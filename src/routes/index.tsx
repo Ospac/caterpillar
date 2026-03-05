@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ReactFlowProvider } from "@xyflow/react";
+import { DiagramCanvas } from "../features/diagram/ui";
 
 export const Route = createFileRoute("/")({
 	component: HomeComponent,
@@ -6,8 +8,10 @@ export const Route = createFileRoute("/")({
 
 function HomeComponent() {
 	return (
-		<div className="p-2">
-			<h3>Welcome Home!</h3>
+		<div className="h-[calc(100vh-56px)] p-3">
+			<ReactFlowProvider>
+				<DiagramCanvas />
+			</ReactFlowProvider>
 		</div>
 	);
 }
