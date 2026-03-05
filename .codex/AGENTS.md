@@ -65,6 +65,21 @@ src/
 - 개발 의존성 추가: `pnpm add -D <package>`
 - 의존성 제거: `pnpm remove <package>`
 
+## Working process
+1. 구현
+- 관련 문서(`.codex/plans`, `.codex/features`)를 먼저 확인하고 범위를 확정한다.
+- 기능 구현 시 `features` 단위로 역할을 분리하고, 타입/상태/UI 책임을 나눠 작성한다.
+
+2. 검증
+- 구현 후 `pnpm lint`를 실행해 정적 점검을 통과한다.
+- `pnpm build`를 실행해 빌드/타입체크를 통과한다.
+- 필요 시 `pnpm dev`로 수동 상호작용을 확인한다.
+
+3. Git workflow 적용
+- 변경 파일 범위를 점검하고 무관한 변경이 포함되지 않았는지 확인한다.
+- 커밋 메시지는 `type(scope): summary` 형식을 사용하고, 고유명사를 제외하면 한글로 작성한다.
+- 명시적 요청이 없으면 `--amend`, 강제 푸시, `reset --hard`는 사용하지 않는다.
+
 ## Git workflow
 - 커밋 시점: 작업 단위가 완료된 후에만 커밋한다.
 - 커밋 범위: 현재 작업과 관련된 파일만 포함하고, 무관한 변경은 제외한다.
