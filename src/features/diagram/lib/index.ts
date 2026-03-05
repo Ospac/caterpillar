@@ -1,2 +1,1 @@
-// Feature-local utilities for diagram.
-export {};
+export * from "./grid";

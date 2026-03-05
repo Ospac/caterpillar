@@ -1,4 +1,5 @@
 import { createRouter, RouterProvider } from "@tanstack/react-router";
+import "@xyflow/react/dist/style.css";
 
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
