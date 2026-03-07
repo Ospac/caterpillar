@@ -4,7 +4,7 @@ import { type DiagramNodeData, NODE_SIZE } from "../../lib/grid";
 export default function SquareNode({ data }: NodeProps<Node<DiagramNodeData>>) {
 	return (
 		<div
-			className="rounded-md border border-gray-400 bg-white text-[12px] text-gray-900 shadow-sm"
+			className="border border-gray-700 bg-green text-[12px] text-gray-900"
 			style={{ width: NODE_SIZE, height: NODE_SIZE }}
 		>
 			<Handle type="target" isConnectable position={Position.Top} id="top" />
