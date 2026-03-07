@@ -15,16 +15,16 @@
 - [x] 드래그 시작/종료에 따른 그리드 가이드 표시/숨김 처리
 
 ### M2. Drag, Snap, Docking
-- [ ] 자유 드래그 이동 + 근접 셀 탐색 구현
-- [ ] 스냅 프리뷰 및 히스테리시스(`snapInDistance`, `snapOutDistance`) 구현
-- [ ] 드롭은 어디서든 허용하되, 가장 가까운 그리드 내부 도킹 확정
-- [ ] 그리드 밖/점유 셀 드롭 시 `lastValidDock` 롤백 및 fallback 정책 구현
+- [ ] `[P0]` 스냅/도킹/검증 도메인 로직을 순수 함수로 분리
+- [ ] `[P0]` `freePosition`, `dockedCell`, `lastValidDock` 상태 흐름 구현
+- [ ] `[P1]` 자유 드래그 이동 + 드롭 시 nearest snap
+- [ ] `[P1]` 스냅 프리뷰 및 히스테리시스(`snapInDistance`, `snapOutDistance`) 구현
+- [ ] `[P2]` 그리드 밖/점유 셀 드롭 시 `lastValidDock` 롤백 및 fallback 정책 구현
+  - fallback 우선순위: `lastValidDock -> nearest empty cell -> clamp`
 
 ### M3. Data Model and Domain Rules
 - [ ] `NodeItem`/`GridState`/`EdgeItem` 타입 정의 및 정규화
-- [ ] `freePosition`, `dockedCell`, `lastValidDock` 상태 흐름 구현
 - [ ] 캔버스 직렬화 스키마 버전 도입 및 마이그레이션 훅 구성
-- [ ] 스냅/도킹/검증 도메인 로직을 순수 함수로 분리
 
 ### M4. Block System
 - [ ] 블록 생성 플로우(메뉴에서 타입 선택 후 노드 생성) 구현

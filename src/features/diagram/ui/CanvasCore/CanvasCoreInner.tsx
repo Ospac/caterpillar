@@ -182,7 +182,7 @@ export function CanvasCoreInner() {
 					nodeTypes={nodeTypes}
 					nodeExtent={nodeExtent}
 					defaultViewport={LOCKED_VIEWPORT}
-					snapToGrid
+					// snapToGrid
 					snapGrid={[NODE_SIZE, NODE_SIZE]}
 					autoPanOnNodeDrag={false}
 					panOnDrag={false}
