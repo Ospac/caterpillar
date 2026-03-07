@@ -9,7 +9,18 @@
     border-color: var(--color-gray-200, currentcolor);
   }
 }
+@theme inline {
+  --color-light-green: #F2FFFA;
+  --color-green: #D8FFB8;
+  --color-pink: #FFD4F0;
+  --color-orange: #FFCCA3;
+  --color-blue: #50CDFF;
+  --color-yellow: #FFEA9E;
+  --color-red: #FF8181;
+  --color-purple: #8381FF;
+  --color-pinky: #FD84FF;
 
+}
 html {
   color-scheme: light dark;
 }

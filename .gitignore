@@ -10,6 +10,3 @@ dist/
 # IDE
 .idea
 
-# LLM
-.claude
-.codex
