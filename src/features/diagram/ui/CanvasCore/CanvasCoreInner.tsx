@@ -102,9 +102,11 @@ export function CanvasCoreInner() {
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
-		if (!isNodeOutsideStage(node.position, visibleStage)) return;
-
-		setVisibleStage((currentStage) => getNextStage(currentStage));
+		setVisibleStage((currentStage) =>
+			isNodeOutsideStage(node.position, currentStage)
+				? getNextStage(currentStage)
+				: currentStage,
+		);
 	};
 
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
