@@ -110,19 +110,19 @@ export function CanvasCoreInner() {
 	};
 
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
-		const clamped = clampPositionToStage(node.position, visibleStage);
-		if (clamped.x !== node.position.x || clamped.y !== node.position.y) {
-			setNodes((currentNodes) =>
-				currentNodes.map((currentNode) =>
-					currentNode.id === node.id
-						? {
-								...currentNode,
-								position: clamped,
-							}
-						: currentNode,
-				),
-			);
-		}
+		setVisibleStage((currentStage) => {
+			const clamped = clampPositionToStage(node.position, currentStage);
+			if (clamped.x !== node.position.x || clamped.y !== node.position.y) {
+				setNodes((currentNodes) =>
+					currentNodes.map((currentNode) =>
+						currentNode.id === node.id
+							? { ...currentNode, position: clamped }
+							: currentNode,
+					),
+				);
+			}
+			return currentStage; // No change to stage, just reading current value
+		});
 		setShowGuide(false);
 	};
 
