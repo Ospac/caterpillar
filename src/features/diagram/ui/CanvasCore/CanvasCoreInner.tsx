@@ -179,13 +179,13 @@ export function CanvasCoreInner() {
 					onNodeDragStop={handleNodeDragStop}
 					nodeTypes={nodeTypes}
 					nodeExtent={nodeExtent}
-					preventScrolling
 					defaultViewport={LOCKED_VIEWPORT}
 					snapToGrid
 					snapGrid={[NODE_SIZE, NODE_SIZE]}
 					autoPanOnNodeDrag={false}
 					panOnDrag={false}
 					panOnScroll={false}
+					preventScrolling={false}
 					zoomOnDoubleClick={false}
 					zoomOnPinch={false}
 					zoomOnScroll={false}
@@ -196,9 +196,7 @@ export function CanvasCoreInner() {
 					/* TODO: minZoom, maxZoom값을 GridGuideOverlay, nodeExtent와 통합 (2번째, 3번째 status에서 Zoom 낮추기) */
 					minZoom={1}
 					maxZoom={1}
-				>
-					{/* <Background gap={NODE_SIZE} /> */}
-				</ReactFlow>
+				></ReactFlow>
 			</div>
 		</div>
 	);
