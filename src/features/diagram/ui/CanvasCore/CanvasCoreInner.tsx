@@ -1,6 +1,5 @@
 import {
 	addEdge,
-	Background,
 	type Connection,
 	type CoordinateExtent,
 	type Edge,
@@ -148,33 +147,29 @@ export function CanvasCoreInner() {
 	};
 
 	return (
-		<div className="h-full w-full overflow-auto rounded-lg border border-gray-300 bg-gray-50 p-4">
+		<div className="h-full w-full overflow-auto rounded-lg border border-gray-300 bg-light-green p-4">
+			<div className="absolute left-56 top-3 z-20 flex gap-2">
+				<button
+					type="button"
+					onClick={handleAddNode}
+					className="rounded border border-gray-300 bg-white px-2.5 py-1 text-xs text-gray-800"
+				>
+					Add Node
+				</button>
+			</div>
+			<div className="absolute top-3 left-128 z-20 rounded border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
+				Stage: {visibleStage}x{visibleStage} | Occupied:{" "}
+				{occupancy.occupiedCellCount} | Conflict: {occupancy.conflictCellCount}
+			</div>
 			<div
-				className="relative border border-gray-300 bg-white"
+				className="relative bg-light-green"
 				style={{ width: stagePixelSize, height: stagePixelSize }}
 			>
-				<div className="absolute left-3 top-3 z-20 flex gap-2">
-					<button
-						type="button"
-						onClick={handleAddNode}
-						className="rounded border border-gray-300 bg-white px-2.5 py-1 text-xs text-gray-800"
-					>
-						Add Node
-					</button>
-				</div>
-
-				<div className="absolute bottom-3 left-3 z-20 rounded border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
-					Stage: {visibleStage}x{visibleStage} | Occupied:{" "}
-					{occupancy.occupiedCellCount} | Conflict:{" "}
-					{occupancy.conflictCellCount}
-				</div>
-
 				{showGuide ? <GridGuideOverlay stage={visibleStage} /> : null}
 
 				<ReactFlow
 					nodes={nodes}
 					edges={edges}
-					autoPanOnNodeDrag={false}
 					onNodesChange={onNodesChange}
 					onEdgesChange={onEdgesChange}
 					onConnect={onConnect}
@@ -184,18 +179,25 @@ export function CanvasCoreInner() {
 					onNodeDragStop={handleNodeDragStop}
 					nodeTypes={nodeTypes}
 					nodeExtent={nodeExtent}
+					preventScrolling
 					defaultViewport={LOCKED_VIEWPORT}
 					snapToGrid
 					snapGrid={[NODE_SIZE, NODE_SIZE]}
+					autoPanOnNodeDrag={false}
 					panOnDrag={false}
 					panOnScroll={false}
 					zoomOnDoubleClick={false}
 					zoomOnPinch={false}
 					zoomOnScroll={false}
 					deleteKeyCode={["Backspace", "Delete"]}
-					proOptions={{ hideAttribution: true }}
+					proOptions={{
+						hideAttribution: true,
+					}}
+					/* TODO: minZoom, maxZoom값을 GridGuideOverlay, nodeExtent와 통합 (2번째, 3번째 status에서 Zoom 낮추기) */
+					minZoom={1}
+					maxZoom={1}
 				>
-					<Background gap={NODE_SIZE} />
+					{/* <Background gap={NODE_SIZE} /> */}
 				</ReactFlow>
 			</div>
 		</div>
