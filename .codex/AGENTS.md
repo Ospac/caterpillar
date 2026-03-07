@@ -36,18 +36,16 @@ src/
     types/
     constants/
   testing/
-    fixtures/
-    mocks/
 ```
 
 ## Documents
-- [canvas.md](./canvas.md): 캔버스 상호작용 규칙(드래그/스냅/도킹/엣지)
-- [blocks.md](./blocks.md): 블록 타입과 생성/편집 규칙
-- [search.md](./search.md): 외부 검색 API 및 연동 규칙
-- [data.md](./data.md): 데이터 모델과 직렬화 정책
-- [persistence.md](./persistence.md): LocalStorage/Server 저장 및 공유 정책
-- [testing.md](./testing.md): 테스트 범위와 전략
-- [roadmap.md](./roadmap.md): TODO와 마일스톤
+- [canvas.md](features/canvas.md): 캔버스 상호작용 규칙(드래그/스냅/도킹/엣지)
+- [blocks.md](features/blocks.md): 블록 타입과 생성/편집 규칙
+- [search.md](features/search.md): 외부 검색 API 및 연동 규칙
+- [data.md](features/data.md): 데이터 모델과 직렬화 정책
+- [persistence.md](features/persistence.md): LocalStorage/Server 저장 및 공유 정책
+- [testing.md](features/testing.md): 테스트 범위와 전략
+- [roadmap.md](roadmap.md): TODO와 마일스톤
 
 ## Setup commands
 ### 1. App scripts

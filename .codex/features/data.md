@@ -1,20 +1,28 @@
 # Data
 
 ## Code Location
-- `src/features/diagram/model`: 노드/그리드/엣지 타입 및 스키마
-- `src/shared/types`: 전역 공용 타입(필요 시)
+- `src/features/diagram/lib/grid.ts`: `DiagramNode`, `CellCoord`, `GridStage`, `GridOccupancy`
+- `@xyflow/react`: `DiagramNode`/edge의 기반 스키마(React Flow 타입)
 
-## Data Model (Suggested)
-- `NodeItem`
-  - `id`, `type`, `data`
-  - `freePosition: { x, y }`
-  - `dockedCell: { row, col } | null`
-  - `lastValidDock: { row, col } | null`
-- `GridState`
-  - `rows`, `cols`, `cellSize`, `origin`
-  - `occupied: Record<CellKey, nodeId>`
-- `EdgeItem`
-  - React Flow edge schema 준수
+## Data Model
+- `CellCoord`
+  - `col: number`
+  - `row: number`
+- `GridStage`
+  - `4 | 7 | 10` (`GRID_STAGES` 기반)
+- `DiagramNodeData`
+  - `label: string`
+- `DiagramNode`
+  - React Flow `Node<DiagramNodeData>` 타입
+  - Canvas Core에서 주로 사용하는 필드: `id`, `type`, `position`, `data.label`
+  - `freePosition`/`dockedCell`/`lastValidDock` 필드는 현재 런타임 모델에 없음
+- `GridOccupancy`
+  - `occupiedCellCount: number`
+  - `conflictCellCount: number`
+  - `cellToNodeIds: Map<string, string[]>`
+  - 점유 정보는 `Record`가 아니라 `Map` 기반으로 계산/보관됨
+- `Edge`
+  - 기존과 동일하게 React Flow edge schema 준수
 
 ## Design Principles
 - 캔버스 직렬화 스키마 버전을 유지해 마이그레이션과 하위 호환을 지원한다.
