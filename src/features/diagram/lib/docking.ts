@@ -39,6 +39,27 @@ export type DockedNodeState = {
 	lastValidDock: CellCoord | null;
 };
 
+export const DRAG_EVENT_TRANSITIONS = {
+	dragStart: "freePosition만 현재 좌표로 갱신하고 도킹 기준점은 유지한다.",
+	dragMove: "freePosition만 드래그 좌표로 갱신한다.",
+	dragStop: "최종 좌표와 확정 dockedCell을 반영하고, 유효한 dockedCell이면 lastValidDock도 갱신한다.",
+	cancel: "lastValidDock 또는 dockedCell 기준 위치로 freePosition을 복구한다.",
+} as const;
+
+export type DockingEvent =
+	| {
+			type: "dragStart" | "dragMove";
+			position: XYPosition;
+	  }
+	| {
+			type: "dragStop";
+			position: XYPosition;
+			dockedCell: CellCoord | null;
+	  }
+	| {
+			type: "cancel";
+	  };
+
 export type DropResolutionBase = {
 	reason: DropReason;
 	usedFallback: boolean;
@@ -67,6 +88,46 @@ export type DockingInput = {
 export type FallbackInput = DockingInput & {
 	reason: DropReason;
 };
+
+export function createDockedNodeState(
+	position: XYPosition,
+	stage: GridStage,
+): DockedNodeState {
+	const dockedCell = getNearestDockCell(position, stage);
+
+	return {
+		freePosition: position,
+		dockedCell,
+		lastValidDock: dockedCell,
+	};
+}
+
+export function transitionDockedNodeState(
+	state: DockedNodeState,
+	event: DockingEvent,
+): DockedNodeState {
+	switch (event.type) {
+		case "dragStart":
+		case "dragMove":
+			return {
+				...state,
+				freePosition: event.position,
+			};
+		case "dragStop":
+			return {
+				freePosition: event.position,
+				dockedCell: event.dockedCell,
+				lastValidDock: event.dockedCell ?? state.lastValidDock,
+			};
+		case "cancel": {
+			const anchorCell = state.lastValidDock ?? state.dockedCell;
+			return {
+				...state,
+				freePosition: anchorCell ? toDockPosition(anchorCell) : state.freePosition,
+			};
+		}
+	}
+}
 
 function getNearestCellIndex(axis: number): number {
 	const biasedAxis = axis + NODE_SIZE / 2 - Number.EPSILON;

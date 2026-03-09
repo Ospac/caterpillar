@@ -14,6 +14,12 @@ import {
 
 import { type MouseEvent, useRef, useState } from "react";
 import {
+	createDockedNodeState,
+	getNearestDockCell,
+	type DockedNodeState,
+	transitionDockedNodeState,
+} from "../../lib/docking";
+import {
 	clampPositionToStage,
 	type DiagramNode,
 	GRID_STAGES,
@@ -63,6 +69,16 @@ export function CanvasCoreInner() {
 	const [nodes, setNodes, onNodesChange] =
 		useNodesState<DiagramNode>(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+	const [nodeDockingState, setNodeDockingState] = useState<
+		Record<string, DockedNodeState>
+	>(() =>
+		Object.fromEntries(
+			initialNodes.map((node) => [
+				node.id,
+				createDockedNodeState(node.position, INITIAL_STAGE),
+			]),
+		),
+	);
 	const [visibleStage, setVisibleStage] = useState<GridStage>(INITIAL_STAGE);
 	const [showGuide, setShowGuide] = useState(false);
 	const nodeIdRef = useRef(initialNodes.length + 1);
@@ -97,11 +113,38 @@ export function CanvasCoreInner() {
 		);
 	};
 
-	const handleNodeDragStart = () => {
+	const updateNodeDockingState = (
+		nodeId: string,
+		updater: (state: DockedNodeState) => DockedNodeState,
+	) => {
+		setNodeDockingState((currentState) => {
+			const baseState =
+				currentState[nodeId] ?? createDockedNodeState({ x: 0, y: 0 }, visibleStage);
+
+			return {
+				...currentState,
+				[nodeId]: updater(baseState),
+			};
+		});
+	};
+
+	const handleNodeDragStart = (_: MouseEvent, node: Node) => {
 		setShowGuide(true);
+		updateNodeDockingState(node.id, (state) =>
+			transitionDockedNodeState(state, {
+				type: "dragStart",
+				position: node.position,
+			}),
+		);
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
+		updateNodeDockingState(node.id, (state) =>
+			transitionDockedNodeState(state, {
+				type: "dragMove",
+				position: node.position,
+			}),
+		);
 		setVisibleStage((currentStage) =>
 			isNodeOutsideStage(node.position, currentStage)
 				? getNextStage(currentStage)
@@ -112,6 +155,8 @@ export function CanvasCoreInner() {
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
 		setVisibleStage((currentStage) => {
 			const clamped = clampPositionToStage(node.position, currentStage);
+			const dockedCell = getNearestDockCell(clamped, currentStage);
+
 			if (clamped.x !== node.position.x || clamped.y !== node.position.y) {
 				setNodes((currentNodes) =>
 					currentNodes.map((currentNode) =>
@@ -121,6 +166,14 @@ export function CanvasCoreInner() {
 					),
 				);
 			}
+
+			updateNodeDockingState(node.id, (state) =>
+				transitionDockedNodeState(state, {
+					type: "dragStop",
+					position: clamped,
+					dockedCell,
+				}),
+			);
 			return currentStage; // No change to stage, just reading current value
 		});
 		setShowGuide(false);
@@ -146,6 +199,10 @@ export function CanvasCoreInner() {
 		};
 
 		setNodes((currentNodes) => [...currentNodes, nextNode]);
+		setNodeDockingState((currentState) => ({
+			...currentState,
+			[id]: createDockedNodeState(nextNode.position, visibleStage),
+		}));
 	};
 
 	return (
@@ -161,7 +218,8 @@ export function CanvasCoreInner() {
 			</div>
 			<div className="absolute top-3 left-128 z-20 rounded border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
 				Stage: {visibleStage}x{visibleStage} | Occupied:{" "}
-				{occupancy.occupiedCellCount} | Conflict: {occupancy.conflictCellCount}
+				{occupancy.occupiedCellCount} | Conflict: {occupancy.conflictCellCount} |
+				Docking: {Object.keys(nodeDockingState).length}
 			</div>
 			<div
 				className="relative bg-light-green"
