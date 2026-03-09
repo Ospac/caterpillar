@@ -84,6 +84,25 @@ export function getNearestDockCell(
 	return cell;
 }
 
+export function isDockableCell(
+	cell: CellCoord,
+	occupancy: GridOccupancy,
+	stage: GridStage,
+	ignoreNodeId?: string,
+): boolean {
+	if (cell.col < 0 || cell.row < 0 || cell.col >= stage || cell.row >= stage) {
+		return false;
+	}
+
+	const occupantIds = occupancy.cellToNodeIds.get(`${cell.col},${cell.row}`) ?? [];
+
+	if (!ignoreNodeId) {
+		return occupantIds.length === 0;
+	}
+
+	return occupantIds.every((nodeId) => nodeId === ignoreNodeId);
+}
+
 export function toDockPosition(cell: CellCoord): XYPosition {
 	return {
 		x: cell.col * NODE_SIZE,
