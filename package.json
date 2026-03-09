@@ -27,6 +27,7 @@
 		"@rsbuild/core": "^1.2.4",
 		"@rsbuild/plugin-babel": "^1.1.1",
 		"@rsbuild/plugin-react": "^1.1.0",
+		"@rstest/core": "^0.9.0",
 		"@tanstack/router-plugin": "^1.164.0",
 		"@types/react": "^19.0.8",
 		"@types/react-dom": "^19.0.3",
