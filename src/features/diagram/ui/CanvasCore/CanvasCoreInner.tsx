@@ -15,8 +15,8 @@ import {
 import { type MouseEvent, useRef, useState } from "react";
 import {
 	createDockedNodeState,
-	getNearestDockCell,
 	type DockedNodeState,
+	resolveDropPosition,
 	transitionDockedNodeState,
 } from "../../lib/docking";
 import {
@@ -115,11 +115,12 @@ export function CanvasCoreInner() {
 
 	const updateNodeDockingState = (
 		nodeId: string,
+		position: { x: number; y: number },
 		updater: (state: DockedNodeState) => DockedNodeState,
 	) => {
 		setNodeDockingState((currentState) => {
 			const baseState =
-				currentState[nodeId] ?? createDockedNodeState({ x: 0, y: 0 }, visibleStage);
+				currentState[nodeId] ?? createDockedNodeState(position, visibleStage);
 
 			return {
 				...currentState,
@@ -130,7 +131,7 @@ export function CanvasCoreInner() {
 
 	const handleNodeDragStart = (_: MouseEvent, node: Node) => {
 		setShowGuide(true);
-		updateNodeDockingState(node.id, (state) =>
+		updateNodeDockingState(node.id, node.position, (state) =>
 			transitionDockedNodeState(state, {
 				type: "dragStart",
 				position: node.position,
@@ -139,7 +140,7 @@ export function CanvasCoreInner() {
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
-		updateNodeDockingState(node.id, (state) =>
+		updateNodeDockingState(node.id, node.position, (state) =>
 			transitionDockedNodeState(state, {
 				type: "dragMove",
 				position: node.position,
@@ -154,24 +155,29 @@ export function CanvasCoreInner() {
 
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
 		setVisibleStage((currentStage) => {
-			const clamped = clampPositionToStage(node.position, currentStage);
-			const dockedCell = getNearestDockCell(clamped, currentStage);
+			const currentDockingState = nodeDockingState[node.id] ??
+				createDockedNodeState(node.position, currentStage);
+			const resolution = resolveDropPosition({
+				position: node.position,
+				stage: currentStage,
+				occupancy,
+				ignoreNodeId: node.id,
+				lastValidDock: currentDockingState.lastValidDock,
+			});
 
-			if (clamped.x !== node.position.x || clamped.y !== node.position.y) {
-				setNodes((currentNodes) =>
-					currentNodes.map((currentNode) =>
-						currentNode.id === node.id
-							? { ...currentNode, position: clamped }
-							: currentNode,
-					),
-				);
-			}
+			setNodes((currentNodes) =>
+				currentNodes.map((currentNode) =>
+					currentNode.id === node.id
+						? { ...currentNode, position: resolution.position }
+						: currentNode,
+				),
+			);
 
-			updateNodeDockingState(node.id, (state) =>
+			updateNodeDockingState(node.id, resolution.position, (state) =>
 				transitionDockedNodeState(state, {
 					type: "dragStop",
-					position: clamped,
-					dockedCell,
+					position: resolution.position,
+					dockedCell: resolution.cell,
 				}),
 			);
 			return currentStage; // No change to stage, just reading current value
@@ -240,7 +246,7 @@ export function CanvasCoreInner() {
 					nodeTypes={nodeTypes}
 					nodeExtent={nodeExtent}
 					defaultViewport={LOCKED_VIEWPORT}
-					// snapToGrid
+					snapToGrid={false}
 					snapGrid={[NODE_SIZE, NODE_SIZE]}
 					autoPanOnNodeDrag={false}
 					panOnDrag={false}
