@@ -63,6 +63,27 @@ export type DockingInput = {
 	lastValidDock: CellCoord | null;
 };
 
+function getNearestCellIndex(axis: number): number {
+	const biasedAxis = axis + NODE_SIZE / 2 - Number.EPSILON;
+	return Math.floor(biasedAxis / NODE_SIZE);
+}
+
+export function getNearestDockCell(
+	position: XYPosition,
+	stage: GridStage,
+): CellCoord | null {
+	const cell = {
+		col: getNearestCellIndex(position.x),
+		row: getNearestCellIndex(position.y),
+	};
+
+	if (cell.col < 0 || cell.row < 0 || cell.col >= stage || cell.row >= stage) {
+		return null;
+	}
+
+	return cell;
+}
+
 export function toDockPosition(cell: CellCoord): XYPosition {
 	return {
 		x: cell.col * NODE_SIZE,
