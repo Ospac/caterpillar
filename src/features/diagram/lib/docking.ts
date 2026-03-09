@@ -3,6 +3,7 @@ import {
 	type CellCoord,
 	type GridOccupancy,
 	type GridStage,
+	isNodeOutsideStage,
 	NODE_SIZE,
 } from "./grid";
 
@@ -168,6 +169,56 @@ export function applyFallback(input: FallbackInput): FallbackResult {
 		position: clampedPosition,
 		strategy: FALLBACK_STRATEGIES.clamp,
 		cell: getNearestDockCell(clampedPosition, input.stage),
+	};
+}
+
+export function resolveDropPosition(input: DockingInput): ResolveDropResult {
+	if (isNodeOutsideStage(input.position, input.stage)) {
+		const fallback = applyFallback({
+			...input,
+			reason: DROP_REASONS.outsideStage,
+		});
+
+		return {
+			...fallback,
+			reason: DROP_REASONS.outsideStage,
+			usedFallback: true,
+		};
+	}
+
+	const nearestCell = getNearestDockCell(input.position, input.stage);
+
+	if (!nearestCell) {
+		const fallback = applyFallback({
+			...input,
+			reason: DROP_REASONS.noNearestCell,
+		});
+
+		return {
+			...fallback,
+			reason: DROP_REASONS.noNearestCell,
+			usedFallback: true,
+		};
+	}
+
+	if (!isDockableCell(nearestCell, input.occupancy, input.stage, input.ignoreNodeId)) {
+		const fallback = applyFallback({
+			...input,
+			reason: DROP_REASONS.occupiedCell,
+		});
+
+		return {
+			...fallback,
+			reason: DROP_REASONS.occupiedCell,
+			usedFallback: true,
+		};
+	}
+
+	return {
+		position: toDockPosition(nearestCell),
+		cell: nearestCell,
+		reason: DROP_REASONS.validDock,
+		usedFallback: false,
 	};
 }
 
