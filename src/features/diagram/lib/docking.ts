@@ -1,6 +1,6 @@
 import {
-	clampPositionToStage,
 	type CellCoord,
+	clampPositionToStage,
 	type GridOccupancy,
 	type GridStage,
 	isNodeOutsideStage,
@@ -12,24 +12,6 @@ export type XYPosition = {
 	y: number;
 };
 
-export const SNAP_IN_DISTANCE = 40;
-export const SNAP_OUT_DISTANCE = 56;
-
-export const DROP_REASONS = {
-	validDock: "valid-dock",
-	outsideStage: "outside-stage",
-	occupiedCell: "occupied-cell",
-	noNearestCell: "no-nearest-cell",
-} as const;
-
-export type DropReason = (typeof DROP_REASONS)[keyof typeof DROP_REASONS];
-
-export const FALLBACK_STRATEGIES = {
-	lastValidDock: "last-valid-dock",
-	nearestEmptyCell: "nearest-empty-cell",
-	clamp: "clamp",
-} as const;
-
 export type FallbackStrategy =
 	(typeof FALLBACK_STRATEGIES)[keyof typeof FALLBACK_STRATEGIES];
 
@@ -39,12 +21,7 @@ export type DockedNodeState = {
 	lastValidDock: CellCoord | null;
 };
 
-export const DRAG_EVENT_TRANSITIONS = {
-	dragStart: "freePosition만 현재 좌표로 갱신하고 도킹 기준점은 유지한다.",
-	dragMove: "freePosition만 드래그 좌표로 갱신한다.",
-	dragStop: "최종 좌표와 확정 dockedCell을 반영하고, 유효한 dockedCell이면 lastValidDock도 갱신한다.",
-	cancel: "lastValidDock 또는 dockedCell 기준 위치로 freePosition을 복구한다.",
-} as const;
+export type DropReason = (typeof DROP_REASONS)[keyof typeof DROP_REASONS];
 
 export type DockingEvent =
 	| {
@@ -89,6 +66,31 @@ export type FallbackInput = DockingInput & {
 	reason: DropReason;
 };
 
+export const SNAP_IN_DISTANCE = 40;
+export const SNAP_OUT_DISTANCE = 56;
+
+// 디버깅 용도 상수들
+export const DROP_REASONS = {
+	validDock: "valid-dock",
+	outsideStage: "outside-stage",
+	occupiedCell: "occupied-cell",
+	noNearestCell: "no-nearest-cell",
+} as const;
+
+export const FALLBACK_STRATEGIES = {
+	lastValidDock: "last-valid-dock",
+	nearestEmptyCell: "nearest-empty-cell",
+	clamp: "clamp",
+} as const;
+
+export const DRAG_EVENT_TRANSITIONS = {
+	dragStart: "freePosition만 현재 좌표로 갱신하고 도킹 기준점은 유지한다.",
+	dragMove: "freePosition만 드래그 좌표로 갱신한다.",
+	dragStop:
+		"최종 좌표와 확정 dockedCell을 반영하고, 유효한 dockedCell이면 lastValidDock도 갱신한다.",
+	cancel: "lastValidDock 또는 dockedCell 기준 위치로 freePosition을 복구한다.",
+} as const;
+
 export function createDockedNodeState(
 	position: XYPosition,
 	stage: GridStage,
@@ -123,7 +125,9 @@ export function transitionDockedNodeState(
 			const anchorCell = state.lastValidDock ?? state.dockedCell;
 			return {
 				...state,
-				freePosition: anchorCell ? toDockPosition(anchorCell) : state.freePosition,
+				freePosition: anchorCell
+					? cellCoordToXYDockPosition(anchorCell)
+					: state.freePosition,
 			};
 		}
 	}
@@ -160,7 +164,8 @@ export function isDockableCell(
 		return false;
 	}
 
-	const occupantIds = occupancy.cellToNodeIds.get(`${cell.col},${cell.row}`) ?? [];
+	const occupantIds =
+		occupancy.cellToNodeIds.get(`${cell.col},${cell.row}`) ?? [];
 
 	if (!ignoreNodeId) {
 		return occupantIds.length === 0;
@@ -179,7 +184,9 @@ function getNearestEmptyCell(input: DockingInput): CellCoord | null {
 		for (let col = 0; col < input.stage; col += 1) {
 			const cell = { col, row };
 
-			if (!isDockableCell(cell, input.occupancy, input.stage, input.ignoreNodeId)) {
+			if (
+				!isDockableCell(cell, input.occupancy, input.stage, input.ignoreNodeId)
+			) {
 				continue;
 			}
 
@@ -209,7 +216,7 @@ export function applyFallback(input: FallbackInput): FallbackResult {
 		)
 	) {
 		return {
-			position: toDockPosition(input.lastValidDock),
+			position: cellCoordToXYDockPosition(input.lastValidDock),
 			strategy: FALLBACK_STRATEGIES.lastValidDock,
 			cell: input.lastValidDock,
 		};
@@ -218,7 +225,7 @@ export function applyFallback(input: FallbackInput): FallbackResult {
 	const nearestEmptyCell = getNearestEmptyCell(input);
 	if (nearestEmptyCell) {
 		return {
-			position: toDockPosition(nearestEmptyCell),
+			position: cellCoordToXYDockPosition(nearestEmptyCell),
 			strategy: FALLBACK_STRATEGIES.nearestEmptyCell,
 			cell: nearestEmptyCell,
 		};
@@ -262,7 +269,14 @@ export function resolveDropPosition(input: DockingInput): ResolveDropResult {
 		};
 	}
 
-	if (!isDockableCell(nearestCell, input.occupancy, input.stage, input.ignoreNodeId)) {
+	if (
+		!isDockableCell(
+			nearestCell,
+			input.occupancy,
+			input.stage,
+			input.ignoreNodeId,
+		)
+	) {
 		const fallback = applyFallback({
 			...input,
 			reason: DROP_REASONS.occupiedCell,
@@ -276,20 +290,23 @@ export function resolveDropPosition(input: DockingInput): ResolveDropResult {
 	}
 
 	return {
-		position: toDockPosition(nearestCell),
+		position: cellCoordToXYDockPosition(nearestCell),
 		cell: nearestCell,
 		reason: DROP_REASONS.validDock,
 		usedFallback: false,
 	};
 }
 
-export function toDockPosition(cell: CellCoord): XYPosition {
+export function cellCoordToXYDockPosition(cell: CellCoord): XYPosition {
 	return {
 		x: cell.col * NODE_SIZE,
 		y: cell.row * NODE_SIZE,
 	};
 }
 
-export function clampDockPosition(position: XYPosition, stage: GridStage): XYPosition {
+export function clampDockPosition(
+	position: XYPosition,
+	stage: GridStage,
+): XYPosition {
 	return clampPositionToStage(position, stage);
 }
