@@ -63,6 +63,10 @@ export type DockingInput = {
 	lastValidDock: CellCoord | null;
 };
 
+export type FallbackInput = DockingInput & {
+	reason: DropReason;
+};
+
 function getNearestCellIndex(axis: number): number {
 	const biasedAxis = axis + NODE_SIZE / 2 - Number.EPSILON;
 	return Math.floor(biasedAxis / NODE_SIZE);
@@ -101,6 +105,70 @@ export function isDockableCell(
 	}
 
 	return occupantIds.every((nodeId) => nodeId === ignoreNodeId);
+}
+
+function getNearestEmptyCell(input: DockingInput): CellCoord | null {
+	const nearestCell = getNearestDockCell(input.position, input.stage);
+	const preferredCell = nearestCell ?? input.lastValidDock;
+	let bestCell: CellCoord | null = null;
+	let bestDistance = Number.POSITIVE_INFINITY;
+
+	for (let row = 0; row < input.stage; row += 1) {
+		for (let col = 0; col < input.stage; col += 1) {
+			const cell = { col, row };
+
+			if (!isDockableCell(cell, input.occupancy, input.stage, input.ignoreNodeId)) {
+				continue;
+			}
+
+			const cellDistance = preferredCell
+				? Math.abs(preferredCell.col - col) + Math.abs(preferredCell.row - row)
+				: Math.abs(input.position.x - col * NODE_SIZE) +
+					Math.abs(input.position.y - row * NODE_SIZE);
+
+			if (cellDistance < bestDistance) {
+				bestCell = cell;
+				bestDistance = cellDistance;
+			}
+		}
+	}
+
+	return bestCell;
+}
+
+export function applyFallback(input: FallbackInput): FallbackResult {
+	if (
+		input.lastValidDock &&
+		isDockableCell(
+			input.lastValidDock,
+			input.occupancy,
+			input.stage,
+			input.ignoreNodeId,
+		)
+	) {
+		return {
+			position: toDockPosition(input.lastValidDock),
+			strategy: FALLBACK_STRATEGIES.lastValidDock,
+			cell: input.lastValidDock,
+		};
+	}
+
+	const nearestEmptyCell = getNearestEmptyCell(input);
+	if (nearestEmptyCell) {
+		return {
+			position: toDockPosition(nearestEmptyCell),
+			strategy: FALLBACK_STRATEGIES.nearestEmptyCell,
+			cell: nearestEmptyCell,
+		};
+	}
+
+	const clampedPosition = clampDockPosition(input.position, input.stage);
+
+	return {
+		position: clampedPosition,
+		strategy: FALLBACK_STRATEGIES.clamp,
+		cell: getNearestDockCell(clampedPosition, input.stage),
+	};
 }
 
 export function toDockPosition(cell: CellCoord): XYPosition {
