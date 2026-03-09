@@ -1,17 +1,4 @@
-import type { Node } from "@xyflow/react";
-
-export type CellCoord = {
-	col: number;
-	row: number;
-};
-
-export type DiagramNodeData = {
-	label: string;
-};
-
-export type DiagramNode = Node<DiagramNodeData>;
-
-export type GridStage = (typeof GRID_STAGES)[number];
+import type { CellCoord, DiagramNode, GridStage, XYPosition } from "./type";
 
 export const GRID_STAGES = [4, 7, 10] as const;
 export const MAX_GRID_STAGE: GridStage = GRID_STAGES[GRID_STAGES.length - 1];
@@ -30,7 +17,10 @@ export function getStagePixelSize(stage: GridStage): number {
 	return stage * NODE_SIZE;
 }
 
-export function toCellCoord(position: { x: number; y: number }): CellCoord {
+export function positionToCellCoord(position: {
+	x: number;
+	y: number;
+}): CellCoord {
 	const centerX = position.x + NODE_SIZE / 2;
 	const centerY = position.y + NODE_SIZE / 2;
 
@@ -39,7 +29,12 @@ export function toCellCoord(position: { x: number; y: number }): CellCoord {
 		row: Math.floor(centerY / NODE_SIZE),
 	};
 }
-
+export function cellCoordToPosition(cell: CellCoord): XYPosition {
+	return {
+		x: cell.col * NODE_SIZE,
+		y: cell.row * NODE_SIZE,
+	};
+}
 export function isNodeOutsideStage(
 	position: { x: number; y: number },
 	stage: GridStage,
@@ -87,7 +82,7 @@ export function getOccupiedCells(nodes: DiagramNode[]): Set<string> {
 	const occupied = new Set<string>();
 
 	for (const node of nodes) {
-		const cell = toCellCoord(node.position);
+		const cell = positionToCellCoord(node.position);
 		if (!isCellInsideMaxGrid(cell)) {
 			continue;
 		}
@@ -107,7 +102,7 @@ export function getGridOccupancy(nodes: DiagramNode[]): GridOccupancy {
 	const cellToNodeIds = new Map<string, string[]>();
 
 	for (const node of nodes) {
-		const cell = toCellCoord(node.position);
+		const cell = positionToCellCoord(node.position);
 		if (!isCellInsideMaxGrid(cell)) {
 			continue;
 		}

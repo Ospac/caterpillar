@@ -15,15 +15,12 @@ import {
 import { type MouseEvent, useRef, useState } from "react";
 import {
 	createDockedNodeState,
-	type DockedNodeState,
 	resolveDropPosition,
 	transitionDockedNodeState,
 } from "../../lib/docking";
 import {
 	clampPositionToStage,
-	type DiagramNode,
 	GRID_STAGES,
-	type GridStage,
 	getGridOccupancy,
 	getNextStage,
 	getStagePixelSize,
@@ -31,6 +28,7 @@ import {
 	MAX_GRID_STAGE,
 	NODE_SIZE,
 } from "../../lib/grid";
+import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
 import GridGuideOverlay from "./GridGuideOverlay";
 import SquareNode from "./SquareNode";
 
@@ -155,7 +153,8 @@ export function CanvasCoreInner() {
 
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
 		setVisibleStage((currentStage) => {
-			const currentDockingState = nodeDockingState[node.id] ??
+			const currentDockingState =
+				nodeDockingState[node.id] ??
 				createDockedNodeState(node.position, currentStage);
 			const resolution = resolveDropPosition({
 				position: node.position,
@@ -224,8 +223,8 @@ export function CanvasCoreInner() {
 			</div>
 			<div className="absolute top-3 left-128 z-20 rounded border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
 				Stage: {visibleStage}x{visibleStage} | Occupied:{" "}
-				{occupancy.occupiedCellCount} | Conflict: {occupancy.conflictCellCount} |
-				Docking: {Object.keys(nodeDockingState).length}
+				{occupancy.occupiedCellCount} | Conflict: {occupancy.conflictCellCount}{" "}
+				| Docking: {Object.keys(nodeDockingState).length}
 			</div>
 			<div
 				className="relative bg-light-green"

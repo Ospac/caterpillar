@@ -1,70 +1,21 @@
 import {
-	type CellCoord,
+	cellCoordToPosition,
 	clampPositionToStage,
 	type GridOccupancy,
-	type GridStage,
 	isNodeOutsideStage,
 	NODE_SIZE,
 } from "./grid";
-
-export type XYPosition = {
-	x: number;
-	y: number;
-};
-
-export type FallbackStrategy =
-	(typeof FALLBACK_STRATEGIES)[keyof typeof FALLBACK_STRATEGIES];
-
-export type DockedNodeState = {
-	freePosition: XYPosition;
-	dockedCell: CellCoord | null;
-	lastValidDock: CellCoord | null;
-};
-
-export type DropReason = (typeof DROP_REASONS)[keyof typeof DROP_REASONS];
-
-export type DockingEvent =
-	| {
-			type: "dragStart" | "dragMove";
-			position: XYPosition;
-	  }
-	| {
-			type: "dragStop";
-			position: XYPosition;
-			dockedCell: CellCoord | null;
-	  }
-	| {
-			type: "cancel";
-	  };
-
-export type DropResolutionBase = {
-	reason: DropReason;
-	usedFallback: boolean;
-};
-
-export type FallbackResult = {
-	position: XYPosition;
-	strategy: FallbackStrategy;
-	cell: CellCoord | null;
-};
-
-export type ResolveDropResult = DropResolutionBase & {
-	position: XYPosition;
-	cell: CellCoord | null;
-	strategy?: FallbackStrategy;
-};
-
-export type DockingInput = {
-	position: XYPosition;
-	stage: GridStage;
-	occupancy: GridOccupancy;
-	ignoreNodeId?: string;
-	lastValidDock: CellCoord | null;
-};
-
-export type FallbackInput = DockingInput & {
-	reason: DropReason;
-};
+import type {
+	CellCoord,
+	DockedNodeState,
+	DockingEvent,
+	DockingInput,
+	FallbackInput,
+	FallbackResult,
+	GridStage,
+	ResolveDropResult,
+	XYPosition,
+} from "./type";
 
 export const SNAP_IN_DISTANCE = 40;
 export const SNAP_OUT_DISTANCE = 56;
@@ -126,7 +77,7 @@ export function transitionDockedNodeState(
 			return {
 				...state,
 				freePosition: anchorCell
-					? cellCoordToXYDockPosition(anchorCell)
+					? cellCoordToPosition(anchorCell)
 					: state.freePosition,
 			};
 		}
@@ -216,7 +167,7 @@ export function applyFallback(input: FallbackInput): FallbackResult {
 		)
 	) {
 		return {
-			position: cellCoordToXYDockPosition(input.lastValidDock),
+			position: cellCoordToPosition(input.lastValidDock),
 			strategy: FALLBACK_STRATEGIES.lastValidDock,
 			cell: input.lastValidDock,
 		};
@@ -225,7 +176,7 @@ export function applyFallback(input: FallbackInput): FallbackResult {
 	const nearestEmptyCell = getNearestEmptyCell(input);
 	if (nearestEmptyCell) {
 		return {
-			position: cellCoordToXYDockPosition(nearestEmptyCell),
+			position: cellCoordToPosition(nearestEmptyCell),
 			strategy: FALLBACK_STRATEGIES.nearestEmptyCell,
 			cell: nearestEmptyCell,
 		};
@@ -290,17 +241,10 @@ export function resolveDropPosition(input: DockingInput): ResolveDropResult {
 	}
 
 	return {
-		position: cellCoordToXYDockPosition(nearestCell),
+		position: cellCoordToPosition(nearestCell),
 		cell: nearestCell,
 		reason: DROP_REASONS.validDock,
 		usedFallback: false,
-	};
-}
-
-export function cellCoordToXYDockPosition(cell: CellCoord): XYPosition {
-	return {
-		x: cell.col * NODE_SIZE,
-		y: cell.row * NODE_SIZE,
 	};
 }
 
