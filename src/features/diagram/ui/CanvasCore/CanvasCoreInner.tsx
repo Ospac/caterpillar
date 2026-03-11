@@ -14,17 +14,21 @@ import {
 
 import { type MouseEvent, useRef, useState } from "react";
 import {
+	createDockedNodeState,
+	resolveDropPosition,
+	transitionDockedNodeState,
+} from "../../lib/docking";
+import {
 	clampPositionToStage,
-	type DiagramNode,
 	GRID_STAGES,
-	type GridStage,
 	getGridOccupancy,
 	getNextStage,
 	getStagePixelSize,
-	isNodeOutsideStage,
+	isNodeCenterOutsideStage,
 	MAX_GRID_STAGE,
 	NODE_SIZE,
 } from "../../lib/grid";
+import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
 import GridGuideOverlay from "./GridGuideOverlay";
 import SquareNode from "./SquareNode";
 
@@ -52,18 +56,23 @@ const initialNodes: DiagramNode[] = [
 		position: clampPositionToStage({ x: 0, y: 0 }, INITIAL_STAGE),
 		data: { label: "Node 1" },
 	},
-	{
-		id: "node-2",
-		type: "square",
-		position: clampPositionToStage({ x: 96, y: 0 }, INITIAL_STAGE),
-		data: { label: "Node 2" },
-	},
 ];
 export function CanvasCoreInner() {
 	const [nodes, setNodes, onNodesChange] =
 		useNodesState<DiagramNode>(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 	const [visibleStage, setVisibleStage] = useState<GridStage>(INITIAL_STAGE);
+
+	const [nodeDockingState, setNodeDockingState] = useState<
+		Record<string, DockedNodeState>
+	>(() =>
+		Object.fromEntries(
+			initialNodes.map((node) => [
+				node.id,
+				createDockedNodeState(node.position, visibleStage),
+			]),
+		),
+	);
 	const [showGuide, setShowGuide] = useState(false);
 	const nodeIdRef = useRef(initialNodes.length + 1);
 
@@ -74,7 +83,7 @@ export function CanvasCoreInner() {
 		[maxStagePixelSize, maxStagePixelSize],
 	];
 
-	const occupancy = getGridOccupancy(nodes);
+	const occupancy = getGridOccupancy(nodes, visibleStage);
 
 	const onConnect = (connection: Connection) => {
 		setEdges((currentEdges) =>
@@ -97,13 +106,41 @@ export function CanvasCoreInner() {
 		);
 	};
 
-	const handleNodeDragStart = () => {
+	const updateNodeDockingState = (
+		nodeId: string,
+		position: { x: number; y: number },
+		updater: (state: DockedNodeState) => DockedNodeState,
+	) => {
+		setNodeDockingState((currentState) => {
+			const baseState =
+				currentState[nodeId] ?? createDockedNodeState(position, visibleStage);
+
+			return {
+				...currentState,
+				[nodeId]: updater(baseState),
+			};
+		});
+	};
+
+	const handleNodeDragStart = (_: MouseEvent, node: Node) => {
 		setShowGuide(true);
+		updateNodeDockingState(node.id, node.position, (state) =>
+			transitionDockedNodeState(state, {
+				type: "dragStart",
+				position: node.position,
+			}),
+		);
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
+		updateNodeDockingState(node.id, node.position, (state) =>
+			transitionDockedNodeState(state, {
+				type: "dragMove",
+				position: node.position,
+			}),
+		);
 		setVisibleStage((currentStage) =>
-			isNodeOutsideStage(node.position, currentStage)
+			isNodeCenterOutsideStage(node.position, currentStage)
 				? getNextStage(currentStage)
 				: currentStage,
 		);
@@ -111,16 +148,32 @@ export function CanvasCoreInner() {
 
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
 		setVisibleStage((currentStage) => {
-			const clamped = clampPositionToStage(node.position, currentStage);
-			if (clamped.x !== node.position.x || clamped.y !== node.position.y) {
-				setNodes((currentNodes) =>
-					currentNodes.map((currentNode) =>
-						currentNode.id === node.id
-							? { ...currentNode, position: clamped }
-							: currentNode,
-					),
-				);
-			}
+			const currentDockingState =
+				nodeDockingState[node.id] ??
+				createDockedNodeState(node.position, visibleStage);
+			const resolution = resolveDropPosition({
+				position: node.position,
+				stage: currentStage,
+				occupancy,
+				ignoreNodeId: node.id,
+				lastValidDock: currentDockingState.lastValidDock,
+			});
+
+			setNodes((currentNodes) =>
+				currentNodes.map((currentNode) =>
+					currentNode.id === node.id
+						? { ...currentNode, position: resolution.position }
+						: currentNode,
+				),
+			);
+
+			updateNodeDockingState(node.id, resolution.position, (state) =>
+				transitionDockedNodeState(state, {
+					type: "dragStop",
+					position: resolution.position,
+					dockedCell: resolution.cell,
+				}),
+			);
 			return currentStage; // No change to stage, just reading current value
 		});
 		setShowGuide(false);
@@ -146,6 +199,10 @@ export function CanvasCoreInner() {
 		};
 
 		setNodes((currentNodes) => [...currentNodes, nextNode]);
+		setNodeDockingState((currentState) => ({
+			...currentState,
+			[id]: createDockedNodeState(nextNode.position, visibleStage),
+		}));
 	};
 
 	return (
@@ -161,7 +218,8 @@ export function CanvasCoreInner() {
 			</div>
 			<div className="absolute top-3 left-128 z-20 rounded border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
 				Stage: {visibleStage}x{visibleStage} | Occupied:{" "}
-				{occupancy.occupiedCellCount} | Conflict: {occupancy.conflictCellCount}
+				{occupancy.occupiedCellCount} | Docking:{" "}
+				{Object.keys(nodeDockingState).length}
 			</div>
 			<div
 				className="relative bg-light-green"
@@ -182,7 +240,7 @@ export function CanvasCoreInner() {
 					nodeTypes={nodeTypes}
 					nodeExtent={nodeExtent}
 					defaultViewport={LOCKED_VIEWPORT}
-					snapToGrid
+					snapToGrid={false}
 					snapGrid={[NODE_SIZE, NODE_SIZE]}
 					autoPanOnNodeDrag={false}
 					panOnDrag={false}
