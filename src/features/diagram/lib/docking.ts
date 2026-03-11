@@ -147,6 +147,8 @@ function getNearestEmptyCell(input: DockingInput): CellCoord | null {
 				continue;
 			}
 
+			// preferredCell이 있으면 셀 단위 맨해튼 거리 사용 (preferredCell.col - col)
+			// 없으면 현재 픽셀 위치에서 각 셀 중심까지의 거리 사용 (input.position.x - col * NODE_SIZE)
 			const cellDistance = preferredCell
 				? Math.abs(preferredCell.col - col) + Math.abs(preferredCell.row - row)
 				: Math.abs(input.position.x - col * NODE_SIZE) +
