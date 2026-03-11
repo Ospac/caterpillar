@@ -36,7 +36,7 @@ import type {
 describe("docking(lib)", () => {
 	describe("createDockedNodeState : position 객체로 DockedNodeState 객체를 생성한다", () => {
 		it("position이 {x: 520, y: 144}이면 DockedNodeState로 {freePosition: {x:520, y:144}, dockedCell:{col:5, row:2}, lastValidDock:{col:5, row:2}}를 반환한다", () => {
-			expect(createDockedNodeState({ x: 520, y: 144 })).toEqual({
+			expect(createDockedNodeState({ x: 520, y: 144 }, 7)).toEqual({
 				freePosition: { x: 520, y: 144 },
 				dockedCell: { col: 5, row: 2 },
 				lastValidDock: { col: 5, row: 2 },
@@ -138,14 +138,12 @@ describe("docking(lib)", () => {
 	describe("isDockableCell : 셀이 현재 stage에서 도킹 가능한지 판정한다", () => {
 		const emptyOccupancy = (): GridOccupancy => ({
 			occupiedCellCount: 0,
-			conflictCellCount: 0,
-			cellToNodeIds: new Map(),
+			cellToNodeId: new Map(),
 		});
 
-		const occupancyOf = (entries: Record<string, string[]>): GridOccupancy => ({
+		const occupancyOf = (entries: Record<string, string>): GridOccupancy => ({
 			occupiedCellCount: Object.keys(entries).length,
-			conflictCellCount: 0,
-			cellToNodeIds: new Map(Object.entries(entries)),
+			cellToNodeId: new Map(Object.entries(entries)),
 		});
 		describe("stage 경계 검사", () => {
 			//경계 밖 판정은 occupancy 와 무관하게 false
@@ -173,11 +171,11 @@ describe("docking(lib)", () => {
 
 		describe("점유 검사", () => {
 			it("비어 있는 셀에 도킹하면 true", () => {
-				const occupancy = occupancyOf({ "0,0": ["node-a"], "0,1": ["node-b"] });
+				const occupancy = occupancyOf({ "0,0": "node-a", "0,1": "node-b" });
 				expect(isDockableCell({ col: 0, row: 2 }, occupancy, 4)).toEqual(true);
 			});
 			it("다른 노드가 점유한 셀에 도킹하면 false", () => {
-				const occupancy = occupancyOf({ "1,2": ["node-a"] });
+				const occupancy = occupancyOf({ "1,2": "node-a" });
 				expect(isDockableCell({ col: 1, row: 2 }, occupancy, 4)).toEqual(false);
 			});
 		});
@@ -185,7 +183,7 @@ describe("docking(lib)", () => {
 		describe("ignoreNodeId 예외", () => {
 			it("ignoreNodeId가 node-a이고 셀 {1,2}를 node-a만 점유 중이면 true를 반환한다", () => {
 				const occupancy = occupancyOf({
-					"1,2": ["node-a"],
+					"1,2": "node-a",
 				});
 
 				const result = isDockableCell(
@@ -200,7 +198,7 @@ describe("docking(lib)", () => {
 
 			it("ignoreNodeId가 node-a이고 셀 {1,2}를 node-b가 점유 중이면 false를 반환한다", () => {
 				const occupancy = occupancyOf({
-					"1,2": ["node-b"],
+					"1,2": "node-b",
 				});
 
 				const result = isDockableCell(

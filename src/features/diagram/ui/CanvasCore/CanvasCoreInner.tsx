@@ -56,28 +56,23 @@ const initialNodes: DiagramNode[] = [
 		position: clampPositionToStage({ x: 0, y: 0 }, INITIAL_STAGE),
 		data: { label: "Node 1" },
 	},
-	{
-		id: "node-2",
-		type: "square",
-		position: clampPositionToStage({ x: 96, y: 0 }, INITIAL_STAGE),
-		data: { label: "Node 2" },
-	},
 ];
 export function CanvasCoreInner() {
 	const [nodes, setNodes, onNodesChange] =
 		useNodesState<DiagramNode>(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+	const [visibleStage, setVisibleStage] = useState<GridStage>(INITIAL_STAGE);
+
 	const [nodeDockingState, setNodeDockingState] = useState<
 		Record<string, DockedNodeState>
 	>(() =>
 		Object.fromEntries(
 			initialNodes.map((node) => [
 				node.id,
-				createDockedNodeState(node.position),
+				createDockedNodeState(node.position, visibleStage),
 			]),
 		),
 	);
-	const [visibleStage, setVisibleStage] = useState<GridStage>(INITIAL_STAGE);
 	const [showGuide, setShowGuide] = useState(false);
 	const nodeIdRef = useRef(initialNodes.length + 1);
 
@@ -88,7 +83,7 @@ export function CanvasCoreInner() {
 		[maxStagePixelSize, maxStagePixelSize],
 	];
 
-	const occupancy = getGridOccupancy(nodes);
+	const occupancy = getGridOccupancy(nodes, visibleStage);
 
 	const onConnect = (connection: Connection) => {
 		setEdges((currentEdges) =>
@@ -117,7 +112,8 @@ export function CanvasCoreInner() {
 		updater: (state: DockedNodeState) => DockedNodeState,
 	) => {
 		setNodeDockingState((currentState) => {
-			const baseState = currentState[nodeId] ?? createDockedNodeState(position);
+			const baseState =
+				currentState[nodeId] ?? createDockedNodeState(position, visibleStage);
 
 			return {
 				...currentState,
@@ -137,7 +133,6 @@ export function CanvasCoreInner() {
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
-		console.log(node.position);
 		updateNodeDockingState(node.id, node.position, (state) =>
 			transitionDockedNodeState(state, {
 				type: "dragMove",
@@ -154,7 +149,8 @@ export function CanvasCoreInner() {
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
 		setVisibleStage((currentStage) => {
 			const currentDockingState =
-				nodeDockingState[node.id] ?? createDockedNodeState(node.position);
+				nodeDockingState[node.id] ??
+				createDockedNodeState(node.position, visibleStage);
 			const resolution = resolveDropPosition({
 				position: node.position,
 				stage: currentStage,
@@ -205,7 +201,7 @@ export function CanvasCoreInner() {
 		setNodes((currentNodes) => [...currentNodes, nextNode]);
 		setNodeDockingState((currentState) => ({
 			...currentState,
-			[id]: createDockedNodeState(nextNode.position),
+			[id]: createDockedNodeState(nextNode.position, visibleStage),
 		}));
 	};
 
@@ -222,8 +218,8 @@ export function CanvasCoreInner() {
 			</div>
 			<div className="absolute top-3 left-128 z-20 rounded border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
 				Stage: {visibleStage}x{visibleStage} | Occupied:{" "}
-				{occupancy.occupiedCellCount} | Conflict: {occupancy.conflictCellCount}{" "}
-				| Docking: {Object.keys(nodeDockingState).length}
+				{occupancy.occupiedCellCount} | Docking:{" "}
+				{Object.keys(nodeDockingState).length}
 			</div>
 			<div
 				className="relative bg-light-green"

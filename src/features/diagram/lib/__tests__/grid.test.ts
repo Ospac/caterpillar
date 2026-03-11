@@ -6,7 +6,7 @@
 - [x] 경계 판정/보정 함수
   - isNodeCenterOutsideStage, clampPositionToStage, isCellCoordInsideMaxGrid
 - [ ] 집계 함수
-  - getGridOccupancy (occupiedCellCount, conflictCellCount, cellToNodeIds)
+  - getGridOccupancy (occupiedCellCount, cellToNodeId)
 */
 
 import { describe, expect, it } from "@rstest/core";
@@ -14,6 +14,7 @@ import {
 	cellCoordToPosition,
 	clampPositionToStage,
 	GRID_STAGES,
+	getGridOccupancy,
 	getNextStage,
 	getStagePixelSize,
 	isCellCoordInsideMaxGrid,
@@ -22,6 +23,7 @@ import {
 	positionToNearestCellCoord,
 	toCellKey,
 } from "../grid";
+import type { DiagramNode } from "../type";
 
 describe("grid(lib)", () => {
 	describe("getNextStage: 다음 stage 값을 얻기", () => {
@@ -52,11 +54,11 @@ describe("grid(lib)", () => {
 	});
 	describe("positionToNearestCellCoord : position 객체로 가장 가까운 cell의 cellCoord 객체 얻기", () => {
 		it("position이 {x: 0, y: 0}이면 가장 가까운 cell 좌표로 {col: 0, row: 0}을 반환한다", () => {
-			const cellCoord = positionToNearestCellCoord({ x: 0, y: 0 });
+			const cellCoord = positionToNearestCellCoord({ x: 0, y: 0 }, 4);
 			expect(cellCoord).toEqual({ col: 0, row: 0 });
 		});
 		it("position이 {x: 520, y: 144}이면 가장 가까운 cell 좌표로 {col: 5, row: 2}를 반환한다", () => {
-			const cellCoord = positionToNearestCellCoord({ x: 520, y: 144 });
+			const cellCoord = positionToNearestCellCoord({ x: 520, y: 144 }, 7);
 			expect(cellCoord).toEqual({ col: 5, row: 2 });
 		});
 	});
@@ -164,6 +166,62 @@ describe("grid(lib)", () => {
 		it("maxGridSize가 4이고 cell 좌표가 {col: 4, row: 3}이면 지정한 grid 범위를 벗어나므로 false를 반환한다", () => {
 			const isInside = isCellCoordInsideMaxGrid({ col: 4, row: 3 }, 4);
 			expect(isInside).toEqual(false);
+		});
+	});
+	describe("getGridOccupancy : 노드 목록의 셀 점유 현황을 계산한다", () => {
+		const createNode = (id: string, x: number, y: number): DiagramNode =>
+			({
+				id,
+				position: { x, y },
+				data: { label: id },
+				type: "default",
+			}) as DiagramNode;
+
+		it("서로 다른 셀에 있는 노드들을 cellToNodeId에 단일 값으로 기록한다", () => {
+			const occupancy = getGridOccupancy(
+				[
+					createNode("node-a", 0, 0),
+					createNode("node-b", NODE_SIZE, NODE_SIZE * 2),
+				],
+				4,
+			);
+
+			expect(occupancy.occupiedCellCount).toEqual(2);
+			expect(Array.from(occupancy.cellToNodeId.entries())).toEqual([
+				["0,0", "node-a"],
+				["1,2", "node-b"],
+			]);
+		});
+
+		it("같은 셀에 여러 노드가 오면 첫 점유 노드만 유지한다", () => {
+			const occupancy = getGridOccupancy(
+				[
+					createNode("node-a", 0, 0),
+					createNode("node-b", 10, 10),
+					createNode("node-c", 20, 20),
+				],
+				4,
+			);
+
+			expect(occupancy.occupiedCellCount).toEqual(1);
+			expect(Array.from(occupancy.cellToNodeId.entries())).toEqual([
+				["0,0", "node-a"],
+			]);
+		});
+
+		it("최대 grid 범위 밖 노드는 점유 집계에서 제외한다", () => {
+			const occupancy = getGridOccupancy(
+				[
+					createNode("node-a", 0, 0),
+					createNode("node-b", NODE_SIZE * 11, NODE_SIZE * 11),
+				],
+				4,
+			);
+
+			expect(occupancy.occupiedCellCount).toEqual(1);
+			expect(Array.from(occupancy.cellToNodeId.entries())).toEqual([
+				["0,0", "node-a"],
+			]);
 		});
 	});
 });
