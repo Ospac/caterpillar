@@ -6,6 +6,8 @@
 		"dev": "rsbuild dev --port 3000",
 		"build": "rsbuild build && tsc --noEmit",
 		"preview": "rsbuild preview",
+		"test": "rstest run",
+		"test:watch": "rstest watch",
 		"format": "biome format",
 		"lint": "biome lint",
 		"check": "biome check",
