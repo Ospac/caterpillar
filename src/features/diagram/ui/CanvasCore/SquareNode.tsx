@@ -1,6 +1,5 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { NODE_SIZE } from "../../lib/grid";
-import type { DiagramNodeData } from "../../lib/type";
+import { type DiagramNodeData, NODE_SIZE } from "../../lib/grid";
 
 export default function SquareNode({ data }: NodeProps<Node<DiagramNodeData>>) {
 	return (
