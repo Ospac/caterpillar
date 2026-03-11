@@ -39,7 +39,7 @@ export function toCellKey(cell: CellCoord): string {
 export function positionToNearestCellCoord(position: XYPosition): CellCoord {
 	const biasedX = position.x + NODE_SIZE / 2 - Number.EPSILON;
 	const biasedY = position.y + NODE_SIZE / 2 - Number.EPSILON;
-
+	//TODO: 경계 밖 값에 대한 null 처리
 	return {
 		col: Math.floor(biasedX / NODE_SIZE),
 		row: Math.floor(biasedY / NODE_SIZE),

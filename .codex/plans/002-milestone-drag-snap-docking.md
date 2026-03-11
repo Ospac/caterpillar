@@ -40,7 +40,7 @@
   - `dockedCell`: 현재 확정 도킹 셀
   - `lastValidDock`: 마지막 유효 도킹 셀
 - 이벤트별 상태 전이 정의
-  - `dragStart`, `dragMove`, `dragStop`, `cancel`
+  - `dragStart`, `dragMove`, `dragStop`, `dragCancel`
 - React Flow 이벤트와 상태 책임 분리(UI 이벤트 -> 도메인 함수 호출 -> 상태 반영)
 
 완료 기준

@@ -75,7 +75,7 @@
 - T5
 
 완료 기준(DoD)
-- dragStart/dragMove/dragStop/cancel 전이 일관성 확보
+- dragStart/dragMove/dragStop/dragCancel 전이 일관성 확보
 - `lastValidDock` 누락 케이스 없음
 
 ## P1 (Core Interaction)
