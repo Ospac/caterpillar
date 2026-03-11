@@ -59,6 +59,7 @@ export type GridStage = (typeof GRID_STAGES)[number];
 export type GridOccupancy = {
 	occupiedCellCount: number;
 	cellToNodeId: Map<string, string>;
+	conflictedCellKeys: Set<string>;
 };
 
 export type FallbackStrategy =

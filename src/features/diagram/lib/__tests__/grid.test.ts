@@ -1,14 +1,3 @@
-/*
-- [x] 기초/상수 함수
-  - getNextStage, getStagePixelSize, toCellKey
-- [x] 좌표 변환 함수
-  - positionToNearestCellCoord, cellCoordToPosition
-- [x] 경계 판정/보정 함수
-  - isNodeCenterOutsideStage, clampPositionToStage, isCellCoordInsideMaxGrid
-- [ ] 집계 함수
-  - getGridOccupancy (occupiedCellCount, cellToNodeId)
-*/
-
 import { describe, expect, it } from "@rstest/core";
 import {
 	cellCoordToPosition,
@@ -204,9 +193,8 @@ describe("grid(lib)", () => {
 			);
 
 			expect(occupancy.occupiedCellCount).toEqual(1);
-			expect(Array.from(occupancy.cellToNodeId.entries())).toEqual([
-				["0,0", "node-a"],
-			]);
+			expect(Array.from(occupancy.cellToNodeId.entries())).toEqual([]);
+			expect(Array.from(occupancy.conflictedCellKeys)).toEqual(["0,0"]);
 		});
 
 		it("최대 grid 범위 밖 노드는 점유 집계에서 제외한다", () => {
@@ -222,6 +210,24 @@ describe("grid(lib)", () => {
 			expect(Array.from(occupancy.cellToNodeId.entries())).toEqual([
 				["0,0", "node-a"],
 			]);
+			expect(Array.from(occupancy.conflictedCellKeys)).toEqual([]);
+		});
+
+		it("충돌이 없는 셀과 충돌 셀을 함께 집계한다", () => {
+			const occupancy = getGridOccupancy(
+				[
+					createNode("node-a", 0, 0),
+					createNode("node-b", NODE_SIZE, 0),
+					createNode("node-c", NODE_SIZE + 10, 10),
+				],
+				4,
+			);
+
+			expect(occupancy.occupiedCellCount).toEqual(2);
+			expect(Array.from(occupancy.cellToNodeId.entries())).toEqual([
+				["0,0", "node-a"],
+			]);
+			expect(Array.from(occupancy.conflictedCellKeys)).toEqual(["1,0"]);
 		});
 	});
 });

@@ -99,7 +99,8 @@ export function isCellCoordInsideMaxGrid(
  *
  * 반환값에는 다음 정보가 포함됩니다.
  * - `occupiedCellCount`: 하나 이상의 노드가 차지한 고유 셀 수
- * - `cellToNodeId`: `"col,row"` 셀 키별 대표 노드 ID
+ * - `cellToNodeId`: 충돌이 없는 `"col,row"` 셀 키별 유일 노드 ID
+ * - `conflictedCellKeys`: 둘 이상의 노드가 겹친 셀 키 집합
  *
  * @param nodes 점유 현황을 계산할 다이어그램 노드 목록.
  * @returns 셀 점유 수와 셀별 노드 ID 매핑을 포함한 그리드 점유 정보.
@@ -109,20 +110,26 @@ export function getGridOccupancy(
 	stage: GridStage,
 ): GridOccupancy {
 	const cellToNodeId = new Map<string, string>();
+	const conflictedCellKeys = new Set<string>();
 
 	for (const node of nodes) {
 		const cell = positionToNearestCellCoord(node.position, stage);
 		if (!cell) continue;
 
 		const key = toCellKey(cell);
-		const existing = cellToNodeId.get(key);
-		if (!existing) {
+		if (conflictedCellKeys.has(key)) continue;
+
+		if (cellToNodeId.has(key)) {
+			cellToNodeId.delete(key);
+			conflictedCellKeys.add(key);
+		} else {
 			cellToNodeId.set(key, node.id);
 		}
 	}
 
 	return {
-		occupiedCellCount: cellToNodeId.size,
+		occupiedCellCount: cellToNodeId.size + conflictedCellKeys.size,
 		cellToNodeId,
+		conflictedCellKeys,
 	};
 }
