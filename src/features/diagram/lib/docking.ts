@@ -114,9 +114,12 @@ export function isDockableCell(
 		return false;
 	}
 
-	const occupantId = occupancy.cellToNodeId.get(`${cell.col},${cell.row}`);
-	console.log(occupancy);
-	// 이미 점유중인 cell이 없는 경우
+	const key = `${cell.col},${cell.row}`;
+	if (occupancy.conflictedCellKeys.has(key)) {
+		return false;
+	}
+
+	const occupantId = occupancy.cellToNodeId.get(key);
 	if (!occupantId) {
 		return true;
 	}

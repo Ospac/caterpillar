@@ -139,11 +139,19 @@ describe("docking(lib)", () => {
 		const emptyOccupancy = (): GridOccupancy => ({
 			occupiedCellCount: 0,
 			cellToNodeId: new Map(),
+			conflictedCellKeys: new Set(),
 		});
 
 		const occupancyOf = (entries: Record<string, string>): GridOccupancy => ({
 			occupiedCellCount: Object.keys(entries).length,
 			cellToNodeId: new Map(Object.entries(entries)),
+			conflictedCellKeys: new Set(),
+		});
+
+		const conflictedOccupancy = (...keys: string[]): GridOccupancy => ({
+			occupiedCellCount: keys.length,
+			cellToNodeId: new Map(),
+			conflictedCellKeys: new Set(keys),
 		});
 		describe("stage 경계 검사", () => {
 			//경계 밖 판정은 occupancy 와 무관하게 false
@@ -178,6 +186,10 @@ describe("docking(lib)", () => {
 				const occupancy = occupancyOf({ "1,2": "node-a" });
 				expect(isDockableCell({ col: 1, row: 2 }, occupancy, 4)).toEqual(false);
 			});
+			it("충돌 상태인 셀에 도킹하면 false", () => {
+				const occupancy = conflictedOccupancy("1,2");
+				expect(isDockableCell({ col: 1, row: 2 }, occupancy, 4)).toEqual(false);
+			});
 		});
 
 		describe("ignoreNodeId 예외", () => {
@@ -200,6 +212,19 @@ describe("docking(lib)", () => {
 				const occupancy = occupancyOf({
 					"1,2": "node-b",
 				});
+
+				const result = isDockableCell(
+					{ col: 1, row: 2 },
+					occupancy,
+					4,
+					"node-a",
+				);
+
+				expect(result).toEqual(false);
+			});
+
+			it("ignoreNodeId가 있어도 충돌 상태인 셀은 false를 반환한다", () => {
+				const occupancy = conflictedOccupancy("1,2");
 
 				const result = isDockableCell(
 					{ col: 1, row: 2 },
