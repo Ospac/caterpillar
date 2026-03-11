@@ -24,7 +24,7 @@ import {
 	getGridOccupancy,
 	getNextStage,
 	getStagePixelSize,
-	isNodeOutsideStage,
+	isNodeCenterOutsideStage,
 	MAX_GRID_STAGE,
 	NODE_SIZE,
 } from "../../lib/grid";
@@ -73,7 +73,7 @@ export function CanvasCoreInner() {
 		Object.fromEntries(
 			initialNodes.map((node) => [
 				node.id,
-				createDockedNodeState(node.position, INITIAL_STAGE),
+				createDockedNodeState(node.position),
 			]),
 		),
 	);
@@ -117,8 +117,7 @@ export function CanvasCoreInner() {
 		updater: (state: DockedNodeState) => DockedNodeState,
 	) => {
 		setNodeDockingState((currentState) => {
-			const baseState =
-				currentState[nodeId] ?? createDockedNodeState(position, visibleStage);
+			const baseState = currentState[nodeId] ?? createDockedNodeState(position);
 
 			return {
 				...currentState,
@@ -138,6 +137,7 @@ export function CanvasCoreInner() {
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
+		console.log(node.position);
 		updateNodeDockingState(node.id, node.position, (state) =>
 			transitionDockedNodeState(state, {
 				type: "dragMove",
@@ -145,7 +145,7 @@ export function CanvasCoreInner() {
 			}),
 		);
 		setVisibleStage((currentStage) =>
-			isNodeOutsideStage(node.position, currentStage)
+			isNodeCenterOutsideStage(node.position, currentStage)
 				? getNextStage(currentStage)
 				: currentStage,
 		);
@@ -154,8 +154,7 @@ export function CanvasCoreInner() {
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
 		setVisibleStage((currentStage) => {
 			const currentDockingState =
-				nodeDockingState[node.id] ??
-				createDockedNodeState(node.position, currentStage);
+				nodeDockingState[node.id] ?? createDockedNodeState(node.position);
 			const resolution = resolveDropPosition({
 				position: node.position,
 				stage: currentStage,
@@ -206,7 +205,7 @@ export function CanvasCoreInner() {
 		setNodes((currentNodes) => [...currentNodes, nextNode]);
 		setNodeDockingState((currentState) => ({
 			...currentState,
-			[id]: createDockedNodeState(nextNode.position, visibleStage),
+			[id]: createDockedNodeState(nextNode.position),
 		}));
 	};
 

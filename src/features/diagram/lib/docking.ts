@@ -1,9 +1,9 @@
 import {
 	cellCoordToPosition,
 	clampPositionToStage,
-	type GridOccupancy,
-	isNodeOutsideStage,
+	isNodeCenterOutsideStage,
 	NODE_SIZE,
+	positionToNearestCellCoord,
 } from "./grid";
 import type {
 	CellCoord,
@@ -12,6 +12,7 @@ import type {
 	DockingInput,
 	FallbackInput,
 	FallbackResult,
+	GridOccupancy,
 	GridStage,
 	ResolveDropResult,
 	XYPosition,
@@ -42,11 +43,8 @@ export const DRAG_EVENT_TRANSITIONS = {
 	cancel: "lastValidDock 또는 dockedCell 기준 위치로 freePosition을 복구한다.",
 } as const;
 
-export function createDockedNodeState(
-	position: XYPosition,
-	stage: GridStage,
-): DockedNodeState {
-	const dockedCell = getNearestDockCell(position, stage);
+export function createDockedNodeState(position: XYPosition): DockedNodeState {
+	const dockedCell = positionToNearestCellCoord(position);
 
 	return {
 		freePosition: position,
@@ -84,27 +82,6 @@ export function transitionDockedNodeState(
 	}
 }
 
-function getNearestCellIndex(axis: number): number {
-	const biasedAxis = axis + NODE_SIZE / 2 - Number.EPSILON;
-	return Math.floor(biasedAxis / NODE_SIZE);
-}
-
-export function getNearestDockCell(
-	position: XYPosition,
-	stage: GridStage,
-): CellCoord | null {
-	const cell = {
-		col: getNearestCellIndex(position.x),
-		row: getNearestCellIndex(position.y),
-	};
-
-	if (cell.col < 0 || cell.row < 0 || cell.col >= stage || cell.row >= stage) {
-		return null;
-	}
-
-	return cell;
-}
-
 export function isDockableCell(
 	cell: CellCoord,
 	occupancy: GridOccupancy,
@@ -126,7 +103,7 @@ export function isDockableCell(
 }
 
 function getNearestEmptyCell(input: DockingInput): CellCoord | null {
-	const nearestCell = getNearestDockCell(input.position, input.stage);
+	const nearestCell = positionToNearestCellCoord(input.position);
 	const preferredCell = nearestCell ?? input.lastValidDock;
 	let bestCell: CellCoord | null = null;
 	let bestDistance = Number.POSITIVE_INFINITY;
@@ -187,12 +164,12 @@ export function applyFallback(input: FallbackInput): FallbackResult {
 	return {
 		position: clampedPosition,
 		strategy: FALLBACK_STRATEGIES.clamp,
-		cell: getNearestDockCell(clampedPosition, input.stage),
+		cell: positionToNearestCellCoord(clampedPosition),
 	};
 }
 
 export function resolveDropPosition(input: DockingInput): ResolveDropResult {
-	if (isNodeOutsideStage(input.position, input.stage)) {
+	if (isNodeCenterOutsideStage(input.position, input.stage)) {
 		const fallback = applyFallback({
 			...input,
 			reason: DROP_REASONS.outsideStage,
@@ -205,7 +182,7 @@ export function resolveDropPosition(input: DockingInput): ResolveDropResult {
 		};
 	}
 
-	const nearestCell = getNearestDockCell(input.position, input.stage);
+	const nearestCell = positionToNearestCellCoord(input.position);
 
 	if (!nearestCell) {
 		const fallback = applyFallback({
