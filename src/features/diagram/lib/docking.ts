@@ -44,8 +44,11 @@ export const DRAG_EVENT_TRANSITIONS = {
 		"lastValidDock 또는 dockedCell 기준 위치로 freePosition을 복구한다.",
 } as const;
 
-export function createDockedNodeState(position: XYPosition): DockedNodeState {
-	const dockedCell = positionToNearestCellCoord(position);
+export function createDockedNodeState(
+	position: XYPosition,
+	stage: GridStage,
+): DockedNodeState {
+	const dockedCell = positionToNearestCellCoord(position, stage);
 
 	return {
 		freePosition: position,
@@ -89,14 +92,14 @@ export function transitionDockedNodeState(
  * 판정 규칙은 다음과 같다.
  * - `cell.col`, `cell.row`가 `0 <= index < stage` 범위를 벗어나면 `false`
  * - 해당 셀에 점유한 노드가 없으면 `true`
- * - `ignoreNodeId`가 없으면 점유 노드가 하나라도 있으면 `false`
- * - `ignoreNodeId`가 있으면, 그 셀의 점유 노드가 모두 자기 자신(`ignoreNodeId`)일 때만 `true`
+ * - `ignoreNodeId`가 없으면 다른 노드가 이미 점유 중인 셀이므로 `false`
+ * - `ignoreNodeId`가 있으면, 그 셀 점유자가 자기 자신(`ignoreNodeId`)일 때만 `true`
  *
  * 이 함수는 드래그 중인 노드가 "원래 자기 셀" 위에 다시 드롭되는 상황에서
  * 자기 자신을 충돌로 오판하지 않도록 `ignoreNodeId`를 지원한다.
  *
  * @param cell 도킹 가능 여부를 검사할 대상 셀 좌표
- * @param occupancy 현재 grid 점유 상태. `cellToNodeIds`에서 `"col,row"` 키를 사용한다.
+ * @param occupancy 현재 grid 점유 상태. `cellToNodeId`에서 `"col,row"` 키를 사용한다.
  * @param stage 현재 활성 grid stage 크기. 유효 셀 범위는 `0`부터 `stage - 1`까지다.
  * @param ignoreNodeId 충돌 검사에서 제외할 노드 id. 보통 현재 드래그 중인 노드 id를 넘긴다.
  * @returns 해당 셀이 현재 조건에서 도킹 가능하면 `true`, 아니면 `false`
@@ -111,19 +114,22 @@ export function isDockableCell(
 		return false;
 	}
 
-	const occupantIds =
-		occupancy.cellToNodeIds.get(`${cell.col},${cell.row}`) ?? [];
+	const occupantId = occupancy.cellToNodeId.get(`${cell.col},${cell.row}`);
+	console.log(occupancy);
+	// 이미 점유중인 cell이 없는 경우
+	if (!occupantId) {
+		return true;
+	}
 
 	if (!ignoreNodeId) {
-		// ignoreNodeId가 없는 경우 점유 중인 Node가 하나라도 있으면 이미 차 있는 셀이므로 false 반환
-		return occupantIds.length === 0;
+		return false;
 	}
-	// ignoreNodeId가 있으면, 그 셀을 점유한 모든 노드가 전부 그 id인지 검사
-	return occupantIds.every((nodeId) => nodeId === ignoreNodeId);
+
+	return occupantId === ignoreNodeId;
 }
 
 function getNearestEmptyCell(input: DockingInput): CellCoord | null {
-	const nearestCell = positionToNearestCellCoord(input.position);
+	const nearestCell = positionToNearestCellCoord(input.position, input.stage);
 	const preferredCell = nearestCell ?? input.lastValidDock;
 	let bestCell: CellCoord | null = null;
 	let bestDistance = Number.POSITIVE_INFINITY;
@@ -184,7 +190,7 @@ export function applyFallback(input: FallbackInput): FallbackResult {
 	return {
 		position: clampedPosition,
 		strategy: FALLBACK_STRATEGIES.clamp,
-		cell: positionToNearestCellCoord(clampedPosition),
+		cell: positionToNearestCellCoord(clampedPosition, input.stage),
 	};
 }
 
@@ -202,7 +208,7 @@ export function resolveDropPosition(input: DockingInput): ResolveDropResult {
 		};
 	}
 
-	const nearestCell = positionToNearestCellCoord(input.position);
+	const nearestCell = positionToNearestCellCoord(input.position, input.stage);
 
 	if (!nearestCell) {
 		const fallback = applyFallback({

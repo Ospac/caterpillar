@@ -25,29 +25,6 @@ export function getStagePixelSize(stage: GridStage): number {
 export function toCellKey(cell: CellCoord): string {
 	return `${cell.col},${cell.row}`;
 }
-
-/**
- * 노드의 좌표{`x`,`y`}를 가장 가까운 그리드 셀 좌표로 변환합니다.
- *
- * XYPosition은 노드의 topLeftAxis를 나타냅니다.
- * 노드의 좌상단 좌표를 그대로 쓰지 않고, 노드 중심점에 가깝게 보정한 뒤
- * `Number.EPSILON`을 빼서 정확히 셀 경계에 놓인 경우 다음 셀로 밀리는 현상을 방지합니다.
- * `NODE_SIZE`로 나누어 어느 셀에 가장 가깝게 위치하는지 계산합니다.
- * @param position 노드의 {x, y} 좌표 객체
- * @returns position에서 가장 가까운 셀의 좌표 {col, row} 객체
- */
-export function positionToNearestCellCoord(position: XYPosition): CellCoord {
-	const biasedX = position.x + NODE_SIZE / 2 - Number.EPSILON;
-	const biasedY = position.y + NODE_SIZE / 2 - Number.EPSILON;
-	//TODO: 경계 밖 값에 대한 null 처리
-	return {
-		col: Math.floor(biasedX / NODE_SIZE),
-		row: Math.floor(biasedY / NODE_SIZE),
-	};
-}
-export function cellCoordToPosition(cell: CellCoord): XYPosition {
-	return { x: cell.col * NODE_SIZE, y: cell.row * NODE_SIZE };
-}
 export function isNodeCenterOutsideStage(
 	position: { x: number; y: number },
 	stage: GridStage,
@@ -60,6 +37,33 @@ export function isNodeCenterOutsideStage(
 		position.x + NODE_SIZE / 2 > stageSize ||
 		position.y + NODE_SIZE / 2 > stageSize
 	);
+}
+/**
+ * 노드의 좌표{`x`,`y`}를 가장 가까운 그리드 셀 좌표로 변환합니다.
+ *
+ * XYPosition은 노드의 topLeftAxis를 나타냅니다.
+ * 노드의 좌상단 좌표를 그대로 쓰지 않고, 노드 중심점에 가깝게 보정한 뒤
+ * `Number.EPSILON`을 빼서 정확히 셀 경계에 놓인 경우 다음 셀로 밀리는 현상을 방지합니다.
+ * `NODE_SIZE`로 나누어 어느 셀에 가장 가깝게 위치하는지 계산합니다.
+ * @param position 노드의 {x, y} 좌표 객체
+ * @returns position에서 가장 가까운 셀의 좌표 {col, row} 객체
+ */
+export function positionToNearestCellCoord(
+	position: XYPosition,
+	stage: GridStage,
+): CellCoord | null {
+	if (isNodeCenterOutsideStage(position, stage)) return null;
+
+	const biasedX = position.x + NODE_SIZE / 2 - Number.EPSILON;
+	const biasedY = position.y + NODE_SIZE / 2 - Number.EPSILON;
+
+	return {
+		col: Math.floor(biasedX / NODE_SIZE),
+		row: Math.floor(biasedY / NODE_SIZE),
+	};
+}
+export function cellCoordToPosition(cell: CellCoord): XYPosition {
+	return { x: cell.col * NODE_SIZE, y: cell.row * NODE_SIZE };
 }
 
 export function clampPositionToStage(
@@ -95,40 +99,30 @@ export function isCellCoordInsideMaxGrid(
  *
  * 반환값에는 다음 정보가 포함됩니다.
  * - `occupiedCellCount`: 하나 이상의 노드가 차지한 고유 셀 수
- * - `conflictCellCount`: 동일 셀에 두 개 이상 노드가 겹친 셀 수
- * - `cellToNodeIds`: `"col,row"` 셀 키별 노드 ID 목록
+ * - `cellToNodeId`: `"col,row"` 셀 키별 대표 노드 ID
  *
  * @param nodes 점유 현황을 계산할 다이어그램 노드 목록.
- * @returns 셀 점유 수, 충돌 셀 수, 셀별 노드 ID 매핑을 포함한 그리드 점유 정보.
+ * @returns 셀 점유 수와 셀별 노드 ID 매핑을 포함한 그리드 점유 정보.
  */
-export function getGridOccupancy(nodes: DiagramNode[]): GridOccupancy {
-	const cellToNodeIds = new Map<string, string[]>();
+export function getGridOccupancy(
+	nodes: DiagramNode[],
+	stage: GridStage,
+): GridOccupancy {
+	const cellToNodeId = new Map<string, string>();
 
 	for (const node of nodes) {
-		const cell = positionToNearestCellCoord(node.position);
-		if (!isCellCoordInsideMaxGrid(cell)) {
-			continue;
-		}
+		const cell = positionToNearestCellCoord(node.position, stage);
+		if (!cell) continue;
 
 		const key = toCellKey(cell);
-		const existing = cellToNodeIds.get(key);
-		if (existing) {
-			existing.push(node.id);
-		} else {
-			cellToNodeIds.set(key, [node.id]);
-		}
-	}
-
-	let conflictCellCount = 0;
-	for (const nodeIds of cellToNodeIds.values()) {
-		if (nodeIds.length > 1) {
-			conflictCellCount += 1;
+		const existing = cellToNodeId.get(key);
+		if (!existing) {
+			cellToNodeId.set(key, node.id);
 		}
 	}
 
 	return {
-		occupiedCellCount: cellToNodeIds.size,
-		conflictCellCount,
-		cellToNodeIds,
+		occupiedCellCount: cellToNodeId.size,
+		cellToNodeId,
 	};
 }
