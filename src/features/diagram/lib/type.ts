@@ -26,6 +26,19 @@ export type DockedNodeState = {
 	lastValidDock: CellCoord | null;
 };
 
+export interface DragStartEvent {
+	type: "dragStart" | "dragMove";
+	position: XYPosition;
+}
+export interface DragStopEvent {
+	type: "dragStop";
+	position: XYPosition;
+	dockedCell: CellCoord | null;
+}
+export interface DragCancelEvent {
+	type: "dragCancel";
+}
+
 /**
  * 도킹 상태 머신에 입력되는 사용자 상호작용 이벤트다.
  *
@@ -33,20 +46,7 @@ export type DockedNodeState = {
  * - `dragStop`: 드롭 시점의 좌표와 확정된 `dockedCell`을 반영한다.
  * - `cancel`: 드래그를 취소하고 마지막 유효 도킹 지점 또는 현재 도킹 지점으로 복구한다.
  */
-
-export type DockingEvent =
-	| {
-			type: "dragStart" | "dragMove";
-			position: XYPosition;
-	  }
-	| {
-			type: "dragStop";
-			position: XYPosition;
-			dockedCell: CellCoord | null;
-	  }
-	| {
-			type: "cancel";
-	  };
+export type DockingEvent = DragStartEvent | DragStopEvent | DragCancelEvent;
 
 export type DiagramNodeData = {
 	label: string;
