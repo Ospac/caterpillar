@@ -12,7 +12,7 @@ import {
 	type Viewport,
 } from "@xyflow/react";
 
-import { type MouseEvent, useRef, useState } from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 import {
 	createDockedNodeState,
 	resolveDropPosition,
@@ -27,6 +27,7 @@ import {
 	isNodeCenterOutsideStage,
 	MAX_GRID_STAGE,
 	NODE_SIZE,
+	syncNodeDockingState,
 } from "../../lib/grid";
 import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
 import GridGuideOverlay from "./GridGuideOverlay";
@@ -199,12 +200,14 @@ export function CanvasCoreInner() {
 		};
 
 		setNodes((currentNodes) => [...currentNodes, nextNode]);
-		setNodeDockingState((currentState) => ({
-			...currentState,
-			[id]: createDockedNodeState(nextNode.position, visibleStage),
-		}));
 	};
 
+	useEffect(() => {
+		// node를 add, delete 할때, nodeDockingState를 업데이트
+		setNodeDockingState((currentState) =>
+			syncNodeDockingState(currentState, nodes, visibleStage),
+		);
+	}, [nodes, visibleStage]);
 	return (
 		<div className="h-full w-full overflow-auto rounded-lg border border-gray-300 bg-light-green p-4">
 			<div className="absolute left-56 top-3 z-20 flex gap-2">

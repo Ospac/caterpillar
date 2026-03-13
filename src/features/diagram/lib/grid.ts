@@ -1,6 +1,8 @@
+import { createDockedNodeState } from "./docking";
 import type {
 	CellCoord,
 	DiagramNode,
+	DockedNodeState,
 	GridOccupancy,
 	GridStage,
 	XYPosition,
@@ -132,4 +134,34 @@ export function getGridOccupancy(
 		cellToNodeId,
 		conflictedCellKeys,
 	};
+}
+
+export function syncNodeDockingState(
+	currentState: Record<string, DockedNodeState>,
+	nodes: DiagramNode[],
+	stage: GridStage,
+): Record<string, DockedNodeState> {
+	const nextNodeIds = new Set(nodes.map((node) => node.id));
+	let changed = false;
+	const nextState: Record<string, DockedNodeState> = {};
+
+	for (const node of nodes) {
+		const existingState = currentState[node.id];
+		if (existingState) {
+			nextState[node.id] = existingState;
+			continue;
+		}
+
+		nextState[node.id] = createDockedNodeState(node.position, stage);
+		changed = true;
+	}
+
+	for (const nodeId of Object.keys(currentState)) {
+		if (!nextNodeIds.has(nodeId)) {
+			changed = true;
+			break;
+		}
+	}
+
+	return changed ? nextState : currentState;
 }
