@@ -1,39 +1,43 @@
-/*
-@TODO:
-- applyFallback
-  - lastValidDock가 유효하면 last-valid-dock 전략을 사용한다.
-  - lastValidDock가 막혀 있으면 nearest-empty-cell 전략을 사용한다.
-  - stage 전체가 막혀 있으면 clamp 전략을 사용한다.
-  - nearest empty cell 탐색은 현재 위치와 가장 가까운 빈 셀을 고른다.
-  - ignoreNodeId를 주면 자기 셀을 fallback 후보로 인정한다.
-
-- resolveDropPosition
-  - stage 안의 빈 nearest cell이면 valid-dock / usedFallback false
-  - stage 밖 위치면 outside-stage + fallback
-  - nearest cell이 점유 중이면 occupied-cell + fallback
-  - fallback 결과의 strategy가 그대로 노출된다.
-  - ignoreNodeId를 주면 자기 자리 드롭은 valid-dock 처리된다.
-
-- clampDockPosition
-  - stage 밖 좌표를 stage 내부 좌표로 보정한다.
-  - 이미 유효한 좌표면 그대로 반환한다.
-*/
-
 import { describe, expect, it } from "@rstest/core";
 import {
+	applyFallback,
 	createDockedNodeState,
+	DROP_REASONS,
+	FALLBACK_STRATEGIES,
 	isDockableCell,
+	resolveDropPosition,
 	transitionDockedNodeState,
 } from "../docking";
+import { cellCoordToPosition } from "../grid";
 import type {
 	DockedNodeState,
 	DockingEvent,
+	DockingInput,
 	DragCancelEvent,
 	DragStopEvent,
+	FallbackInput,
 	GridOccupancy,
 } from "../type";
 
 describe("docking(lib)", () => {
+	const emptyOccupancy = (): GridOccupancy => ({
+		occupiedCellCount: 0,
+		cellToNodeId: new Map(),
+		conflictedCellKeys: new Set(),
+	});
+
+	const occupancyOf = (entries: Record<string, string>): GridOccupancy => ({
+		occupiedCellCount: Object.keys(entries).length,
+		cellToNodeId: new Map(Object.entries(entries)),
+		conflictedCellKeys: new Set(),
+	});
+
+	const conflictedOccupancy = (...keys: string[]): GridOccupancy => ({
+		occupiedCellCount: keys.length,
+		cellToNodeId: new Map(),
+		conflictedCellKeys: new Set(keys),
+	});
+
 	describe("createDockedNodeState : position 객체로 DockedNodeState 객체를 생성한다", () => {
 		it("position이 {x: 520, y: 144}이면 DockedNodeState로 {freePosition: {x:520, y:144}, dockedCell:{col:5, row:2}, lastValidDock:{col:5, row:2}}를 반환한다", () => {
 			expect(createDockedNodeState({ x: 520, y: 144 }, 7)).toEqual({
@@ -136,23 +140,6 @@ describe("docking(lib)", () => {
 		});
 	});
 	describe("isDockableCell : 셀이 현재 stage에서 도킹 가능한지 판정한다", () => {
-		const emptyOccupancy = (): GridOccupancy => ({
-			occupiedCellCount: 0,
-			cellToNodeId: new Map(),
-			conflictedCellKeys: new Set(),
-		});
-
-		const occupancyOf = (entries: Record<string, string>): GridOccupancy => ({
-			occupiedCellCount: Object.keys(entries).length,
-			cellToNodeId: new Map(Object.entries(entries)),
-			conflictedCellKeys: new Set(),
-		});
-
-		const conflictedOccupancy = (...keys: string[]): GridOccupancy => ({
-			occupiedCellCount: keys.length,
-			cellToNodeId: new Map(),
-			conflictedCellKeys: new Set(keys),
-		});
 		describe("stage 경계 검사", () => {
 			//경계 밖 판정은 occupancy 와 무관하게 false
 			it("stage 범위 안이면 true", () => {
@@ -234,6 +221,254 @@ describe("docking(lib)", () => {
 				);
 
 				expect(result).toEqual(false);
+			});
+		});
+	});
+	describe("applyFallback : 유효한 도킹 셀을 즉시 확정할 수 없을 때 대체 위치를 계산한다", () => {
+		const fallbackInput = (
+			overrides: Partial<FallbackInput> = {},
+		): FallbackInput => ({
+			position: { x: 96, y: 96 },
+			stage: 4,
+			occupancy: emptyOccupancy(),
+			lastValidDock: { col: 0, row: 0 },
+			reason: DROP_REASONS.occupiedCell,
+			...overrides,
+		});
+
+		it("lastValidDock가 유효하면 해당 셀로 복귀한다", () => {
+			const result = applyFallback(
+				fallbackInput({
+					position: { x: 192, y: 192 },
+					lastValidDock: { col: 1, row: 0 },
+				}),
+			);
+
+			expect(result).toEqual({
+				position: cellCoordToPosition({ col: 1, row: 0 }),
+				strategy: FALLBACK_STRATEGIES.lastValidDock,
+				cell: { col: 1, row: 0 },
+			});
+		});
+
+		it("lastValidDock가 막혀 있으면 가장 가까운 빈 셀을 탐색하여 복귀한다", () => {
+			const result = applyFallback(
+				fallbackInput({
+					position: { x: 192, y: 192 },
+					lastValidDock: { col: 1, row: 1 },
+					occupancy: occupancyOf({
+						"1,1": "node-a",
+						"2,2": "node-b",
+					}),
+				}),
+			);
+
+			expect(result).toEqual({
+				position: cellCoordToPosition({ col: 2, row: 1 }),
+				strategy: FALLBACK_STRATEGIES.nearestEmptyCell,
+				cell: { col: 2, row: 1 },
+			});
+		});
+
+		it("stage 전체가 막혀 있으면 null을 반환한다", () => {
+			const result = applyFallback(
+				fallbackInput({
+					occupancy: occupancyOf({
+						"0,0": "node-0",
+						"1,0": "node-1",
+						"2,0": "node-2",
+						"3,0": "node-3",
+						"0,1": "node-4",
+						"1,1": "node-5",
+						"2,1": "node-6",
+						"3,1": "node-7",
+						"0,2": "node-8",
+						"1,2": "node-9",
+						"2,2": "node-10",
+						"3,2": "node-11",
+						"0,3": "node-12",
+						"1,3": "node-13",
+						"2,3": "node-14",
+						"3,3": "node-15",
+					}),
+				}),
+			);
+
+			expect(result).toEqual(null);
+		});
+
+		it("nearest empty cell 탐색은 현재 위치와 가장 가까운 빈 셀을 고른다", () => {
+			const result = applyFallback(
+				fallbackInput({
+					position: { x: -10, y: -10 },
+					lastValidDock: null,
+					occupancy: occupancyOf({
+						"1,0": "node-a",
+						"0,1": "node-b",
+						"1,1": "node-c",
+					}),
+				}),
+			);
+
+			expect(result).toEqual({
+				position: cellCoordToPosition({ col: 0, row: 0 }),
+				strategy: FALLBACK_STRATEGIES.nearestEmptyCell,
+				cell: { col: 0, row: 0 },
+			});
+		});
+
+		it("ignoreNodeId를 주면 자기 셀을 fallback 후보로 인정한다", () => {
+			const result = applyFallback(
+				fallbackInput({
+					lastValidDock: { col: 2, row: 1 },
+					occupancy: occupancyOf({
+						"2,1": "node-self",
+						"0,0": "node-a",
+					}),
+					ignoreNodeId: "node-self",
+				}),
+			);
+
+			expect(result).toEqual({
+				position: cellCoordToPosition({ col: 2, row: 1 }),
+				strategy: FALLBACK_STRATEGIES.lastValidDock,
+				cell: { col: 2, row: 1 },
+			});
+		});
+	});
+	describe("resolveDropPosition : 드롭 좌표를 최종 배치 위치로 변환한다", () => {
+		const dockingInput = (
+			overrides: Partial<DockingInput> = {},
+		): DockingInput => ({
+			position: { x: 96, y: 96 },
+			stage: 4,
+			occupancy: emptyOccupancy(),
+			lastValidDock: { col: 0, row: 0 },
+			...overrides,
+		});
+
+		it("stage 안의 빈 nearest cell이면 valid-dock / usedFallback false를 반환한다", () => {
+			const result = resolveDropPosition(
+				dockingInput({
+					position: { x: 192, y: 96 },
+				}),
+			);
+
+			expect(result).toEqual({
+				position: cellCoordToPosition({ col: 2, row: 1 }),
+				cell: { col: 2, row: 1 },
+				reason: DROP_REASONS.validDock,
+				usedFallback: false,
+			});
+		});
+
+		it("stage 밖 위치면 outside-stage 사유로 fallback 결과를 반환한다", () => {
+			const result = resolveDropPosition(
+				dockingInput({
+					position: { x: -20, y: 96 },
+					lastValidDock: { col: 1, row: 0 },
+				}),
+			);
+
+			expect(result).toEqual({
+				position: cellCoordToPosition({ col: 1, row: 0 }),
+				cell: { col: 1, row: 0 },
+				reason: DROP_REASONS.outsideStage,
+				strategy: FALLBACK_STRATEGIES.lastValidDock,
+				usedFallback: true,
+			});
+		});
+
+		it("nearest cell이 점유 중이면 occupied-cell 사유로 fallback 결과를 반환한다", () => {
+			const result = resolveDropPosition(
+				dockingInput({
+					position: { x: 192, y: 96 },
+					lastValidDock: { col: 0, row: 0 },
+					occupancy: occupancyOf({
+						"2,1": "node-a",
+					}),
+				}),
+			);
+
+			expect(result).toEqual({
+				position: cellCoordToPosition({ col: 0, row: 0 }),
+				cell: { col: 0, row: 0 },
+				reason: DROP_REASONS.occupiedCell,
+				strategy: FALLBACK_STRATEGIES.lastValidDock,
+				usedFallback: true,
+			});
+		});
+
+		it("fallback으로 nearest-empty-cell이 선택되면 strategy를 그대로 노출한다", () => {
+			const result = resolveDropPosition(
+				dockingInput({
+					position: { x: 192, y: 192 },
+					lastValidDock: { col: 2, row: 2 },
+					occupancy: occupancyOf({
+						"2,2": "node-a",
+					}),
+				}),
+			);
+
+			expect(result).toEqual({
+				position: cellCoordToPosition({ col: 2, row: 1 }),
+				cell: { col: 2, row: 1 },
+				reason: DROP_REASONS.occupiedCell,
+				strategy: FALLBACK_STRATEGIES.nearestEmptyCell,
+				usedFallback: true,
+			});
+		});
+
+		it("ignoreNodeId를 주면 자기 자리 드롭은 valid-dock 처리된다", () => {
+			const result = resolveDropPosition(
+				dockingInput({
+					position: { x: 192, y: 96 },
+					occupancy: occupancyOf({
+						"2,1": "node-self",
+					}),
+					ignoreNodeId: "node-self",
+				}),
+			);
+
+			expect(result).toEqual({
+				position: cellCoordToPosition({ col: 2, row: 1 }),
+				cell: { col: 2, row: 1 },
+				reason: DROP_REASONS.validDock,
+				usedFallback: false,
+			});
+		});
+
+		it("fallback도 실패하면 현재 position을 유지하고 cell null을 반환한다", () => {
+			const result = resolveDropPosition(
+				dockingInput({
+					position: { x: -20, y: 96 },
+					lastValidDock: null,
+					occupancy: occupancyOf({
+						"0,0": "node-0",
+						"1,0": "node-1",
+						"2,0": "node-2",
+						"3,0": "node-3",
+						"0,1": "node-4",
+						"1,1": "node-5",
+						"2,1": "node-6",
+						"3,1": "node-7",
+						"0,2": "node-8",
+						"1,2": "node-9",
+						"2,2": "node-10",
+						"3,2": "node-11",
+						"0,3": "node-12",
+						"1,3": "node-13",
+						"2,3": "node-14",
+						"3,3": "node-15",
+					}),
+				}),
+			);
+
+			expect(result).toEqual({
+				position: { x: -20, y: 96 },
+				cell: null,
+				reason: DROP_REASONS.outsideStage,
+				usedFallback: false,
 			});
 		});
 	});
