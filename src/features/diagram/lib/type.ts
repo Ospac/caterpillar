@@ -71,6 +71,8 @@ export type FallbackResult = {
 	cell: CellCoord | null;
 };
 
+export type FallbackResolution = FallbackResult | null;
+
 export type DockingInput = {
 	position: XYPosition;
 	stage: GridStage;
