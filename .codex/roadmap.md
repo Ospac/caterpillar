@@ -1,7 +1,6 @@
 # Roadmap
 
 ## TODO
-- [ ] 캔버스 직렬화 스키마 버전 정책 확정(마이그레이션/하위 호환)
 - [ ] 백엔드 후보와 인증/저장 전략 최종 확정(LocalStorage/server 선택 UX 포함)
 - [ ] 공유 링크 협업 범위(읽기 전용/편집 권한) 정책 정의
 - [ ] 외부 검색 API 키/쿼터/장애 대응 정책 확정
@@ -15,16 +14,17 @@
 - [x] 드래그 시작/종료에 따른 그리드 가이드 표시/숨김 처리
 
 ### M2. Drag, Snap, Docking
-- [ ] `[P0]` 스냅/도킹/검증 도메인 로직을 순수 함수로 분리
-- [ ] `[P0]` `freePosition`, `dockedCell`, `lastValidDock` 상태 흐름 구현
-- [ ] `[P1]` 자유 드래그 이동 + 드롭 시 nearest snap
-- [ ] `[P1]` 스냅 프리뷰 및 히스테리시스(`snapInDistance`, `snapOutDistance`) 구현
-- [ ] `[P2]` 그리드 밖/점유 셀 드롭 시 `lastValidDock` 롤백 및 fallback 정책 구현
+- [x] `[P0]` 스냅/도킹/검증 도메인 로직을 순수 함수로 분리
+- [x] `[P0]` `freePosition`, `dockedCell`, `lastValidDock` 상태 흐름 구현
+- [x] `[P1]` 자유 드래그 이동 + 드롭 시 nearest snap
+- [x] `[P1]` 스냅 프리뷰 및 히스테리시스(`snapInDistance`, `snapOutDistance`) 구현
+- [x] `[P2]` 그리드 밖/점유 셀 드롭 시 `lastValidDock` 롤백 및 fallback 정책 구현
   - fallback 우선순위: `lastValidDock -> nearest empty cell -> clamp`
 
 ### M3. Data Model and Domain Rules
-- [ ] `NodeItem`/`GridState`/`EdgeItem` 타입 정의 및 정규화
-- [ ] 캔버스 직렬화 스키마 버전 도입 및 마이그레이션 훅 구성
+- [x] 런타임 상태와 저장 모델의 경계만 명확히 분리
+- [x] M4에 필요한 최소 블록 데이터 구조만 정의
+- [x] 저장/복원 가능한 단순 document shape만 정리
 
 ### M4. Block System
 - [ ] 블록 생성 플로우(메뉴에서 타입 선택 후 노드 생성) 구현

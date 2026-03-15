@@ -20,7 +20,6 @@ import {
 } from "../../lib/docking";
 import {
 	clampPositionToStage,
-	GRID_STAGES,
 	getGridOccupancy,
 	getNextStage,
 	getStagePixelSize,
@@ -30,52 +29,39 @@ import {
 	syncNodeDockingState,
 } from "../../lib/grid";
 import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
+import { createDefaultBlockData } from "../../model/block";
+import {
+	type CanvasRuntimeState,
+	createInitialCanvasRuntimeState,
+	type RuntimeNodeDockingState,
+} from "../../model/runtime";
 import GridGuideOverlay from "./GridGuideOverlay";
 import SquareNode from "./SquareNode";
 
+const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 const nodeTypes: NodeTypes = {
 	square: SquareNode,
 };
 
-const INITIAL_STAGE = GRID_STAGES[0];
-const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
-const initialEdges: Edge[] = [
-	// {
-	// 	id: "edge-1-2",
-	// 	source: "node-1",
-	// 	target: "node-2",
-	// 	type: "smoothstep",
-	// 	markerEnd: {
-	// 		type: MarkerType.ArrowClosed,
-	// 	},
-	// },
-];
-const initialNodes: DiagramNode[] = [
-	{
-		id: "node-1",
-		type: "square",
-		position: clampPositionToStage({ x: 0, y: 0 }, INITIAL_STAGE),
-		data: { label: "Node 1" },
-	},
-];
 export function CanvasCoreInner() {
-	const [nodes, setNodes, onNodesChange] =
-		useNodesState<DiagramNode>(initialNodes);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-	const [visibleStage, setVisibleStage] = useState<GridStage>(INITIAL_STAGE);
-
-	const [nodeDockingState, setNodeDockingState] = useState<
-		Record<string, DockedNodeState>
-	>(() =>
-		Object.fromEntries(
-			initialNodes.map((node) => [
-				node.id,
-				createDockedNodeState(node.position, visibleStage),
-			]),
-		),
+	// 초기값을 마운트 시점에 한 번만 계산
+	const [initialRuntimeState] = useState<CanvasRuntimeState>(() =>
+		createInitialCanvasRuntimeState(),
 	);
+	const [nodes, setNodes, onNodesChange] = useNodesState<DiagramNode>(
+		initialRuntimeState.nodes,
+	);
+	const [edges, setEdges, onEdgesChange] = useEdgesState(
+		initialRuntimeState.edges,
+	);
+	const [visibleStage, setVisibleStage] = useState<GridStage>(
+		initialRuntimeState.visibleStage,
+	);
+
+	const [nodeDockingState, setNodeDockingState] =
+		useState<RuntimeNodeDockingState>(initialRuntimeState.nodeDockingState);
 	const [showGuide, setShowGuide] = useState(false);
-	const nodeIdRef = useRef(initialNodes.length + 1);
+	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
 
 	const stagePixelSize = getStagePixelSize(visibleStage);
 	const maxStagePixelSize = getStagePixelSize(MAX_GRID_STAGE);
@@ -195,7 +181,7 @@ export function CanvasCoreInner() {
 				visibleStage,
 			),
 			data: {
-				label: `Node ${nodeIdRef.current - 1}`,
+				...createDefaultBlockData("text", `Node ${nodeIdRef.current - 1}`),
 			},
 		};
 

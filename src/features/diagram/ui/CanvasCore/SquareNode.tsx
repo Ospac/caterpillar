@@ -1,6 +1,7 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import { NODE_SIZE } from "../../lib/grid";
 import type { DiagramNodeData } from "../../lib/type";
+import { getBlockDisplayText } from "../../model/block";
 
 export default function SquareNode({ data }: NodeProps<Node<DiagramNodeData>>) {
 	return (
@@ -23,7 +24,7 @@ export default function SquareNode({ data }: NodeProps<Node<DiagramNodeData>>) {
 				id="right"
 			/>
 			<div className="flex h-full items-center justify-center p-1 text-center leading-tight">
-				{data.label}
+				{getBlockDisplayText(data)}
 			</div>
 		</div>
 	);
