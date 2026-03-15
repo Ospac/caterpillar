@@ -1,4 +1,4 @@
-import type { Edge, Viewport } from "@xyflow/react";
+import type { Edge } from "@xyflow/react";
 import type { DiagramNode, DockedNodeState, GridStage } from "../lib/type";
 import { createDockedNodeState } from "../lib/docking";
 
@@ -9,7 +9,6 @@ export type CanvasRuntimeState = {
 	edges: Edge[];
 	visibleStage: GridStage;
 	nodeDockingState: RuntimeNodeDockingState;
-	viewport: Viewport | null;
 };
 
 export function createRuntimeNodeDockingState(

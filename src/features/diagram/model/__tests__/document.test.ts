@@ -9,7 +9,6 @@ import {
 describe("document(model)", () => {
 	const documentFixture: CanvasDocument = {
 		visibleStage: 4,
-		viewport: { x: 0, y: 0, zoom: 1 },
 		nodes: [
 			{
 				id: "node-1",
@@ -46,7 +45,6 @@ describe("document(model)", () => {
 		expect(
 			parseCanvasDocument({
 				visibleStage: 4,
-				viewport: null,
 				nodes: [
 					{
 						id: "node-1",
@@ -59,7 +57,6 @@ describe("document(model)", () => {
 			}),
 		).toEqual({
 			visibleStage: 4,
-			viewport: null,
 			nodes: [
 				{
 					id: "node-1",

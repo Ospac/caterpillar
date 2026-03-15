@@ -22,9 +22,9 @@
   - fallback 우선순위: `lastValidDock -> nearest empty cell -> clamp`
 
 ### M3. Data Model and Domain Rules
-- [ ] 런타임 상태와 저장 모델의 경계만 명확히 분리
-- [ ] M4에 필요한 최소 블록 데이터 구조만 정의
-- [ ] 저장/복원 가능한 단순 document shape만 정리
+- [x] 런타임 상태와 저장 모델의 경계만 명확히 분리
+- [x] M4에 필요한 최소 블록 데이터 구조만 정의
+- [x] 저장/복원 가능한 단순 document shape만 정리
 
 ### M4. Block System
 - [ ] 블록 생성 플로우(메뉴에서 타입 선택 후 노드 생성) 구현

@@ -62,7 +62,6 @@ const initialEdges: Edge[] = [
 ];
 const initialDocument: CanvasDocument = {
 	visibleStage: INITIAL_STAGE,
-	viewport: LOCKED_VIEWPORT,
 	nodes: [
 		{
 			id: "node-1",
@@ -89,7 +88,6 @@ function createInitialCanvasRuntimeState(): CanvasRuntimeState {
 			parsedDocument.nodes,
 			parsedDocument.visibleStage,
 		),
-		viewport: parsedDocument.viewport,
 	};
 }
 export function CanvasCoreInner() {

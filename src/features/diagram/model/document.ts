@@ -1,4 +1,4 @@
-import type { Edge, Viewport } from "@xyflow/react";
+import type { Edge } from "@xyflow/react";
 import type { DiagramNode, GridStage, XYPosition } from "../lib/type";
 import { GRID_STAGES } from "../lib/grid";
 import { validateBlockData } from "./block";
@@ -22,14 +22,13 @@ export type EdgeItem = {
 
 export type CanvasDocument = {
 	visibleStage: GridStage;
-	viewport: Viewport | null;
 	nodes: NodeItem[];
 	edges: EdgeItem[];
 };
 
 export type ParsedCanvasDocument = Pick<
 	CanvasRuntimeState,
-	"nodes" | "edges" | "visibleStage" | "viewport"
+	"nodes" | "edges" | "visibleStage"
 >;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -46,27 +45,6 @@ function isXYPosition(value: unknown): value is XYPosition {
 		typeof value.x === "number" &&
 		typeof value.y === "number"
 	);
-}
-
-function parseViewport(value: unknown): Viewport | null {
-	if (value === null || value === undefined) {
-		return null;
-	}
-
-	if (
-		isRecord(value) &&
-		typeof value.x === "number" &&
-		typeof value.y === "number" &&
-		typeof value.zoom === "number"
-	) {
-		return {
-			x: value.x,
-			y: value.y,
-			zoom: value.zoom,
-		};
-	}
-
-	return null;
 }
 
 function parseNodeItem(value: unknown): NodeItem | null {
@@ -122,7 +100,6 @@ export function serializeCanvasDocument(
 ): CanvasDocument {
 	return {
 		visibleStage: runtimeState.visibleStage,
-		viewport: runtimeState.viewport,
 		nodes: runtimeState.nodes.map((node) => ({
 			id: node.id,
 			type: node.type ?? "square",
@@ -162,7 +139,6 @@ export function parseCanvasDocument(input: unknown): ParsedCanvasDocument | null
 
 	return {
 		visibleStage: input.visibleStage,
-		viewport: parseViewport(input.viewport),
 		nodes,
 		edges,
 	};
