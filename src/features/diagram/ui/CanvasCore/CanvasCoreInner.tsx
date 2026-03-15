@@ -30,6 +30,7 @@ import {
 	syncNodeDockingState,
 } from "../../lib/grid";
 import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
+import type { RuntimeNodeDockingState } from "../../model/runtime";
 import GridGuideOverlay from "./GridGuideOverlay";
 import SquareNode from "./SquareNode";
 
@@ -64,9 +65,8 @@ export function CanvasCoreInner() {
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 	const [visibleStage, setVisibleStage] = useState<GridStage>(INITIAL_STAGE);
 
-	const [nodeDockingState, setNodeDockingState] = useState<
-		Record<string, DockedNodeState>
-	>(() =>
+	const [nodeDockingState, setNodeDockingState] = useState<RuntimeNodeDockingState>(
+		() =>
 		Object.fromEntries(
 			initialNodes.map((node) => [
 				node.id,
