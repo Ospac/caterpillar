@@ -1,0 +1,53 @@
+import { describe, expect, it } from "@rstest/core";
+import { createDefaultBlockData } from "../block";
+import {
+	parseCanvasDocument,
+	serializeCanvasDocument,
+	type CanvasDocument,
+} from "../document";
+
+describe("document(model)", () => {
+	const documentFixture: CanvasDocument = {
+		visibleStage: 4,
+		viewport: { x: 0, y: 0, zoom: 1 },
+		nodes: [
+			{
+				id: "node-1",
+				type: "square",
+				position: { x: 0, y: 0 },
+				data: createDefaultBlockData("text", "Node 1"),
+			},
+		],
+		edges: [
+			{
+				id: "edge-1",
+				source: "node-1",
+				target: "node-2",
+				type: "smoothstep",
+			},
+		],
+	};
+
+	it("현재 document shape를 파싱한다", () => {
+		expect(parseCanvasDocument(documentFixture)).toEqual(documentFixture);
+	});
+
+	it("필수 필드가 없으면 null을 반환한다", () => {
+		expect(
+			parseCanvasDocument({
+				visibleStage: 4,
+				nodes: [{ id: "node-1" }],
+				edges: [],
+			}),
+		).toBeNull();
+	});
+
+	it("런타임 상태를 document shape로 직렬화한다", () => {
+		const parsed = parseCanvasDocument(documentFixture);
+		expect(parsed).not.toBeNull();
+
+		expect(serializeCanvasDocument(parsed as CanvasDocument)).toEqual(
+			documentFixture,
+		);
+	});
+});
