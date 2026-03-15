@@ -73,6 +73,38 @@ describe("document(model)", () => {
 		});
 	});
 
+	it("node position에 NaN 또는 Infinity가 있으면 null을 반환한다", () => {
+		expect(
+			parseCanvasDocument({
+				visibleStage: 4,
+				nodes: [
+					{
+						id: "node-1",
+						type: "square",
+						position: { x: Number.NaN, y: 0 },
+						data: createDefaultBlockData("text", "Node 1"),
+					},
+				],
+				edges: [],
+			}),
+		).toBeNull();
+
+		expect(
+			parseCanvasDocument({
+				visibleStage: 4,
+				nodes: [
+					{
+						id: "node-1",
+						type: "square",
+						position: { x: 0, y: Number.POSITIVE_INFINITY },
+						data: createDefaultBlockData("text", "Node 1"),
+					},
+				],
+				edges: [],
+			}),
+		).toBeNull();
+	});
+
 	it("런타임 상태를 document shape로 직렬화한다", () => {
 		const parsed = parseCanvasDocument(documentFixture);
 		expect(parsed).not.toBeNull();

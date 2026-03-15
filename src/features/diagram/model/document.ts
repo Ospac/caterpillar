@@ -43,7 +43,9 @@ function isXYPosition(value: unknown): value is XYPosition {
 	return (
 		isRecord(value) &&
 		typeof value.x === "number" &&
-		typeof value.y === "number"
+		Number.isFinite(value.x) &&
+		typeof value.y === "number" &&
+		Number.isFinite(value.y)
 	);
 }
 
