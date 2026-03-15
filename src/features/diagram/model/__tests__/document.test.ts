@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@rstest/core";
 import { createDefaultBlockData } from "../block";
 import {
+	type CanvasDocument,
 	parseCanvasDocument,
 	serializeCanvasDocument,
-	type CanvasDocument,
 } from "../document";
 
 describe("document(model)", () => {

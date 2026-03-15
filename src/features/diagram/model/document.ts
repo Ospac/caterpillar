@@ -1,6 +1,6 @@
 import type { Edge } from "@xyflow/react";
-import type { DiagramNode, GridStage, XYPosition } from "../lib/type";
 import { GRID_STAGES } from "../lib/grid";
+import type { DiagramNode, GridStage, XYPosition } from "../lib/type";
 import { validateBlockData } from "./block";
 import type { CanvasRuntimeState } from "./runtime";
 
@@ -47,8 +47,13 @@ function isXYPosition(value: unknown): value is XYPosition {
 	);
 }
 
+// TODO: 각 검증 분기별로 null을 반환하는게 아니라, 에러 발생 및 처리 필요
 function parseNodeItem(value: unknown): NodeItem | null {
-	if (!isRecord(value) || !isXYPosition(value.position) || !isRecord(value.data)) {
+	if (
+		!isRecord(value) ||
+		!isXYPosition(value.position) ||
+		!isRecord(value.data)
+	) {
 		return null;
 	}
 
@@ -117,7 +122,10 @@ export function serializeCanvasDocument(
 	};
 }
 
-export function parseCanvasDocument(input: unknown): ParsedCanvasDocument | null {
+// TODO: 각 검증 분기별로 null을 반환하는게 아니라, 에러 발생 및 처리 필요
+export function parseCanvasDocument(
+	input: unknown,
+): ParsedCanvasDocument | null {
 	if (!isRecord(input) || !isGridStage(input.visibleStage)) {
 		return null;
 	}
@@ -133,7 +141,10 @@ export function parseCanvasDocument(input: unknown): ParsedCanvasDocument | null
 		.map((edge) => parseEdgeItem(edge))
 		.filter((edge): edge is EdgeItem => edge !== null);
 
-	if (nodes.length !== input.nodes.length || edges.length !== input.edges.length) {
+	if (
+		nodes.length !== input.nodes.length ||
+		edges.length !== input.edges.length
+	) {
 		return null;
 	}
 

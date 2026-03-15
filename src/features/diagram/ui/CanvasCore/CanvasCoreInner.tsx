@@ -20,7 +20,6 @@ import {
 } from "../../lib/docking";
 import {
 	clampPositionToStage,
-	GRID_STAGES,
 	getGridOccupancy,
 	getNextStage,
 	getStagePixelSize,
@@ -33,71 +32,28 @@ import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
 import { createDefaultBlockData } from "../../model/block";
 import {
 	type CanvasRuntimeState,
-	createRuntimeNodeDockingState,
+	createInitialCanvasRuntimeState,
 	type RuntimeNodeDockingState,
 } from "../../model/runtime";
-import {
-	parseCanvasDocument,
-	type CanvasDocument,
-} from "../../model/document";
 import GridGuideOverlay from "./GridGuideOverlay";
 import SquareNode from "./SquareNode";
 
+const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 const nodeTypes: NodeTypes = {
 	square: SquareNode,
 };
 
-const INITIAL_STAGE = GRID_STAGES[0];
-const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
-const initialEdges: Edge[] = [
-	// {
-	// 	id: "edge-1-2",
-	// 	source: "node-1",
-	// 	target: "node-2",
-	// 	type: "smoothstep",
-	// 	markerEnd: {
-	// 		type: MarkerType.ArrowClosed,
-	// 	},
-	// },
-];
-const initialDocument: CanvasDocument = {
-	visibleStage: INITIAL_STAGE,
-	nodes: [
-		{
-			id: "node-1",
-			type: "square",
-			position: clampPositionToStage({ x: 0, y: 0 }, INITIAL_STAGE),
-			data: createDefaultBlockData("text", "Node 1"),
-		},
-	],
-	edges: initialEdges,
-};
-
-function createInitialCanvasRuntimeState(): CanvasRuntimeState {
-	const parsedDocument = parseCanvasDocument(initialDocument);
-
-	if (!parsedDocument) {
-		throw new Error("초기 캔버스 문서를 파싱할 수 없습니다.");
-	}
-
-	return {
-		nodes: parsedDocument.nodes,
-		edges: parsedDocument.edges,
-		visibleStage: parsedDocument.visibleStage,
-		nodeDockingState: createRuntimeNodeDockingState(
-			parsedDocument.nodes,
-			parsedDocument.visibleStage,
-		),
-	};
-}
 export function CanvasCoreInner() {
+	// 초기값을 마운트 시점에 한 번만 계산
 	const [initialRuntimeState] = useState<CanvasRuntimeState>(() =>
 		createInitialCanvasRuntimeState(),
 	);
 	const [nodes, setNodes, onNodesChange] = useNodesState<DiagramNode>(
 		initialRuntimeState.nodes,
 	);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(initialRuntimeState.edges);
+	const [edges, setEdges, onEdgesChange] = useEdgesState(
+		initialRuntimeState.edges,
+	);
 	const [visibleStage, setVisibleStage] = useState<GridStage>(
 		initialRuntimeState.visibleStage,
 	);

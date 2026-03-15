@@ -92,7 +92,9 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					title,
 					text,
 					description:
-						typeof input.description === "string" ? input.description : undefined,
+						typeof input.description === "string"
+							? input.description
+							: undefined,
 				},
 			};
 		}
@@ -111,7 +113,9 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					imageUrl: typeof input.imageUrl === "string" ? input.imageUrl : "",
 					alt: typeof input.alt === "string" ? input.alt : title,
 					description:
-						typeof input.description === "string" ? input.description : undefined,
+						typeof input.description === "string"
+							? input.description
+							: undefined,
 				},
 			};
 		}
@@ -127,7 +131,9 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					title,
 					url: typeof input.url === "string" ? input.url : "",
 					description:
-						typeof input.description === "string" ? input.description : undefined,
+						typeof input.description === "string"
+							? input.description
+							: undefined,
 				},
 			};
 		}
