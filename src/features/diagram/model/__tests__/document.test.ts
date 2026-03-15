@@ -42,6 +42,40 @@ describe("document(model)", () => {
 		).toBeNull();
 	});
 
+	it("블록 데이터는 validation 결과를 반영해 보정한다", () => {
+		expect(
+			parseCanvasDocument({
+				visibleStage: 4,
+				viewport: null,
+				nodes: [
+					{
+						id: "node-1",
+						type: "square",
+						position: { x: 0, y: 0 },
+						data: { blockType: "link" },
+					},
+				],
+				edges: [],
+			}),
+		).toEqual({
+			visibleStage: 4,
+			viewport: null,
+			nodes: [
+				{
+					id: "node-1",
+					type: "square",
+					position: { x: 0, y: 0 },
+					data: {
+						blockType: "link",
+						title: "Link",
+						url: "",
+					},
+				},
+			],
+			edges: [],
+		});
+	});
+
 	it("런타임 상태를 document shape로 직렬화한다", () => {
 		const parsed = parseCanvasDocument(documentFixture);
 		expect(parsed).not.toBeNull();

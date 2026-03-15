@@ -1,5 +1,6 @@
 import type { Edge, Viewport } from "@xyflow/react";
 import type { DiagramNode, DockedNodeState, GridStage } from "../lib/type";
+import { createDockedNodeState } from "../lib/docking";
 
 export type RuntimeNodeDockingState = Record<string, DockedNodeState>;
 
@@ -10,3 +11,12 @@ export type CanvasRuntimeState = {
 	nodeDockingState: RuntimeNodeDockingState;
 	viewport: Viewport | null;
 };
+
+export function createRuntimeNodeDockingState(
+	nodes: DiagramNode[],
+	stage: GridStage,
+): RuntimeNodeDockingState {
+	return Object.fromEntries(
+		nodes.map((node) => [node.id, createDockedNodeState(node.position, stage)]),
+	);
+}

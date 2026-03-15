@@ -1,6 +1,7 @@
 import type { Edge, Viewport } from "@xyflow/react";
 import type { DiagramNode, GridStage, XYPosition } from "../lib/type";
 import { GRID_STAGES } from "../lib/grid";
+import { validateBlockData } from "./block";
 import type { CanvasRuntimeState } from "./runtime";
 
 export type NodeItem = {
@@ -77,11 +78,16 @@ function parseNodeItem(value: unknown): NodeItem | null {
 		return null;
 	}
 
+	const validation = validateBlockData(value.data);
+	if (validation.status === "invalid") {
+		return null;
+	}
+
 	return {
 		id: value.id,
 		type: value.type,
 		position: value.position,
-		data: value.data as DiagramNode["data"],
+		data: validation.data as DiagramNode["data"],
 	};
 }
 

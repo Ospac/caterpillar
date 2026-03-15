@@ -31,7 +31,15 @@ import {
 } from "../../lib/grid";
 import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
 import { createDefaultBlockData } from "../../model/block";
-import type { RuntimeNodeDockingState } from "../../model/runtime";
+import {
+	type CanvasRuntimeState,
+	createRuntimeNodeDockingState,
+	type RuntimeNodeDockingState,
+} from "../../model/runtime";
+import {
+	parseCanvasDocument,
+	type CanvasDocument,
+} from "../../model/document";
 import GridGuideOverlay from "./GridGuideOverlay";
 import SquareNode from "./SquareNode";
 
@@ -52,31 +60,54 @@ const initialEdges: Edge[] = [
 	// 	},
 	// },
 ];
-const initialNodes: DiagramNode[] = [
-	{
-		id: "node-1",
-		type: "square",
-		position: clampPositionToStage({ x: 0, y: 0 }, INITIAL_STAGE),
-		data: createDefaultBlockData("text", "Node 1"),
-	},
-];
-export function CanvasCoreInner() {
-	const [nodes, setNodes, onNodesChange] =
-		useNodesState<DiagramNode>(initialNodes);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-	const [visibleStage, setVisibleStage] = useState<GridStage>(INITIAL_STAGE);
+const initialDocument: CanvasDocument = {
+	visibleStage: INITIAL_STAGE,
+	viewport: LOCKED_VIEWPORT,
+	nodes: [
+		{
+			id: "node-1",
+			type: "square",
+			position: clampPositionToStage({ x: 0, y: 0 }, INITIAL_STAGE),
+			data: createDefaultBlockData("text", "Node 1"),
+		},
+	],
+	edges: initialEdges,
+};
 
-	const [nodeDockingState, setNodeDockingState] = useState<RuntimeNodeDockingState>(
-		() =>
-		Object.fromEntries(
-			initialNodes.map((node) => [
-				node.id,
-				createDockedNodeState(node.position, visibleStage),
-			]),
+function createInitialCanvasRuntimeState(): CanvasRuntimeState {
+	const parsedDocument = parseCanvasDocument(initialDocument);
+
+	if (!parsedDocument) {
+		throw new Error("초기 캔버스 문서를 파싱할 수 없습니다.");
+	}
+
+	return {
+		nodes: parsedDocument.nodes,
+		edges: parsedDocument.edges,
+		visibleStage: parsedDocument.visibleStage,
+		nodeDockingState: createRuntimeNodeDockingState(
+			parsedDocument.nodes,
+			parsedDocument.visibleStage,
 		),
+		viewport: parsedDocument.viewport,
+	};
+}
+export function CanvasCoreInner() {
+	const [initialRuntimeState] = useState<CanvasRuntimeState>(() =>
+		createInitialCanvasRuntimeState(),
 	);
+	const [nodes, setNodes, onNodesChange] = useNodesState<DiagramNode>(
+		initialRuntimeState.nodes,
+	);
+	const [edges, setEdges, onEdgesChange] = useEdgesState(initialRuntimeState.edges);
+	const [visibleStage, setVisibleStage] = useState<GridStage>(
+		initialRuntimeState.visibleStage,
+	);
+
+	const [nodeDockingState, setNodeDockingState] =
+		useState<RuntimeNodeDockingState>(initialRuntimeState.nodeDockingState);
 	const [showGuide, setShowGuide] = useState(false);
-	const nodeIdRef = useRef(initialNodes.length + 1);
+	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
 
 	const stagePixelSize = getStagePixelSize(visibleStage);
 	const maxStagePixelSize = getStagePixelSize(MAX_GRID_STAGE);
