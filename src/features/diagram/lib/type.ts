@@ -1,4 +1,5 @@
 import type { Node } from "@xyflow/react";
+import type { BlockData } from "../model/block";
 import type { DROP_REASONS, FALLBACK_STRATEGIES } from "./docking";
 import type { GRID_STAGES } from "./grid";
 
@@ -48,9 +49,7 @@ export interface DragCancelEvent {
  */
 export type DockingEvent = DragStartEvent | DragStopEvent | DragCancelEvent;
 
-export type DiagramNodeData = {
-	label: string;
-};
+export type DiagramNodeData = BlockData;
 
 export type DiagramNode = Node<DiagramNodeData>;
 

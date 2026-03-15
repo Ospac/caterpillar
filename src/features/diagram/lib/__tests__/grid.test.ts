@@ -13,6 +13,7 @@ import {
 	toCellKey,
 } from "../grid";
 import type { DiagramNode } from "../type";
+import { createDefaultBlockData } from "../../model/block";
 
 describe("grid(lib)", () => {
 	describe("getNextStage: 다음 stage 값을 얻기", () => {
@@ -162,7 +163,7 @@ describe("grid(lib)", () => {
 			({
 				id,
 				position: { x, y },
-				data: { label: id },
+				data: createDefaultBlockData("text", id),
 				type: "default",
 			}) as DiagramNode;
 

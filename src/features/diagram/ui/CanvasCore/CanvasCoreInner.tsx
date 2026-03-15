@@ -30,6 +30,7 @@ import {
 	syncNodeDockingState,
 } from "../../lib/grid";
 import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
+import { createDefaultBlockData } from "../../model/block";
 import type { RuntimeNodeDockingState } from "../../model/runtime";
 import GridGuideOverlay from "./GridGuideOverlay";
 import SquareNode from "./SquareNode";
@@ -56,7 +57,7 @@ const initialNodes: DiagramNode[] = [
 		id: "node-1",
 		type: "square",
 		position: clampPositionToStage({ x: 0, y: 0 }, INITIAL_STAGE),
-		data: { label: "Node 1" },
+		data: createDefaultBlockData("text", "Node 1"),
 	},
 ];
 export function CanvasCoreInner() {
@@ -195,7 +196,7 @@ export function CanvasCoreInner() {
 				visibleStage,
 			),
 			data: {
-				label: `Node ${nodeIdRef.current - 1}`,
+				...createDefaultBlockData("text", `Node ${nodeIdRef.current - 1}`),
 			},
 		};
 
