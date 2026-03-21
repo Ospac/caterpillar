@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@rstest/core";
+import { createDefaultBlockData } from "../../model/block";
 import {
 	cellCoordToPosition,
 	clampPositionToStage,
@@ -13,7 +14,6 @@ import {
 	toCellKey,
 } from "../grid";
 import type { DiagramNode } from "../type";
-import { createDefaultBlockData } from "../../model/block";
 
 describe("grid(lib)", () => {
 	describe("getNextStage: 다음 stage 값을 얻기", () => {
