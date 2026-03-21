@@ -1,6 +1,7 @@
 import {
 	addEdge,
 	type Connection,
+	ConnectionMode,
 	type CoordinateExtent,
 	type Edge,
 	MarkerType,
@@ -36,11 +37,11 @@ import {
 	type RuntimeNodeDockingState,
 } from "../../model/runtime";
 import GridGuideOverlay from "./GridGuideOverlay";
-import SquareNode from "./SquareNode";
+import MenuNode from "./MenuNode";
 
 const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 const nodeTypes: NodeTypes = {
-	square: SquareNode,
+	square: MenuNode,
 };
 
 export function CanvasCoreInner() {
@@ -232,6 +233,8 @@ export function CanvasCoreInner() {
 					snapToGrid={false}
 					snapGrid={[NODE_SIZE, NODE_SIZE]}
 					autoPanOnNodeDrag={false}
+					autoPanOnConnect={false}
+					connectionMode={ConnectionMode.Loose}
 					panOnDrag={false}
 					panOnScroll={false}
 					preventScrolling={false}
