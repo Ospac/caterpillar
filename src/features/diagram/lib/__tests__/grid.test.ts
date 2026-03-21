@@ -47,8 +47,11 @@ describe("grid(lib)", () => {
 			const cellCoord = positionToNearestCellCoord({ x: 0, y: 0 }, 4);
 			expect(cellCoord).toEqual({ col: 0, row: 0 });
 		});
-		it("position이 {x: 520, y: 144}이면 가장 가까운 cell 좌표로 {col: 5, row: 2}를 반환한다", () => {
-			const cellCoord = positionToNearestCellCoord({ x: 520, y: 144 }, 7);
+		it("position이 {x: 5 * NODE_SIZE, y: 2 * NODE_SIZE}이면 가장 가까운 cell 좌표로 {col: 5, row: 2}를 반환한다", () => {
+			const cellCoord = positionToNearestCellCoord(
+				{ x: 5 * NODE_SIZE, y: 2 * NODE_SIZE },
+				7,
+			);
 			expect(cellCoord).toEqual({ col: 5, row: 2 });
 		});
 	});
