@@ -36,12 +36,14 @@ import {
 	createInitialCanvasRuntimeState,
 	type RuntimeNodeDockingState,
 } from "../../model/runtime";
+import BlockNode from "./BlockNode";
 import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
 
 const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 const nodeTypes: NodeTypes = {
-	square: MenuNode,
+	menu: MenuNode,
+	block: BlockNode,
 };
 
 export function CanvasCoreInner() {
@@ -173,7 +175,7 @@ export function CanvasCoreInner() {
 
 		const nextNode: DiagramNode = {
 			id,
-			type: "square",
+			type: "menu",
 			position: clampPositionToStage(
 				{
 					x: stagePixelSize / 2 - NODE_SIZE / 2,
@@ -181,9 +183,7 @@ export function CanvasCoreInner() {
 				},
 				visibleStage,
 			),
-			data: {
-				...createDefaultBlockData("text", `Node ${nodeIdRef.current - 1}`),
-			},
+			data: createDefaultBlockData("menu", ""),
 		};
 
 		setNodes((currentNodes) => [...currentNodes, nextNode]);

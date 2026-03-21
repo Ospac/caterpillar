@@ -62,7 +62,7 @@ export type BlockData = TextBlockData | ImageBlockData | LinkBlockData
 
 **파일:** `ui/CanvasCore/MenuNode.tsx`
 
-- 96×96px 컨테이너, 타입 목록 인라인 표시 (7종 아이콘 + 레이블)
+- 168×168px 컨테이너, 타입 목록 인라인 표시 (7종 아이콘 + 레이블)
 - 타입 클릭 시 `onTypeSelect(blockType)` 콜백 호출 (React Flow `data` prop 경유)
 - `CanvasCoreInner`에서 처리: 해당 위치에 `"block"` 노드 생성 + `"menu"` 노드 제거
 - 메뉴 노드는 `BlockData`에 포함하지 않음 — `data: { type: "menu" }` 별도 `MenuNodeData`

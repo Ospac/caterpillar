@@ -164,7 +164,7 @@ describe("grid(lib)", () => {
 				id,
 				position: { x, y },
 				data: createDefaultBlockData("text", id),
-				type: "default",
+				type: "block",
 			}) as DiagramNode;
 
 		it("서로 다른 셀에 있는 노드들을 cellToNodeId에 단일 값으로 기록한다", () => {

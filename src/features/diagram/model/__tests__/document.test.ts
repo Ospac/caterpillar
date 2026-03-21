@@ -2,6 +2,7 @@ import { describe, expect, it } from "@rstest/core";
 import { createDefaultBlockData } from "../block";
 import {
 	type CanvasDocument,
+	type ParsedCanvasDocument,
 	parseCanvasDocument,
 	serializeCanvasDocument,
 } from "../document";
@@ -12,7 +13,7 @@ describe("document(model)", () => {
 		nodes: [
 			{
 				id: "node-1",
-				type: "square",
+				type: "block",
 				position: { x: 0, y: 0 },
 				data: createDefaultBlockData("text", "Node 1"),
 			},
@@ -48,7 +49,7 @@ describe("document(model)", () => {
 				nodes: [
 					{
 						id: "node-1",
-						type: "square",
+						type: "block",
 						position: { x: 0, y: 0 },
 						data: { blockType: "link" },
 					},
@@ -60,7 +61,7 @@ describe("document(model)", () => {
 			nodes: [
 				{
 					id: "node-1",
-					type: "square",
+					type: "block",
 					position: { x: 0, y: 0 },
 					data: {
 						blockType: "link",
@@ -80,7 +81,7 @@ describe("document(model)", () => {
 				nodes: [
 					{
 						id: "node-1",
-						type: "square",
+						type: "block",
 						position: { x: Number.NaN, y: 0 },
 						data: createDefaultBlockData("text", "Node 1"),
 					},
@@ -95,7 +96,7 @@ describe("document(model)", () => {
 				nodes: [
 					{
 						id: "node-1",
-						type: "square",
+						type: "block",
 						position: { x: 0, y: Number.POSITIVE_INFINITY },
 						data: createDefaultBlockData("text", "Node 1"),
 					},
@@ -109,7 +110,7 @@ describe("document(model)", () => {
 		const parsed = parseCanvasDocument(documentFixture);
 		expect(parsed).not.toBeNull();
 
-		expect(serializeCanvasDocument(parsed as CanvasDocument)).toEqual(
+		expect(serializeCanvasDocument(parsed as ParsedCanvasDocument)).toEqual(
 			documentFixture,
 		);
 	});

@@ -51,7 +51,9 @@ export type DockingEvent = DragStartEvent | DragStopEvent | DragCancelEvent;
 
 export type DiagramNodeData = BlockData;
 
-export type DiagramNode = Node<DiagramNodeData>;
+export type DiagramNodeType = "menu" | "block";
+
+export type DiagramNode = Node<DiagramNodeData, DiagramNodeType>;
 
 export type GridStage = (typeof GRID_STAGES)[number];
 

@@ -42,9 +42,9 @@ const initialEdges: Edge[] = [
 const initialNodes: NodeItem[] = [
 	{
 		id: "node-1",
-		type: "square",
+		type: "menu",
 		position: clampPositionToStage({ x: 0, y: 0 }, INITIAL_STAGE),
-		data: createDefaultBlockData("text", "Node 1"),
+		data: createDefaultBlockData("menu", ""),
 	},
 ];
 const initialDocument: CanvasDocument = {
