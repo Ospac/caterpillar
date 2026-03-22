@@ -1,6 +1,6 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import { NODE_SIZE } from "../../lib/grid";
-import type { MenuNodeData } from "../../lib/type";
+import type { MenuNodeData } from "../../model/type";
 
 const BLOCK_TYPE_BUTTONS = [
 	{ blockType: "text", label: "Text", className: "bg-green" },

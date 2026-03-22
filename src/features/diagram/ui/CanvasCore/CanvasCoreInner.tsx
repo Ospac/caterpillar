@@ -29,13 +29,14 @@ import {
 	NODE_SIZE,
 	syncNodeDockingState,
 } from "../../lib/grid";
-import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
-import { type BlockType, createDefaultBlockData } from "../../model/block";
+import type { DockedNodeState, GridStage } from "../../lib/type";
+import { createDefaultBlockData } from "../../model/block";
 import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
 	type RuntimeNodeDockingState,
 } from "../../model/runtime";
+import type { BlockType, DiagramNode } from "../../model/type";
 import BlockNode from "./BlockNode";
 import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";

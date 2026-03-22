@@ -1,7 +1,7 @@
+import type { DiagramNode } from "../model/type";
 import { createDockedNodeState } from "./docking";
 import type {
 	CellCoord,
-	DiagramNode,
 	DockedNodeState,
 	GridOccupancy,
 	GridStage,

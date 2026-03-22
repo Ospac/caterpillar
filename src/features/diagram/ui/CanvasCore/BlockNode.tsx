@@ -1,6 +1,6 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import { NODE_SIZE } from "../../lib/grid";
-import type { DiagramNodeData, MenuNodeData } from "../../lib/type";
+import type { DiagramNodeData, MenuNodeData } from "../../model/type";
 
 type BlockNodeData = Exclude<DiagramNodeData, MenuNodeData>;
 

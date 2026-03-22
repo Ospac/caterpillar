@@ -1,8 +1,9 @@
 import type { Edge } from "@xyflow/react";
 import { GRID_STAGES } from "../lib/grid";
-import type { DiagramNode, DiagramNodeType, GridStage, XYPosition } from "../lib/type";
+import type { GridStage, XYPosition } from "../lib/type";
 import { validateBlockData } from "./block";
 import type { CanvasRuntimeState } from "./runtime";
+import type { DiagramNode, DiagramNodeType } from "./type";
 
 const DIAGRAM_NODE_TYPES: ReadonlySet<string> = new Set<DiagramNodeType>([
 	"menu",

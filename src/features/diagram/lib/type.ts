@@ -1,5 +1,3 @@
-import type { Node } from "@xyflow/react";
-import type { BlockData, BlockType } from "../model/block";
 import type { DROP_REASONS, FALLBACK_STRATEGIES } from "./docking";
 import type { GRID_STAGES } from "./grid";
 
@@ -48,21 +46,6 @@ export interface DragCancelEvent {
  * - `cancel`: 드래그를 취소하고 마지막 유효 도킹 지점 또는 현재 도킹 지점으로 복구한다.
  */
 export type DockingEvent = DragStartEvent | DragStopEvent | DragCancelEvent;
-
-/**
- * 메뉴 노드의 런타임 전용 데이터.
- * `onTypeSelect`는 직렬화되지 않으므로 BlockData에 포함하지 않는다.
- */
-export type MenuNodeData = {
-	blockType: "menu";
-	onTypeSelect?: (blockType: BlockType) => void;
-};
-
-export type DiagramNodeData = BlockData | MenuNodeData;
-
-export type DiagramNodeType = "menu" | "block";
-
-export type DiagramNode = Node<DiagramNodeData, DiagramNodeType>;
 
 export type GridStage = (typeof GRID_STAGES)[number];
 

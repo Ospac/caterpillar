@@ -1,91 +1,9 @@
 import { z } from "zod";
-
-export const BLOCK_TYPES = [
-	"menu",
-	"text",
-	"image",
-	"link",
-	"music",
-	"game",
-	"movie",
-	"book",
-] as const;
-
-export type BlockType = (typeof BLOCK_TYPES)[number];
-
-type BlockBase = {
-	blockType: BlockType;
-	title?: string;
-	description?: string;
-};
-
-export type MenuBlockData = BlockBase & {
-	blockType: "menu";
-};
-export type TextBlockData = BlockBase & {
-	blockType: "text";
-	text: string;
-};
-
-export type ImageBlockData = BlockBase & {
-	blockType: "image";
-	imageUrl: string;
-	alt: string;
-};
-
-export type LinkBlockData = BlockBase & {
-	blockType: "link";
-	url: string;
-};
-export type MusicBlockData = BlockBase & {
-	blockType: "music";
-	artist: string;
-	albumArt?: string;
-};
-export type GameBlockData = BlockBase & {
-	blockType: "game";
-	coverUrl?: string;
-	releaseYear?: number;
-};
-export type MovieBlockData = BlockBase & {
-	blockType: "movie";
-	posterUrl?: string;
-	releaseYear?: number;
-};
-export type BookBlockData = BlockBase & {
-	blockType: "book";
-	author: string;
-	coverUrl?: string;
-};
-export type BlockData =
-	| MenuBlockData
-	| TextBlockData
-	| ImageBlockData
-	| LinkBlockData
-	| MusicBlockData
-	| GameBlockData
-	| MovieBlockData
-	| BookBlockData;
-
-export type BlockValidationResult =
-	| {
-			status: "ok" | "fallback";
-			data: BlockData;
-	  }
-	| {
-			status: "invalid";
-			reason: string;
-	  };
+import type { BlockData, BlockType, BlockValidationResult } from "./type";
 
 // ── Zod 스키마 (loose: 각 필드를 optional로 받아 fallback 처리) ──────────────
 
 const descriptionField = z.string().optional();
-
-const menuSchema = z.object({
-	blockType: z.literal("menu"),
-	title: z.string().nullish(),
-	description: descriptionField,
-});
 
 const textSchema = z.object({
 	blockType: z.literal("text"),
@@ -148,8 +66,6 @@ export function createDefaultBlockData(
 	title: string,
 ): BlockData {
 	switch (blockType) {
-		case "menu":
-			return { blockType };
 		case "text":
 			return { blockType, title, text: title };
 		case "image":
@@ -182,18 +98,6 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 	const blockType = (input as Record<string, unknown>).blockType as string;
 
 	switch (blockType) {
-		case "menu": {
-			const r = menuSchema.safeParse(input);
-			if (!r.success) return { status: "invalid", reason: r.error.message };
-			return {
-				status: "ok",
-				data: {
-					blockType: "menu",
-					...(r.data.title != null && { title: r.data.title }),
-					...(r.data.description != null && { description: r.data.description }),
-				},
-			};
-		}
 		case "text": {
 			const r = textSchema.safeParse(input);
 			if (!r.success) return { status: "invalid", reason: r.error.message };
