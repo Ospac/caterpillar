@@ -8,7 +8,7 @@ import {
 	resolveDropPosition,
 	transitionDockedNodeState,
 } from "../docking";
-import { cellCoordToPosition } from "../grid";
+import { cellCoordToPosition, NODE_SIZE } from "../grid";
 import type {
 	DockedNodeState,
 	DockingEvent,
@@ -39,9 +39,11 @@ describe("docking(lib)", () => {
 	});
 
 	describe("createDockedNodeState : position 객체로 DockedNodeState 객체를 생성한다", () => {
-		it("position이 {x: 520, y: 144}이면 DockedNodeState로 {freePosition: {x:520, y:144}, dockedCell:{col:5, row:2}, lastValidDock:{col:5, row:2}}를 반환한다", () => {
-			expect(createDockedNodeState({ x: 520, y: 144 }, 7)).toEqual({
-				freePosition: { x: 520, y: 144 },
+		it(`position이 {x: ${5 * NODE_SIZE}, y: ${2 * NODE_SIZE}}이면 DockedNodeState로 {freePosition: {x:${5 * NODE_SIZE}, y:${2 * NODE_SIZE}}, dockedCell:{col:5, row:2}, lastValidDock:{col:5, row:2}}를 반환한다`, () => {
+			expect(
+				createDockedNodeState({ x: 5 * NODE_SIZE, y: 2 * NODE_SIZE }, 7),
+			).toEqual({
+				freePosition: { x: 5 * NODE_SIZE, y: 2 * NODE_SIZE },
 				dockedCell: { col: 5, row: 2 },
 				lastValidDock: { col: 5, row: 2 },
 			});
@@ -228,7 +230,7 @@ describe("docking(lib)", () => {
 		const fallbackInput = (
 			overrides: Partial<FallbackInput> = {},
 		): FallbackInput => ({
-			position: { x: 96, y: 96 },
+			position: { x: NODE_SIZE, y: NODE_SIZE },
 			stage: 4,
 			occupancy: emptyOccupancy(),
 			lastValidDock: { col: 0, row: 0 },
@@ -239,7 +241,7 @@ describe("docking(lib)", () => {
 		it("lastValidDock가 유효하면 해당 셀로 복귀한다", () => {
 			const result = applyFallback(
 				fallbackInput({
-					position: { x: 192, y: 192 },
+					position: { x: 2 * NODE_SIZE, y: 2 * NODE_SIZE },
 					lastValidDock: { col: 1, row: 0 },
 				}),
 			);
@@ -254,7 +256,7 @@ describe("docking(lib)", () => {
 		it("lastValidDock가 막혀 있으면 가장 가까운 빈 셀을 탐색하여 복귀한다", () => {
 			const result = applyFallback(
 				fallbackInput({
-					position: { x: 192, y: 192 },
+					position: { x: 2 * NODE_SIZE, y: 2 * NODE_SIZE },
 					lastValidDock: { col: 1, row: 1 },
 					occupancy: occupancyOf({
 						"1,1": "node-a",
@@ -340,7 +342,7 @@ describe("docking(lib)", () => {
 		const dockingInput = (
 			overrides: Partial<DockingInput> = {},
 		): DockingInput => ({
-			position: { x: 96, y: 96 },
+			position: { x: NODE_SIZE, y: NODE_SIZE },
 			stage: 4,
 			occupancy: emptyOccupancy(),
 			lastValidDock: { col: 0, row: 0 },
@@ -350,7 +352,7 @@ describe("docking(lib)", () => {
 		it("stage 안의 빈 nearest cell이면 valid-dock / usedFallback false를 반환한다", () => {
 			const result = resolveDropPosition(
 				dockingInput({
-					position: { x: 192, y: 96 },
+					position: { x: 2 * NODE_SIZE, y: NODE_SIZE },
 				}),
 			);
 
@@ -365,7 +367,7 @@ describe("docking(lib)", () => {
 		it("stage 밖 위치면 outside-stage 사유로 fallback 결과를 반환한다", () => {
 			const result = resolveDropPosition(
 				dockingInput({
-					position: { x: -20, y: 96 },
+					position: { x: -20, y: NODE_SIZE },
 					lastValidDock: { col: 1, row: 0 },
 				}),
 			);
@@ -382,7 +384,7 @@ describe("docking(lib)", () => {
 		it("nearest cell이 점유 중이면 occupied-cell 사유로 fallback 결과를 반환한다", () => {
 			const result = resolveDropPosition(
 				dockingInput({
-					position: { x: 192, y: 96 },
+					position: { x: 2 * NODE_SIZE, y: NODE_SIZE },
 					lastValidDock: { col: 0, row: 0 },
 					occupancy: occupancyOf({
 						"2,1": "node-a",
@@ -402,7 +404,7 @@ describe("docking(lib)", () => {
 		it("fallback으로 nearest-empty-cell이 선택되면 strategy를 그대로 노출한다", () => {
 			const result = resolveDropPosition(
 				dockingInput({
-					position: { x: 192, y: 192 },
+					position: { x: 2 * NODE_SIZE, y: 2 * NODE_SIZE },
 					lastValidDock: { col: 2, row: 2 },
 					occupancy: occupancyOf({
 						"2,2": "node-a",
@@ -422,7 +424,7 @@ describe("docking(lib)", () => {
 		it("ignoreNodeId를 주면 자기 자리 드롭은 valid-dock 처리된다", () => {
 			const result = resolveDropPosition(
 				dockingInput({
-					position: { x: 192, y: 96 },
+					position: { x: 2 * NODE_SIZE, y: NODE_SIZE },
 					occupancy: occupancyOf({
 						"2,1": "node-self",
 					}),
@@ -441,7 +443,7 @@ describe("docking(lib)", () => {
 		it("fallback도 실패하면 현재 position을 유지하고 cell null을 반환한다", () => {
 			const result = resolveDropPosition(
 				dockingInput({
-					position: { x: -20, y: 96 },
+					position: { x: -20, y: NODE_SIZE },
 					lastValidDock: null,
 					occupancy: occupancyOf({
 						"0,0": "node-0",
@@ -465,7 +467,7 @@ describe("docking(lib)", () => {
 			);
 
 			expect(result).toEqual({
-				position: { x: -20, y: 96 },
+				position: { x: -20, y: NODE_SIZE },
 				cell: null,
 				reason: DROP_REASONS.outsideStage,
 				usedFallback: false,

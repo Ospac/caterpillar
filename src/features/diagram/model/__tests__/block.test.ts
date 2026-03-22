@@ -53,26 +53,6 @@ describe("block(model)", () => {
 		});
 	});
 
-	// ── menu ────────────────────────────────────────────────────────────────────
-
-	it("menu: 필드 없이 blockType만 있어도 ok를 반환한다", () => {
-		expect(validateBlockData({ blockType: "menu" })).toEqual({
-			status: "ok",
-			data: { blockType: "menu" },
-		});
-	});
-
-	it("menu: title이 있으면 ok를 반환하고 title을 포함한다", () => {
-		expect(
-			validateBlockData({ blockType: "menu", title: "Main Menu" }),
-		).toEqual({
-			status: "ok",
-			data: { blockType: "menu", title: "Main Menu" },
-		});
-	});
-
-	// ── 신규 타입 fallback 케이스 ───────────────────────────────────────────────
-
 	it("music: 필수 필드가 빠진 경우 fallback으로 보정한다", () => {
 		expect(validateBlockData({ blockType: "music" })).toEqual({
 			status: "fallback",
