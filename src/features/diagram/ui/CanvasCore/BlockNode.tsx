@@ -1,8 +1,10 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import { NODE_SIZE } from "../../lib/grid";
-import type { DiagramNodeData } from "../../lib/type";
+import type { DiagramNodeData, MenuNodeData } from "../../lib/type";
 
-export default function BlockNode({ data }: NodeProps<Node<DiagramNodeData>>) {
+type BlockNodeData = Exclude<DiagramNodeData, MenuNodeData>;
+
+export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 	return (
 		<div
 			className="border border-gray-700 bg-green text-[12px] text-gray-900"

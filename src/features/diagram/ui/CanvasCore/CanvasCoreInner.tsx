@@ -30,7 +30,7 @@ import {
 	syncNodeDockingState,
 } from "../../lib/grid";
 import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
-import { createDefaultBlockData } from "../../model/block";
+import { type BlockType, createDefaultBlockData } from "../../model/block";
 import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
@@ -169,6 +169,25 @@ export function CanvasCoreInner() {
 		setShowGuide(false);
 	};
 
+	const handleMenuTypeSelect = (menuNodeId: string, blockType: BlockType) => {
+		const id = `node-${nodeIdRef.current}`;
+		nodeIdRef.current += 1;
+
+		setNodes((currentNodes) => {
+			const menuNode = currentNodes.find((n) => n.id === menuNodeId);
+			if (!menuNode) return currentNodes;
+
+			const newNode: DiagramNode = {
+				id,
+				type: "block",
+				position: menuNode.position,
+				data: createDefaultBlockData(blockType, ""),
+			};
+
+			return [...currentNodes.filter((n) => n.id !== menuNodeId), newNode];
+		});
+	};
+
 	const handleAddNode = () => {
 		const id = `node-${nodeIdRef.current}`;
 		nodeIdRef.current += 1;
@@ -183,7 +202,10 @@ export function CanvasCoreInner() {
 				},
 				visibleStage,
 			),
-			data: createDefaultBlockData("menu", ""),
+			data: {
+				blockType: "menu",
+				onTypeSelect: (blockType) => handleMenuTypeSelect(id, blockType),
+			},
 		};
 
 		setNodes((currentNodes) => [...currentNodes, nextNode]);
