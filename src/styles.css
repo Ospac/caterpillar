@@ -20,6 +20,9 @@
   --color-purple: #8381FF;
   --color-pinky: #FD84FF;
 
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: calc(1 / 0.625);
+
 }
 html {
   color-scheme: light dark;

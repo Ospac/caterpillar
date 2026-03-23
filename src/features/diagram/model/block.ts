@@ -1,8 +1,6 @@
 import { z } from "zod";
 import type { BlockData, BlockType, BlockValidationResult } from "./type";
 
-// ── Zod 스키마 (loose: 각 필드를 optional로 받아 fallback 처리) ──────────────
-
 const descriptionField = z.string().optional();
 
 const textSchema = z.object({
@@ -58,8 +56,6 @@ const bookSchema = z.object({
 	coverUrl: z.string().nullish(),
 	description: descriptionField,
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 export function createDefaultBlockData(
 	blockType: BlockType,
