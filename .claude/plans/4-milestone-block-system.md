@@ -61,7 +61,7 @@ export type BlockData = TextBlockData | ImageBlockData | LinkBlockData
 
 **파일:** `ui/CanvasCore/MenuNode.tsx`
 
-- NODE_SIZE(215px) 기반 컨테이너, 7종 버튼 인라인 표시 (타입별 배경색)
+- NODE_SIZE(216px) 기반 컨테이너, 7종 버튼 인라인 표시 (타입별 배경색)
 - 타입 클릭 시 `data.onTypeSelect?.(blockType)` 콜백 호출
 - `CanvasCoreInner`에서 처리: 해당 위치에 `"block"` 노드 생성 + `"menu"` 노드 제거 완료
 - 메뉴 노드는 `BlockData`에 포함하지 않음 — 별도 `MenuNodeData`

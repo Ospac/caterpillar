@@ -20,7 +20,7 @@
 ## Canvas
 
 **그리드 단계:** `4×4` → `7×7` → `10×10` (`GRID_STAGES`)
-- `NODE_SIZE = 215px`
+- `NODE_SIZE = 216px`
 - 노드가 현재 가시 영역 밖으로 드래그되면 다음 단계로 자동 확장
 - 그리드 가이드: 드래그 시작 시 표시, 드래그 종료 시 숨김
 - `snapToGrid: false` — React Flow 자동 스냅 비활성화 필수

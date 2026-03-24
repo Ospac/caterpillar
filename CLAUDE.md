@@ -58,7 +58,7 @@ src/
 
 ### 그리드 & 도킹 시스템 (`lib/grid.ts`, `lib/docking.ts`)
 
-- 그리드 단계: 4×4, 7×7, 10×10 (NODE_SIZE = 215px)
+- 그리드 단계: 4×4, 7×7, 10×10 (NODE_SIZE = 216px)
 - 드래그 상태 머신: `dragStart` → `dragMove` → `dragStop`(가장 가까운 셀에 스냅) 또는 `dragCancel`(`lastValidDock` 복원)
 - 드롭 해결 우선순위: 유효한 dock → lastValidDock 폴백 → 가장 가까운 빈 셀 → 현재 위치 유지
 
