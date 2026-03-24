@@ -73,16 +73,26 @@ function parseNodeItem(value: unknown): NodeItem | null {
 		return null;
 	}
 
-	const validation = validateBlockData(value.data);
-	if (validation.status === "invalid") {
-		return null;
+	let data: DiagramNode["data"];
+
+	if (value.type === "menu") {
+		if (value.data.blockType !== "menu") {
+			return null;
+		}
+		data = { blockType: "menu" };
+	} else {
+		const validation = validateBlockData(value.data);
+		if (validation.status === "invalid") {
+			return null;
+		}
+		data = validation.data as DiagramNode["data"];
 	}
 
 	return {
 		id: value.id,
 		type: value.type,
 		position: value.position,
-		data: validation.data as DiagramNode["data"],
+		data,
 	};
 }
 
