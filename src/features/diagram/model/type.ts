@@ -31,6 +31,7 @@ export type ImageBlockData = BlockBase & {
 export type LinkBlockData = BlockBase & {
 	blockType: "link";
 	url: string;
+	description?: string;
 };
 export type MusicBlockData = BlockBase & {
 	blockType: "music";

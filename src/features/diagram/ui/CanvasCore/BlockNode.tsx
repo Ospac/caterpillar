@@ -5,7 +5,7 @@ import coverArtImage from "assets/ppqq.jpg";
 import { Fragment, type JSX, useState } from "react";
 import { NODE_SIZE } from "../../lib/grid";
 import type { BlockData, BlockNodeData } from "../../model/type";
-import { renderEditForm } from "./BlockNodeForm";
+import BlockEditForm from "./BlockEditForm";
 
 function NodeHandles() {
 	return (
@@ -168,7 +168,11 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 		>
 			<NodeHandles />
 			{isEditing ? (
-				renderEditForm(data, (newData) => data.onDataChange?.(newData), endEdit)
+				<BlockEditForm
+					data={data}
+					onDataChange={(newData) => data.onDataChange?.(newData)}
+					onEditEnd={endEdit}
+				/>
 			) : (
 				<BlockView data={data as BlockData} />
 			)}

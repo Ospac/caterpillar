@@ -1,5 +1,3 @@
-// ─── Forms ────────────────────────────────────────────────────────────────────
-
 import { MOCK_RESULTS } from "features/diagram/model/mock";
 import type {
 	BlockData,
@@ -11,8 +9,9 @@ import type {
 	MusicBlockData,
 	TextBlockData,
 } from "features/diagram/model/type";
-import { type JSX, type ReactNode, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { type ReactNode, useState } from "react";
+import { useForm } from "react-hook-form";
+import Input from "./Input";
 
 type FormProps<T extends BlockData> = {
 	data: T;
@@ -25,7 +24,7 @@ function TextBlockForm({
 	onDataChange,
 	onEditEnd,
 }: FormProps<TextBlockData>) {
-	const { control } = useForm<TextBlockData>({ defaultValues: data });
+	const { register } = useForm<TextBlockData>({ defaultValues: data });
 	return (
 		<fieldset
 			className="h-full"
@@ -33,22 +32,13 @@ function TextBlockForm({
 				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
 			}}
 		>
-			<Controller
-				control={control}
-				name="text"
-				render={({ field }) => (
-					<textarea
-						{...field}
-						value={field.value ?? ""}
-						// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
-						autoFocus
-						className="w-full h-full resize-none bg-transparent text-[12px] leading-tight outline-none p-2"
-						onChange={(e) => {
-							field.onChange(e);
-							onDataChange({ ...data, text: e.target.value });
-						}}
-					/>
-				)}
+			<textarea
+				{...register("text", {
+					onChange: (e) => onDataChange({ ...data, text: e.target.value }),
+				})}
+				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
+				autoFocus
+				className="w-full h-full resize-none bg-transparent text-[12px] leading-tight outline-none p-2"
 			/>
 		</fieldset>
 	);
@@ -59,7 +49,7 @@ function ImageBlockForm({
 	onDataChange,
 	onEditEnd,
 }: FormProps<ImageBlockData>) {
-	const { control, setValue } = useForm<ImageBlockData>({
+	const { register, setValue } = useForm<ImageBlockData>({
 		defaultValues: data,
 	});
 	return (
@@ -69,44 +59,25 @@ function ImageBlockForm({
 				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
 			}}
 		>
-			<Controller
-				control={control}
-				name="imageUrl"
-				render={({ field }) => (
-					<input
-						{...field}
-						value={field.value ?? ""}
-						type="url"
-						placeholder="Image URL"
-						// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
-						autoFocus
-						className="w-full border border-gray-400 bg-white px-1.5 py-0.5 text-[11px] outline-none"
-						onChange={(e) => {
-							field.onChange(e);
-							const url = e.target.value;
-							const filename = url.split("/").pop()?.split("?")[0] ?? "";
-							setValue("alt", filename);
-							onDataChange({ ...data, imageUrl: url, alt: filename });
-						}}
-					/>
-				)}
+			<Input
+				{...register("imageUrl", {
+					onChange: (e) => {
+						const url = e.target.value;
+						const filename = url.split("/").pop()?.split("?")[0] ?? "";
+						setValue("alt", filename);
+						onDataChange({ ...data, imageUrl: url, alt: filename });
+					},
+				})}
+				type="url"
+				placeholder="Image URL"
+				autoFocus={true}
 			/>
-			<Controller
-				control={control}
-				name="alt"
-				render={({ field }) => (
-					<input
-						{...field}
-						value={field.value ?? ""}
-						type="text"
-						placeholder="Alt text"
-						className="w-full border border-gray-400 bg-white px-1.5 py-0.5 text-[11px] outline-none"
-						onChange={(e) => {
-							field.onChange(e);
-							onDataChange({ ...data, alt: e.target.value });
-						}}
-					/>
-				)}
+			<Input
+				{...register("alt", {
+					onChange: (e) => onDataChange({ ...data, alt: e.target.value }),
+				})}
+				type="text"
+				placeholder="Alt text"
 			/>
 			<div className="flex-1 border border-dashed border-gray-400 flex items-center justify-center text-[11px] text-gray-500">
 				drag &amp; drop
@@ -120,7 +91,9 @@ function LinkBlockForm({
 	onDataChange,
 	onEditEnd,
 }: FormProps<LinkBlockData>) {
-	const { control, setValue } = useForm<LinkBlockData>({ defaultValues: data });
+	const { register, setValue } = useForm<LinkBlockData>({
+		defaultValues: data,
+	});
 	return (
 		<fieldset
 			className="h-full p-2 flex flex-col gap-1.5 "
@@ -128,69 +101,31 @@ function LinkBlockForm({
 				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
 			}}
 		>
-			<Controller
-				control={control}
-				name="url"
-				render={({ field }) => (
-					<input
-						{...field}
-						value={field.value ?? ""}
-						type="url"
-						placeholder="URL"
-						// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
-						autoFocus
-						className="w-full border border-gray-400 bg-white px-1.5 py-0.5 text-[11px] outline-none"
-						onChange={(e) => {
-							field.onChange(e);
-							onDataChange({ ...data, url: e.target.value });
-						}}
-						onBlur={(e) => {
-							// OpenGraph stub: URL hostname을 title로 자동 채움 (M5에서 실제 fetch로 교체)
-							const url = e.target.value;
-							try {
-								const hostname = new URL(url).hostname;
-								setValue("title", hostname);
-								onDataChange({ ...data, url, title: hostname });
-							} catch {
-								// invalid URL, skip
-							}
-						}}
-					/>
-				)}
+			<Input
+				{...register("url", {
+					onChange: (e) => onDataChange({ ...data, url: e.target.value }),
+					onBlur: (e) => {
+						// OpenGraph stub: URL hostname을 title로 자동 채움 (M5에서 실제 fetch로 교체)
+						try {
+							const hostname = new URL(e.target.value).hostname;
+							setValue("title", hostname);
+							onDataChange({ ...data, url: e.target.value, title: hostname });
+						} catch {
+							// invalid URL, skip
+						}
+					},
+				})}
+				type="url"
+				placeholder="URL"
+				autoFocus
 			/>
-			<Controller
-				control={control}
-				name="title"
-				render={({ field }) => (
-					<input
-						{...field}
-						value={field.value ?? ""}
-						type="text"
-						placeholder="Title"
-						className="w-full border border-gray-400 bg-white px-1.5 py-0.5 text-[11px] outline-none"
-						onChange={(e) => {
-							field.onChange(e);
-							onDataChange({ ...data, title: e.target.value });
-						}}
-					/>
-				)}
-			/>
-			<Controller
-				control={control}
-				name="description"
-				render={({ field }) => (
-					<input
-						{...field}
-						value={field.value ?? ""}
-						type="text"
-						placeholder="Description"
-						className="w-full border border-gray-400 bg-white px-1.5 py-0.5 text-[11px] outline-none"
-						onChange={(e) => {
-							field.onChange(e);
-							onDataChange({ ...data, description: e.target.value });
-						}}
-					/>
-				)}
+			<Input
+				{...register("description", {
+					onChange: (e) =>
+						onDataChange({ ...data, description: e.target.value }),
+				})}
+				type="text"
+				placeholder="description"
 			/>
 		</fieldset>
 	);
@@ -198,7 +133,7 @@ function LinkBlockForm({
 
 // ─── Search-based forms ───────────────────────────────────────────────────────
 
-type SearchBlockFormProps<R extends { title: string }> = {
+interface SearchBlockFormProps<R extends { title: string }> {
 	placeholder: string;
 	items: readonly R[];
 	filterFn: (item: R, query: string) => boolean;
@@ -206,7 +141,7 @@ type SearchBlockFormProps<R extends { title: string }> = {
 	onSelect: (item: R) => void;
 	onEditEnd: () => void;
 	footer?: ReactNode;
-};
+}
 
 function SearchBlockForm<R extends { title: string }>({
 	placeholder,
@@ -280,7 +215,9 @@ function MusicBlockForm({
 				r.artist.toLowerCase().includes(q.toLowerCase())
 			}
 			renderResult={(r) => ({ title: r.title, secondary: `— ${r.artist}` })}
-			onSelect={(r) => onDataChange({ ...data, title: r.title, artist: r.artist })}
+			onSelect={(r) =>
+				onDataChange({ ...data, title: r.title, artist: r.artist })
+			}
 			onEditEnd={onEditEnd}
 			footer={
 				data.title ? (
@@ -303,7 +240,10 @@ function GameBlockForm({
 			placeholder="Search game..."
 			items={MOCK_RESULTS.game}
 			filterFn={(r, q) => r.title.toLowerCase().includes(q.toLowerCase())}
-			renderResult={(r) => ({ title: r.title, secondary: `(${r.releaseYear})` })}
+			renderResult={(r) => ({
+				title: r.title,
+				secondary: `(${r.releaseYear})`,
+			})}
 			onSelect={(r) =>
 				onDataChange({ ...data, title: r.title, releaseYear: r.releaseYear })
 			}
@@ -322,7 +262,10 @@ function MovieBlockForm({
 			placeholder="Search movie..."
 			items={MOCK_RESULTS.movie}
 			filterFn={(r, q) => r.title.toLowerCase().includes(q.toLowerCase())}
-			renderResult={(r) => ({ title: r.title, secondary: `(${r.releaseYear})` })}
+			renderResult={(r) => ({
+				title: r.title,
+				secondary: `(${r.releaseYear})`,
+			})}
 			onSelect={(r) =>
 				onDataChange({ ...data, title: r.title, releaseYear: r.releaseYear })
 			}
@@ -345,17 +288,24 @@ function BookBlockForm({
 				r.author.toLowerCase().includes(q.toLowerCase())
 			}
 			renderResult={(r) => ({ title: r.title, secondary: `— ${r.author}` })}
-			onSelect={(r) => onDataChange({ ...data, title: r.title, author: r.author })}
+			onSelect={(r) =>
+				onDataChange({ ...data, title: r.title, author: r.author })
+			}
 			onEditEnd={onEditEnd}
 		/>
 	);
 }
 
-export function renderEditForm(
-	data: BlockData,
-	onDataChange: (newData: BlockData) => void,
-	onEditEnd: () => void,
-): JSX.Element {
+interface BlockEditFormProps {
+	data: BlockData;
+	onDataChange: (newData: BlockData) => void;
+	onEditEnd: () => void;
+}
+export default function BlockEditForm({
+	data,
+	onDataChange,
+	onEditEnd,
+}: BlockEditFormProps) {
 	switch (data.blockType) {
 		case "text":
 			return (
