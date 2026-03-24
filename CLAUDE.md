@@ -26,7 +26,7 @@ pnpm check            # 포맷 + 린트 함께 실행
 
 ### 기능 구조
 
-```
+```text
 src/
   features/diagram/     # 주요 기능 — 캔버스, 노드, 엣지, 그리드, 검색
     model/              # 상태, 타입, 비즈니스 규칙

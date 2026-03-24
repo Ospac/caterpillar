@@ -123,6 +123,7 @@ export function CanvasCoreInner() {
 		setNodes((curr) =>
 			curr.map((n) => {
 				if (n.id !== nodeId) return n;
+				//TODO: 타입 단언 대신 타입 좁히기 적용
 				const existing = n.data as BlockNodeData;
 				return {
 					...n,
