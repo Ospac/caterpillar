@@ -36,7 +36,12 @@ import {
 	createInitialCanvasRuntimeState,
 	type RuntimeNodeDockingState,
 } from "../../model/runtime";
-import type { BlockData, BlockNodeData, BlockType, DiagramNode } from "../../model/type";
+import type {
+	BlockData,
+	BlockNodeData,
+	BlockType,
+	DiagramNode,
+} from "../../model/type";
 import BlockNode from "./BlockNode";
 import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
