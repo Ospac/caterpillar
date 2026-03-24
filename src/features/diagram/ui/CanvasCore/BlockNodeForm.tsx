@@ -11,7 +11,7 @@ import type {
 	MusicBlockData,
 	TextBlockData,
 } from "features/diagram/model/type";
-import { type JSX, useState } from "react";
+import { type JSX, type ReactNode, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
 type FormProps<T extends BlockData> = {
@@ -198,18 +198,27 @@ function LinkBlockForm({
 
 // ─── Search-based forms ───────────────────────────────────────────────────────
 
-function MusicBlockForm({
-	data,
-	onDataChange,
+type SearchBlockFormProps<R extends { title: string }> = {
+	placeholder: string;
+	items: readonly R[];
+	filterFn: (item: R, query: string) => boolean;
+	renderResult: (item: R) => { title: string; secondary: string };
+	onSelect: (item: R) => void;
+	onEditEnd: () => void;
+	footer?: ReactNode;
+};
+
+function SearchBlockForm<R extends { title: string }>({
+	placeholder,
+	items,
+	filterFn,
+	renderResult,
+	onSelect,
 	onEditEnd,
-}: FormProps<MusicBlockData>) {
+	footer,
+}: SearchBlockFormProps<R>) {
 	const [query, setQuery] = useState("");
-	const results = MOCK_RESULTS.music.filter(
-		(r) =>
-			query.length > 0 &&
-			(r.title.toLowerCase().includes(query.toLowerCase()) ||
-				r.artist.toLowerCase().includes(query.toLowerCase())),
-	);
+	const results = items.filter((r) => query.length > 0 && filterFn(r, query));
 	return (
 		<fieldset
 			className="h-full flex flex-col "
@@ -220,7 +229,7 @@ function MusicBlockForm({
 			<input
 				type="text"
 				value={query}
-				placeholder="Search music..."
+				placeholder={placeholder}
 				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
 				autoFocus
 				className=" w-full border-b border-gray-400 bg-transparent px-2 py-1 text-[11px] outline-none"
@@ -228,33 +237,59 @@ function MusicBlockForm({
 			/>
 			<div className="flex-1 overflow-y-auto">
 				{results.length > 0 ? (
-					results.map((r) => (
-						<button
-							key={r.title}
-							type="button"
-							className=" w-full text-left px-2 py-1 text-[11px] hover:bg-gray-100"
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={() => {
-								onDataChange({ ...data, title: r.title, artist: r.artist });
-								onEditEnd();
-							}}
-						>
-							<span className="font-medium">{r.title}</span>
-							<span className="text-gray-500"> — {r.artist}</span>
-						</button>
-					))
+					results.map((r) => {
+						const { title, secondary } = renderResult(r);
+						return (
+							<button
+								key={r.title}
+								type="button"
+								className=" w-full text-left px-2 py-1 text-[11px] hover:bg-gray-100"
+								onMouseDown={(e) => e.preventDefault()}
+								onClick={() => {
+									onSelect(r);
+									onEditEnd();
+								}}
+							>
+								<span className="font-medium">{title}</span>
+								<span className="text-gray-500"> {secondary}</span>
+							</button>
+						);
+					})
 				) : (
 					<div className="flex h-full items-center justify-center text-[11px] text-gray-400">
 						{query ? "No results" : "Type to search"}
 					</div>
 				)}
 			</div>
-			{data.title && (
-				<div className="border-t border-gray-300 px-2 py-1 text-[10px] text-gray-600 bg-white/50">
-					{data.title}
-				</div>
-			)}
+			{footer}
 		</fieldset>
+	);
+}
+
+function MusicBlockForm({
+	data,
+	onDataChange,
+	onEditEnd,
+}: FormProps<MusicBlockData>) {
+	return (
+		<SearchBlockForm
+			placeholder="Search music..."
+			items={MOCK_RESULTS.music}
+			filterFn={(r, q) =>
+				r.title.toLowerCase().includes(q.toLowerCase()) ||
+				r.artist.toLowerCase().includes(q.toLowerCase())
+			}
+			renderResult={(r) => ({ title: r.title, secondary: `— ${r.artist}` })}
+			onSelect={(r) => onDataChange({ ...data, title: r.title, artist: r.artist })}
+			onEditEnd={onEditEnd}
+			footer={
+				data.title ? (
+					<div className="border-t border-gray-300 px-2 py-1 text-[10px] text-gray-600 bg-white/50">
+						{data.title}
+					</div>
+				) : undefined
+			}
+		/>
 	);
 }
 
@@ -263,55 +298,17 @@ function GameBlockForm({
 	onDataChange,
 	onEditEnd,
 }: FormProps<GameBlockData>) {
-	const [query, setQuery] = useState("");
-	const results = MOCK_RESULTS.game.filter(
-		(r) =>
-			query.length > 0 && r.title.toLowerCase().includes(query.toLowerCase()),
-	);
 	return (
-		<fieldset
-			className="h-full flex flex-col "
-			onBlur={(e) => {
-				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
-			}}
-		>
-			<input
-				type="text"
-				value={query}
-				placeholder="Search game..."
-				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
-				autoFocus
-				className=" w-full border-b border-gray-400 bg-transparent px-2 py-1 text-[11px] outline-none"
-				onChange={(e) => setQuery(e.target.value)}
-			/>
-			<div className="flex-1 overflow-y-auto">
-				{results.length > 0 ? (
-					results.map((r) => (
-						<button
-							key={r.title}
-							type="button"
-							className=" w-full text-left px-2 py-1 text-[11px] hover:bg-gray-100"
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={() => {
-								onDataChange({
-									...data,
-									title: r.title,
-									releaseYear: r.releaseYear,
-								});
-								onEditEnd();
-							}}
-						>
-							<span className="font-medium">{r.title}</span>
-							<span className="text-gray-500"> ({r.releaseYear})</span>
-						</button>
-					))
-				) : (
-					<div className="flex h-full items-center justify-center text-[11px] text-gray-400">
-						{query ? "No results" : "Type to search"}
-					</div>
-				)}
-			</div>
-		</fieldset>
+		<SearchBlockForm
+			placeholder="Search game..."
+			items={MOCK_RESULTS.game}
+			filterFn={(r, q) => r.title.toLowerCase().includes(q.toLowerCase())}
+			renderResult={(r) => ({ title: r.title, secondary: `(${r.releaseYear})` })}
+			onSelect={(r) =>
+				onDataChange({ ...data, title: r.title, releaseYear: r.releaseYear })
+			}
+			onEditEnd={onEditEnd}
+		/>
 	);
 }
 
@@ -320,55 +317,17 @@ function MovieBlockForm({
 	onDataChange,
 	onEditEnd,
 }: FormProps<MovieBlockData>) {
-	const [query, setQuery] = useState("");
-	const results = MOCK_RESULTS.movie.filter(
-		(r) =>
-			query.length > 0 && r.title.toLowerCase().includes(query.toLowerCase()),
-	);
 	return (
-		<fieldset
-			className="h-full flex flex-col "
-			onBlur={(e) => {
-				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
-			}}
-		>
-			<input
-				type="text"
-				value={query}
-				placeholder="Search movie..."
-				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
-				autoFocus
-				className=" w-full border-b border-gray-400 bg-transparent px-2 py-1 text-[11px] outline-none"
-				onChange={(e) => setQuery(e.target.value)}
-			/>
-			<div className="flex-1 overflow-y-auto">
-				{results.length > 0 ? (
-					results.map((r) => (
-						<button
-							key={r.title}
-							type="button"
-							className=" w-full text-left px-2 py-1 text-[11px] hover:bg-gray-100"
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={() => {
-								onDataChange({
-									...data,
-									title: r.title,
-									releaseYear: r.releaseYear,
-								});
-								onEditEnd();
-							}}
-						>
-							<span className="font-medium">{r.title}</span>
-							<span className="text-gray-500"> ({r.releaseYear})</span>
-						</button>
-					))
-				) : (
-					<div className="flex h-full items-center justify-center text-[11px] text-gray-400">
-						{query ? "No results" : "Type to search"}
-					</div>
-				)}
-			</div>
-		</fieldset>
+		<SearchBlockForm
+			placeholder="Search movie..."
+			items={MOCK_RESULTS.movie}
+			filterFn={(r, q) => r.title.toLowerCase().includes(q.toLowerCase())}
+			renderResult={(r) => ({ title: r.title, secondary: `(${r.releaseYear})` })}
+			onSelect={(r) =>
+				onDataChange({ ...data, title: r.title, releaseYear: r.releaseYear })
+			}
+			onEditEnd={onEditEnd}
+		/>
 	);
 }
 
@@ -377,53 +336,18 @@ function BookBlockForm({
 	onDataChange,
 	onEditEnd,
 }: FormProps<BookBlockData>) {
-	const [query, setQuery] = useState("");
-	const results = MOCK_RESULTS.book.filter(
-		(r) =>
-			query.length > 0 &&
-			(r.title.toLowerCase().includes(query.toLowerCase()) ||
-				r.author.toLowerCase().includes(query.toLowerCase())),
-	);
 	return (
-		<fieldset
-			className="h-full flex flex-col "
-			onBlur={(e) => {
-				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
-			}}
-		>
-			<input
-				type="text"
-				value={query}
-				placeholder="Search book..."
-				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
-				autoFocus
-				className=" w-full border-b border-gray-400 bg-transparent px-2 py-1 text-[11px] outline-none"
-				onChange={(e) => setQuery(e.target.value)}
-			/>
-			<div className="flex-1 overflow-y-auto">
-				{results.length > 0 ? (
-					results.map((r) => (
-						<button
-							key={r.title}
-							type="button"
-							className=" w-full text-left px-2 py-1 text-[11px] hover:bg-gray-100"
-							onMouseDown={(e) => e.preventDefault()}
-							onClick={() => {
-								onDataChange({ ...data, title: r.title, author: r.author });
-								onEditEnd();
-							}}
-						>
-							<span className="font-medium">{r.title}</span>
-							<span className="text-gray-500"> — {r.author}</span>
-						</button>
-					))
-				) : (
-					<div className="flex h-full items-center justify-center text-[11px] text-gray-400">
-						{query ? "No results" : "Type to search"}
-					</div>
-				)}
-			</div>
-		</fieldset>
+		<SearchBlockForm
+			placeholder="Search book..."
+			items={MOCK_RESULTS.book}
+			filterFn={(r, q) =>
+				r.title.toLowerCase().includes(q.toLowerCase()) ||
+				r.author.toLowerCase().includes(q.toLowerCase())
+			}
+			renderResult={(r) => ({ title: r.title, secondary: `— ${r.author}` })}
+			onSelect={(r) => onDataChange({ ...data, title: r.title, author: r.author })}
+			onEditEnd={onEditEnd}
+		/>
 	);
 }
 
