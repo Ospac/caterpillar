@@ -1,4 +1,6 @@
 import { describe, expect, it } from "@rstest/core";
+import { createDefaultBlockData } from "../../model/block";
+import type { DiagramNode } from "../../model/type";
 import {
 	cellCoordToPosition,
 	clampPositionToStage,
@@ -12,8 +14,6 @@ import {
 	positionToNearestCellCoord,
 	toCellKey,
 } from "../grid";
-import type { DiagramNode } from "../type";
-import { createDefaultBlockData } from "../../model/block";
 
 describe("grid(lib)", () => {
 	describe("getNextStage: 다음 stage 값을 얻기", () => {
@@ -47,8 +47,11 @@ describe("grid(lib)", () => {
 			const cellCoord = positionToNearestCellCoord({ x: 0, y: 0 }, 4);
 			expect(cellCoord).toEqual({ col: 0, row: 0 });
 		});
-		it("position이 {x: 520, y: 144}이면 가장 가까운 cell 좌표로 {col: 5, row: 2}를 반환한다", () => {
-			const cellCoord = positionToNearestCellCoord({ x: 520, y: 144 }, 7);
+		it("position이 {x: 5 * NODE_SIZE, y: 2 * NODE_SIZE}이면 가장 가까운 cell 좌표로 {col: 5, row: 2}를 반환한다", () => {
+			const cellCoord = positionToNearestCellCoord(
+				{ x: 5 * NODE_SIZE, y: 2 * NODE_SIZE },
+				7,
+			);
 			expect(cellCoord).toEqual({ col: 5, row: 2 });
 		});
 	});
@@ -164,7 +167,7 @@ describe("grid(lib)", () => {
 				id,
 				position: { x, y },
 				data: createDefaultBlockData("text", id),
-				type: "default",
+				type: "block",
 			}) as DiagramNode;
 
 		it("서로 다른 셀에 있는 노드들을 cellToNodeId에 단일 값으로 기록한다", () => {

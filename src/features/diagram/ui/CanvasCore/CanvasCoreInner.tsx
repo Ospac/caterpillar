@@ -1,6 +1,7 @@
 import {
 	addEdge,
 	type Connection,
+	ConnectionMode,
 	type CoordinateExtent,
 	type Edge,
 	MarkerType,
@@ -28,19 +29,27 @@ import {
 	NODE_SIZE,
 	syncNodeDockingState,
 } from "../../lib/grid";
-import type { DiagramNode, DockedNodeState, GridStage } from "../../lib/type";
+import type { DockedNodeState, GridStage } from "../../lib/type";
 import { createDefaultBlockData } from "../../model/block";
 import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
 	type RuntimeNodeDockingState,
 } from "../../model/runtime";
+import type {
+	BlockData,
+	BlockNodeData,
+	BlockType,
+	DiagramNode,
+} from "../../model/type";
+import BlockNode from "./BlockNode";
 import GridGuideOverlay from "./GridGuideOverlay";
-import SquareNode from "./SquareNode";
+import MenuNode from "./MenuNode";
 
 const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 const nodeTypes: NodeTypes = {
-	square: SquareNode,
+	menu: MenuNode,
+	block: BlockNode,
 };
 
 export function CanvasCoreInner() {
@@ -61,6 +70,7 @@ export function CanvasCoreInner() {
 	const [nodeDockingState, setNodeDockingState] =
 		useState<RuntimeNodeDockingState>(initialRuntimeState.nodeDockingState);
 	const [showGuide, setShowGuide] = useState(false);
+	const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
 
 	const stagePixelSize = getStagePixelSize(visibleStage);
@@ -109,7 +119,31 @@ export function CanvasCoreInner() {
 		});
 	};
 
+	const handleBlockDataChange = (nodeId: string, newData: BlockData) => {
+		setNodes((curr) =>
+			curr.map((n) => {
+				if (n.id !== nodeId) return n;
+				//TODO: 타입 단언 대신 타입 좁히기 적용
+				const existing = n.data as BlockNodeData;
+				return {
+					...n,
+					data: {
+						...newData,
+						onDataChange: existing.onDataChange,
+						onEditStart: existing.onEditStart,
+						onEditEnd: existing.onEditEnd,
+					},
+				};
+			}),
+		);
+	};
+
+	const handleEditStart = (nodeId: string) => setEditingNodeId(nodeId);
+	const handleEditEnd = (nodeId: string) =>
+		setEditingNodeId((curr) => (curr === nodeId ? null : curr));
+
 	const handleNodeDragStart = (_: MouseEvent, node: Node) => {
+		if (editingNodeId !== null) return;
 		setShowGuide(true);
 		updateNodeDockingState(node.id, node.position, (state) =>
 			transitionDockedNodeState(state, {
@@ -166,13 +200,37 @@ export function CanvasCoreInner() {
 		setShowGuide(false);
 	};
 
+	const handleMenuTypeSelect = (menuNodeId: string, blockType: BlockType) => {
+		const id = `node-${nodeIdRef.current}`;
+		nodeIdRef.current += 1;
+
+		setNodes((currentNodes) => {
+			const menuNode = currentNodes.find((n) => n.id === menuNodeId);
+			if (!menuNode) return currentNodes;
+
+			const newNode: DiagramNode = {
+				id,
+				type: "block",
+				position: menuNode.position,
+				data: {
+					...createDefaultBlockData(blockType, ""),
+					onDataChange: (newData) => handleBlockDataChange(id, newData),
+					onEditStart: () => handleEditStart(id),
+					onEditEnd: () => handleEditEnd(id),
+				},
+			};
+
+			return [...currentNodes.filter((n) => n.id !== menuNodeId), newNode];
+		});
+	};
+
 	const handleAddNode = () => {
 		const id = `node-${nodeIdRef.current}`;
 		nodeIdRef.current += 1;
 
 		const nextNode: DiagramNode = {
 			id,
-			type: "square",
+			type: "menu",
 			position: clampPositionToStage(
 				{
 					x: stagePixelSize / 2 - NODE_SIZE / 2,
@@ -181,7 +239,8 @@ export function CanvasCoreInner() {
 				visibleStage,
 			),
 			data: {
-				...createDefaultBlockData("text", `Node ${nodeIdRef.current - 1}`),
+				blockType: "menu",
+				onTypeSelect: (blockType) => handleMenuTypeSelect(id, blockType),
 			},
 		};
 
@@ -232,6 +291,8 @@ export function CanvasCoreInner() {
 					snapToGrid={false}
 					snapGrid={[NODE_SIZE, NODE_SIZE]}
 					autoPanOnNodeDrag={false}
+					autoPanOnConnect={false}
+					connectionMode={ConnectionMode.Loose}
 					panOnDrag={false}
 					panOnScroll={false}
 					preventScrolling={false}

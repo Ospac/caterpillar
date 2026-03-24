@@ -1,12 +1,22 @@
 import type { Edge } from "@xyflow/react";
 import { GRID_STAGES } from "../lib/grid";
-import type { DiagramNode, GridStage, XYPosition } from "../lib/type";
+import type { GridStage, XYPosition } from "../lib/type";
 import { validateBlockData } from "./block";
 import type { CanvasRuntimeState } from "./runtime";
+import type { DiagramNode, DiagramNodeType } from "./type";
+
+const DIAGRAM_NODE_TYPES: ReadonlySet<string> = new Set<DiagramNodeType>([
+	"menu",
+	"block",
+]);
+
+function isDiagramNodeType(value: unknown): value is DiagramNodeType {
+	return typeof value === "string" && DIAGRAM_NODE_TYPES.has(value);
+}
 
 export type NodeItem = {
 	id: string;
-	type: string;
+	type: DiagramNodeType;
 	position: XYPosition;
 	data: DiagramNode["data"];
 };
@@ -43,7 +53,9 @@ function isXYPosition(value: unknown): value is XYPosition {
 	return (
 		isRecord(value) &&
 		typeof value.x === "number" &&
-		typeof value.y === "number"
+		Number.isFinite(value.x) &&
+		typeof value.y === "number" &&
+		Number.isFinite(value.y)
 	);
 }
 
@@ -57,20 +69,30 @@ function parseNodeItem(value: unknown): NodeItem | null {
 		return null;
 	}
 
-	if (typeof value.id !== "string" || typeof value.type !== "string") {
+	if (typeof value.id !== "string" || !isDiagramNodeType(value.type)) {
 		return null;
 	}
 
-	const validation = validateBlockData(value.data);
-	if (validation.status === "invalid") {
-		return null;
+	let data: DiagramNode["data"];
+
+	if (value.type === "menu") {
+		if (value.data.blockType !== "menu") {
+			return null;
+		}
+		data = { blockType: "menu" };
+	} else {
+		const validation = validateBlockData(value.data);
+		if (validation.status === "invalid") {
+			return null;
+		}
+		data = validation.data as DiagramNode["data"];
 	}
 
 	return {
 		id: value.id,
 		type: value.type,
 		position: value.position,
-		data: validation.data as DiagramNode["data"],
+		data,
 	};
 }
 
@@ -107,7 +129,7 @@ export function serializeCanvasDocument(
 		visibleStage: runtimeState.visibleStage,
 		nodes: runtimeState.nodes.map((node) => ({
 			id: node.id,
-			type: node.type ?? "square",
+			type: node.type ?? "menu",
 			position: node.position,
 			data: node.data,
 		})),

@@ -1,5 +1,3 @@
-import type { Node } from "@xyflow/react";
-import type { BlockData } from "../model/block";
 import type { DROP_REASONS, FALLBACK_STRATEGIES } from "./docking";
 import type { GRID_STAGES } from "./grid";
 
@@ -48,10 +46,6 @@ export interface DragCancelEvent {
  * - `cancel`: 드래그를 취소하고 마지막 유효 도킹 지점 또는 현재 도킹 지점으로 복구한다.
  */
 export type DockingEvent = DragStartEvent | DragStopEvent | DragCancelEvent;
-
-export type DiagramNodeData = BlockData;
-
-export type DiagramNode = Node<DiagramNodeData>;
 
 export type GridStage = (typeof GRID_STAGES)[number];
 

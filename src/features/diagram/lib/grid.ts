@@ -1,7 +1,7 @@
+import type { DiagramNode } from "../model/type";
 import { createDockedNodeState } from "./docking";
 import type {
 	CellCoord,
-	DiagramNode,
 	DockedNodeState,
 	GridOccupancy,
 	GridStage,
@@ -10,7 +10,7 @@ import type {
 
 export const GRID_STAGES = [4, 7, 10] as const;
 export const MAX_GRID_STAGE: GridStage = GRID_STAGES[GRID_STAGES.length - 1];
-export const NODE_SIZE = 96;
+export const NODE_SIZE = 215;
 
 export function getNextStage(currentStage: GridStage): GridStage {
 	const currentIndex = GRID_STAGES.indexOf(currentStage);

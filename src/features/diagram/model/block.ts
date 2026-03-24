@@ -1,44 +1,61 @@
-export const BLOCK_TYPES = ["text", "image", "link"] as const;
+import { z } from "zod";
+import type { BlockData, BlockType, BlockValidationResult } from "./type";
 
-export type BlockType = (typeof BLOCK_TYPES)[number];
+const descriptionField = z.string().optional();
 
-type BlockBase = {
-	blockType: BlockType;
-	title: string;
-	description?: string;
-};
+const textSchema = z.object({
+	blockType: z.literal("text"),
+	title: z.string().nullish(),
+	text: z.string().nullish(),
+	description: descriptionField,
+});
 
-export type TextBlockData = BlockBase & {
-	blockType: "text";
-	text: string;
-};
+const imageSchema = z.object({
+	blockType: z.literal("image"),
+	title: z.string().nullish(),
+	imageUrl: z.string().nullish(),
+	alt: z.string().nullish(),
+	description: descriptionField,
+});
 
-export type ImageBlockData = BlockBase & {
-	blockType: "image";
-	imageUrl: string;
-	alt: string;
-};
+const linkSchema = z.object({
+	blockType: z.literal("link"),
+	title: z.string().nullish(),
+	url: z.string().nullish(),
+	description: descriptionField,
+});
 
-export type LinkBlockData = BlockBase & {
-	blockType: "link";
-	url: string;
-};
+const musicSchema = z.object({
+	blockType: z.literal("music"),
+	title: z.string().nullish(),
+	artist: z.string().nullish(),
+	albumArt: z.string().nullish(),
+	description: descriptionField,
+});
 
-export type BlockData = TextBlockData | ImageBlockData | LinkBlockData;
+const gameSchema = z.object({
+	blockType: z.literal("game"),
+	title: z.string().nullish(),
+	coverUrl: z.string().nullish(),
+	releaseYear: z.number().nullish(),
+	description: descriptionField,
+});
 
-export type BlockValidationResult =
-	| {
-			status: "ok" | "fallback";
-			data: BlockData;
-	  }
-	| {
-			status: "invalid";
-			reason: string;
-	  };
+const movieSchema = z.object({
+	blockType: z.literal("movie"),
+	title: z.string().nullish(),
+	posterUrl: z.string().nullish(),
+	releaseYear: z.number().nullish(),
+	description: descriptionField,
+});
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === "object" && value !== null;
-}
+const bookSchema = z.object({
+	blockType: z.literal("book"),
+	title: z.string().nullish(),
+	author: z.string().nullish(),
+	coverUrl: z.string().nullish(),
+	description: descriptionField,
+});
 
 export function createDefaultBlockData(
 	blockType: BlockType,
@@ -46,112 +63,154 @@ export function createDefaultBlockData(
 ): BlockData {
 	switch (blockType) {
 		case "text":
-			return {
-				blockType,
-				title,
-				text: title,
-			};
+			return { blockType, title, text: title };
 		case "image":
-			return {
-				blockType,
-				title,
-				imageUrl: "",
-				alt: title,
-			};
+			return { blockType, title, imageUrl: "", alt: title };
 		case "link":
-			return {
-				blockType,
-				title,
-				url: "",
-			};
+			return { blockType, title, url: "" };
+		case "music":
+			return { blockType, title, artist: "" };
+		case "game":
+			return { blockType, title };
+		case "movie":
+			return { blockType, title };
+		case "book":
+			return { blockType, title, author: "" };
 	}
 }
 
 export function validateBlockData(input: unknown): BlockValidationResult {
-	if (!isRecord(input) || typeof input.blockType !== "string") {
+	if (
+		typeof input !== "object" ||
+		input === null ||
+		typeof (input as Record<string, unknown>).blockType !== "string"
+	) {
 		return {
 			status: "invalid",
 			reason: "blockType이 없는 데이터는 복원할 수 없습니다.",
 		};
 	}
 
-	switch (input.blockType) {
+	const blockType = (input as Record<string, unknown>).blockType as string;
+
+	switch (blockType) {
 		case "text": {
-			const title =
-				typeof input.title === "string"
-					? input.title
-					: typeof input.text === "string"
-						? input.text
-						: "Untitled";
-			const text = typeof input.text === "string" ? input.text : title;
+			const r = textSchema.safeParse(input);
+			if (!r.success) return { status: "invalid", reason: r.error.message };
+			const title = r.data.title ?? r.data.text ?? "Untitled";
+			const text = r.data.text ?? title;
 			return {
-				status:
-					title === input.title && text === input.text ? "ok" : "fallback",
+				status: r.data.title != null && r.data.text != null ? "ok" : "fallback",
 				data: {
 					blockType: "text",
 					title,
 					text,
-					description:
-						typeof input.description === "string"
-							? input.description
-							: undefined,
+					description: r.data.description,
 				},
 			};
 		}
 		case "image": {
-			const title = typeof input.title === "string" ? input.title : "Image";
+			const r = imageSchema.safeParse(input);
+			if (!r.success) return { status: "invalid", reason: r.error.message };
+			const title = r.data.title ?? "Image";
 			return {
 				status:
-					typeof input.title === "string" &&
-					typeof input.imageUrl === "string" &&
-					typeof input.alt === "string"
+					r.data.title != null && r.data.imageUrl != null && r.data.alt != null
 						? "ok"
 						: "fallback",
 				data: {
 					blockType: "image",
 					title,
-					imageUrl: typeof input.imageUrl === "string" ? input.imageUrl : "",
-					alt: typeof input.alt === "string" ? input.alt : title,
-					description:
-						typeof input.description === "string"
-							? input.description
-							: undefined,
+					imageUrl: r.data.imageUrl ?? "",
+					alt: r.data.alt ?? title,
+					description: r.data.description,
 				},
 			};
 		}
 		case "link": {
-			const title = typeof input.title === "string" ? input.title : "Link";
+			const r = linkSchema.safeParse(input);
+			if (!r.success) return { status: "invalid", reason: r.error.message };
+			const title = r.data.title ?? "Link";
 			return {
-				status:
-					typeof input.title === "string" && typeof input.url === "string"
-						? "ok"
-						: "fallback",
+				status: r.data.title != null && r.data.url != null ? "ok" : "fallback",
 				data: {
 					blockType: "link",
 					title,
-					url: typeof input.url === "string" ? input.url : "",
-					description:
-						typeof input.description === "string"
-							? input.description
-							: undefined,
+					url: r.data.url ?? "",
+					description: r.data.description,
+				},
+			};
+		}
+		case "music": {
+			const r = musicSchema.safeParse(input);
+			if (!r.success) return { status: "invalid", reason: r.error.message };
+			const title = r.data.title ?? "Music";
+			return {
+				status:
+					r.data.title != null && r.data.artist != null ? "ok" : "fallback",
+				data: {
+					blockType: "music",
+					title,
+					artist: r.data.artist ?? "",
+					...(r.data.albumArt != null && { albumArt: r.data.albumArt }),
+					description: r.data.description,
+				},
+			};
+		}
+		case "game": {
+			const r = gameSchema.safeParse(input);
+			if (!r.success) return { status: "invalid", reason: r.error.message };
+			const title = r.data.title ?? "Game";
+			return {
+				status: r.data.title != null ? "ok" : "fallback",
+				data: {
+					blockType: "game",
+					title,
+					...(r.data.coverUrl != null && { coverUrl: r.data.coverUrl }),
+					...(r.data.releaseYear != null && {
+						releaseYear: r.data.releaseYear,
+					}),
+					description: r.data.description,
+				},
+			};
+		}
+		case "movie": {
+			const r = movieSchema.safeParse(input);
+			if (!r.success) return { status: "invalid", reason: r.error.message };
+			const title = r.data.title ?? "Movie";
+			return {
+				status: r.data.title != null ? "ok" : "fallback",
+				data: {
+					blockType: "movie",
+					title,
+					...(r.data.posterUrl != null && { posterUrl: r.data.posterUrl }),
+					...(r.data.releaseYear != null && {
+						releaseYear: r.data.releaseYear,
+					}),
+					description: r.data.description,
+				},
+			};
+		}
+		case "book": {
+			const r = bookSchema.safeParse(input);
+			if (!r.success) return { status: "invalid", reason: r.error.message };
+			const title = r.data.title ?? "Book";
+			return {
+				status:
+					r.data.title != null && r.data.author != null ? "ok" : "fallback",
+				data: {
+					blockType: "book",
+					title,
+					author: r.data.author ?? "",
+					...(r.data.coverUrl != null && { coverUrl: r.data.coverUrl }),
+					description: r.data.description,
 				},
 			};
 		}
 		default:
 			return {
 				status: "invalid",
-				reason: `지원하지 않는 blockType: ${String(input.blockType)}`,
+				reason: `지원하지 않는 blockType: ${blockType}`,
 			};
-	}
-}
-
-export function getBlockDisplayText(data: BlockData): string {
-	switch (data.blockType) {
-		case "text":
-			return data.text || data.title;
-		case "image":
-			return data.title || data.alt || "Image";
-		case "link":
-			return data.title || data.url || "Link";
 	}
 }

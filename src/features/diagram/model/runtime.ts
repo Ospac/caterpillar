@@ -1,13 +1,13 @@
 import type { Edge } from "@xyflow/react";
 import { createDockedNodeState } from "../lib/docking";
-import { clampPositionToStage, GRID_STAGES } from "../lib/grid";
-import type { DiagramNode, DockedNodeState, GridStage } from "../lib/type";
-import { createDefaultBlockData } from "./block";
+import { GRID_STAGES } from "../lib/grid";
+import type { DockedNodeState, GridStage } from "../lib/type";
 import {
 	type CanvasDocument,
 	type NodeItem,
 	parseCanvasDocument,
 } from "./document";
+import type { DiagramNode } from "./type";
 
 export type RuntimeNodeDockingState = Record<string, DockedNodeState>;
 
@@ -28,25 +28,8 @@ export function createRuntimeNodeDockingState(
 }
 const INITIAL_STAGE = GRID_STAGES[0];
 
-const initialEdges: Edge[] = [
-	// {
-	// 	id: "edge-1-2",
-	// 	source: "node-1",
-	// 	target: "node-2",
-	// 	type: "smoothstep",
-	// 	markerEnd: {
-	// 		type: MarkerType.ArrowClosed,
-	// 	},
-	// },
-];
-const initialNodes: NodeItem[] = [
-	{
-		id: "node-1",
-		type: "square",
-		position: clampPositionToStage({ x: 0, y: 0 }, INITIAL_STAGE),
-		data: createDefaultBlockData("text", "Node 1"),
-	},
-];
+const initialEdges: Edge[] = [];
+const initialNodes: NodeItem[] = [];
 const initialDocument: CanvasDocument = {
 	visibleStage: INITIAL_STAGE,
 	nodes: initialNodes,
