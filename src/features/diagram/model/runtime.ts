@@ -1,12 +1,13 @@
 import type { Edge } from "@xyflow/react";
 import { createDockedNodeState } from "../lib/docking";
 import { GRID_STAGES } from "../lib/grid";
-import type { DiagramNode, DockedNodeState, GridStage } from "../lib/type";
+import type { DockedNodeState, GridStage } from "../lib/type";
 import {
 	type CanvasDocument,
 	type NodeItem,
 	parseCanvasDocument,
 } from "./document";
+import type { DiagramNode } from "./type";
 
 export type RuntimeNodeDockingState = Record<string, DockedNodeState>;
 

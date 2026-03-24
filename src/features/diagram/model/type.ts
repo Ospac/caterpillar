@@ -80,7 +80,17 @@ export type MenuNodeData = {
 	onTypeSelect?: (blockType: BlockType) => void;
 };
 
-export type DiagramNodeData = BlockData | MenuNodeData;
+/**
+ * 블록 노드의 런타임 전용 콜백. BlockData에 직렬화되지 않는다.
+ * MenuNodeData의 onTypeSelect 패턴과 동일하게 data에 포함해 전달한다.
+ */
+export type BlockNodeData = BlockData & {
+	onDataChange?: (newData: BlockData) => void;
+	onEditStart?: () => void;
+	onEditEnd?: () => void;
+};
+
+export type DiagramNodeData = BlockNodeData | MenuNodeData;
 
 export type DiagramNodeType = "menu" | "block";
 

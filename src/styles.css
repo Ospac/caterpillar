@@ -33,6 +33,17 @@ html {
 body {
   @apply bg-gray-50 text-gray-950 dark:bg-gray-900 dark:text-gray-200;
 }
+::-webkit-scrollbar{
+  width: 0.5rem;
+}
+::-webkit-scrollbar-track {
+  background: color-mix(in oklab, var(--color-gray-500) 70%, transparent);
+
+}
+::-webkit-scrollbar-thumb{
+  background-color: color-mix(in oklab, var(--color-pinky) 30%, transparent);
+  
+}
 button {
   cursor: pointer;
 }

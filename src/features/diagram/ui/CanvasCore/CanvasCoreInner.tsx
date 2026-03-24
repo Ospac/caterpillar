@@ -36,7 +36,7 @@ import {
 	createInitialCanvasRuntimeState,
 	type RuntimeNodeDockingState,
 } from "../../model/runtime";
-import type { BlockType, DiagramNode } from "../../model/type";
+import type { BlockData, BlockNodeData, BlockType, DiagramNode } from "../../model/type";
 import BlockNode from "./BlockNode";
 import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
@@ -65,6 +65,7 @@ export function CanvasCoreInner() {
 	const [nodeDockingState, setNodeDockingState] =
 		useState<RuntimeNodeDockingState>(initialRuntimeState.nodeDockingState);
 	const [showGuide, setShowGuide] = useState(false);
+	const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
 
 	const stagePixelSize = getStagePixelSize(visibleStage);
@@ -113,7 +114,30 @@ export function CanvasCoreInner() {
 		});
 	};
 
+	const handleBlockDataChange = (nodeId: string, newData: BlockData) => {
+		setNodes((curr) =>
+			curr.map((n) => {
+				if (n.id !== nodeId) return n;
+				const existing = n.data as BlockNodeData;
+				return {
+					...n,
+					data: {
+						...newData,
+						onDataChange: existing.onDataChange,
+						onEditStart: existing.onEditStart,
+						onEditEnd: existing.onEditEnd,
+					},
+				};
+			}),
+		);
+	};
+
+	const handleEditStart = (nodeId: string) => setEditingNodeId(nodeId);
+	const handleEditEnd = (nodeId: string) =>
+		setEditingNodeId((curr) => (curr === nodeId ? null : curr));
+
 	const handleNodeDragStart = (_: MouseEvent, node: Node) => {
+		if (editingNodeId !== null) return;
 		setShowGuide(true);
 		updateNodeDockingState(node.id, node.position, (state) =>
 			transitionDockedNodeState(state, {
@@ -182,7 +206,12 @@ export function CanvasCoreInner() {
 				id,
 				type: "block",
 				position: menuNode.position,
-				data: createDefaultBlockData(blockType, ""),
+				data: {
+					...createDefaultBlockData(blockType, ""),
+					onDataChange: (newData) => handleBlockDataChange(id, newData),
+					onEditStart: () => handleEditStart(id),
+					onEditEnd: () => handleEditEnd(id),
+				},
 			};
 
 			return [...currentNodes.filter((n) => n.id !== menuNodeId), newNode];
