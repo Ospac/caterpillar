@@ -142,6 +142,12 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 					</div>
 				</div>
 			);
+		default:
+			return (
+				<div className="flex h-full items-center justify-center p-4 text-2xs text-gray-400">
+					알 수 없는 블록 타입
+				</div>
+			);
 	}
 }
 
