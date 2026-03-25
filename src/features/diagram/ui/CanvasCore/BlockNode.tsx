@@ -3,7 +3,8 @@ import templateImage from "assets/frankenstein.webp";
 import coverArtImage from "assets/ppqq.jpg";
 
 import { Fragment, type JSX, useState } from "react";
-import { NODE_SIZE } from "../../lib/grid";
+import { CELL_SIZE } from "../../lib/grid";
+import { getNodeSpan } from "../../lib/span";
 import type { BlockData, BlockNodeData } from "../../model/type";
 import BlockEditForm from "./BlockEditForm";
 
@@ -164,12 +165,14 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 		data.onEditEnd?.();
 	};
 
+	const span = getNodeSpan(data.blockType);
+
 	return (
 		// biome-ignore lint/a11y/noStaticElementInteractions: React Flow 노드 — 클릭으로 편집 진입
 		// biome-ignore lint/a11y/useKeyWithClickEvents: React Flow 캔버스는 마우스 인터랙션 기반
 		<div
 			className={containerClass(data.blockType)}
-			style={{ width: NODE_SIZE, height: NODE_SIZE }}
+			style={{ width: span.cols * CELL_SIZE, height: span.rows * CELL_SIZE }}
 			onClick={!isEditing ? startEdit : undefined}
 		>
 			<NodeHandles />

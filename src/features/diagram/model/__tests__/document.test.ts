@@ -9,7 +9,7 @@ import {
 
 describe("document(model)", () => {
 	const documentFixture: CanvasDocument = {
-		visibleStage: 4,
+		visibleStage: 8,
 		nodes: [
 			{
 				id: "node-1",
@@ -35,7 +35,7 @@ describe("document(model)", () => {
 	it("필수 필드가 없으면 null을 반환한다", () => {
 		expect(
 			parseCanvasDocument({
-				visibleStage: 4,
+				visibleStage: 8,
 				nodes: [{ id: "node-1" }],
 				edges: [],
 			}),
@@ -45,7 +45,7 @@ describe("document(model)", () => {
 	it("블록 데이터는 validation 결과를 반영해 보정한다", () => {
 		expect(
 			parseCanvasDocument({
-				visibleStage: 4,
+				visibleStage: 8,
 				nodes: [
 					{
 						id: "node-1",
@@ -57,7 +57,7 @@ describe("document(model)", () => {
 				edges: [],
 			}),
 		).toEqual({
-			visibleStage: 4,
+			visibleStage: 8,
 			nodes: [
 				{
 					id: "node-1",
@@ -77,7 +77,7 @@ describe("document(model)", () => {
 	it("node position에 NaN 또는 Infinity가 있으면 null을 반환한다", () => {
 		expect(
 			parseCanvasDocument({
-				visibleStage: 4,
+				visibleStage: 8,
 				nodes: [
 					{
 						id: "node-1",
@@ -92,7 +92,7 @@ describe("document(model)", () => {
 
 		expect(
 			parseCanvasDocument({
-				visibleStage: 4,
+				visibleStage: 8,
 				nodes: [
 					{
 						id: "node-1",
