@@ -55,7 +55,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 	switch (data.blockType) {
 		case "text":
 			return (
-				<div className="flex h-full text-center leading-tight p-4 overflow-y-auto">
+				<div className="flex h-full text-center leading-tight p-4 overflow-y-auto break-all">
 					{data.text}
 				</div>
 			);
@@ -150,10 +150,12 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 	const [isEditing, setIsEditing] = useState(data.initialEditing ?? false);
 	const startEdit = () => {
 		setIsEditing(true);
+		data.onEditStart?.();
 	};
 
 	const endEdit = () => {
 		setIsEditing(false);
+		data.onEditEnd?.();
 	};
 
 	const span = getNodeSpan(data.blockType);
@@ -161,7 +163,7 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 		// biome-ignore lint/a11y/noStaticElementInteractions: React Flow 노드 — 클릭으로 편집 진입
 		// biome-ignore lint/a11y/useKeyWithClickEvents: React Flow 캔버스는 마우스 인터랙션 기반
 		<div
-			className={containerClass(data.blockType)}
+			className={`${containerClass(data.blockType)}${isEditing ? " nodrag" : ""}`}
 			style={{ width: span.cols * CELL_SIZE, height: span.rows * CELL_SIZE }}
 			onClick={!isEditing ? startEdit : undefined}
 		>
