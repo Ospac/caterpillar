@@ -1,23 +1,83 @@
 export const MOCK_RESULTS = {
 	music: [
-		{ title: "ppqq", artist: "Pishu" },
-		{ title: "Antichrist Television Blues", artist: "Arcade Fire" },
-		{ title: "Motion Picture Soundtrack", artist: "Radiohead" },
+		{
+			title: "ppqq",
+			artist: "Pishu",
+			image:
+				"https://lastfm.freetls.fastly.net/i/u/500x500/be8eb85d6e4687d24321e4d6fff65718.jpg",
+		},
+		{
+			title: "Antichrist Television Blues",
+			artist: "Arcade Fire",
+			image:
+				"https://lastfm.freetls.fastly.net/i/u/500x500/be8eb85d6e4687d24321e4d6fff65718.jpg",
+		},
+		{
+			title: "Motion Picture Soundtrack",
+			artist: "Radiohead",
+			image:
+				"https://lastfm.freetls.fastly.net/i/u/500x500/be8eb85d6e4687d24321e4d6fff65718.jpg",
+		},
 	],
 	game: [
-		{ title: "Elden Ring", releaseYear: 2022 },
-		{ title: "Hollow Knight", releaseYear: 2017 },
-		{ title: "Disco Elysium", releaseYear: 2019 },
+		{
+			title: "Elden Ring",
+			releaseYear: 2022,
+			image:
+				"https://images.igdb.com/igdb/image/upload/t_cover_big/co1sfj.webp",
+		},
+		{
+			title: "Hollow Knight",
+			releaseYear: 2017,
+			image:
+				"https://images.igdb.com/igdb/image/upload/t_cover_big/co1sfj.webp",
+		},
+		{
+			title: "Disco Elysium",
+			releaseYear: 2019,
+			image:
+				"https://images.igdb.com/igdb/image/upload/t_cover_big/co1sfj.webp",
+		},
 	],
 	movie: [
-		{ title: "Everything Everywhere All at Once", releaseYear: 2022 },
-		{ title: "Portrait of a Lady on Fire", releaseYear: 2019 },
-		{ title: "Annihilation", releaseYear: 2018 },
+		{
+			title: "Everything Everywhere All at Once",
+			releaseYear: 2022,
+			image:
+				"https://media.themoviedb.org/t/p/w300_and_h450_face/aIRrCuaWpsdVil2T2vTfjL7MLWR.jpg",
+		},
+		{
+			title: "Portrait of a Lady on Fire",
+			releaseYear: 2019,
+			image:
+				"https://media.themoviedb.org/t/p/w300_and_h450_face/aIRrCuaWpsdVil2T2vTfjL7MLWR.jpg",
+		},
+		{
+			title: "Annihilation",
+			releaseYear: 2018,
+			image:
+				"https://media.themoviedb.org/t/p/w300_and_h450_face/aIRrCuaWpsdVil2T2vTfjL7MLWR.jpg",
+		},
 	],
 	book: [
-		{ title: "The Left Hand of Darkness", author: "Ursula K. Le Guin" },
-		{ title: "Piranesi", author: "Susanna Clarke" },
-		{ title: "Normal People", author: "Sally Rooney" },
+		{
+			title: "The Left Hand of Darkness",
+			author: "Ursula K. Le Guin",
+			image:
+				"https://shopping-phinf.pstatic.net/main_3246352/32463527641.20240917111252.jpg?type=w300",
+		},
+		{
+			title: "Piranesi",
+			author: "Susanna Clarke",
+			image:
+				"https://shopping-phinf.pstatic.net/main_3246352/32463527641.20240917111252.jpg?type=w300",
+		},
+		{
+			title: "Normal People",
+			author: "Sally Rooney",
+			image:
+				"https://shopping-phinf.pstatic.net/main_3246352/32463527641.20240917111252.jpg?type=w300",
+		},
 	],
 } as const;
 

@@ -19,25 +19,24 @@ function NodeHandles() {
 	);
 }
 interface RectangleBlockViewProps {
-	coverUrl?: string;
+	image?: string;
 	title?: string;
 	author?: string;
 	year?: number;
 }
 function RectangleBlockView({
-	coverUrl,
+	image,
 	title,
 	author,
 	year,
 }: RectangleBlockViewProps) {
 	return (
 		<div className="flex flex-col h-full">
-			{coverUrl && (
-				<img className="w-full h-32 object-cover" src={coverUrl} alt={title} />
+			{image && (
+				<img className="w-full h-40 object-cover" src={image} alt={title} />
 			)}
-			<div className="flex flex-col flex-1 justify-center items-center p-3 gap-1">
-				<p className="font-medium text-center">{title}s</p>
-				{year && <p className="text-2xs text-gray-600">{year}</p>}
+			<div className="flex flex-col flex-1 justify-center items-center p-1 gap-1">
+				<p className="font-medium text-center text-2xs">{title}</p>
 			</div>
 		</div>
 	);
@@ -65,11 +64,13 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<div className="h-full p-2.5">
 					<figure>
 						<img
-							className="outline-2 outline-purple-600"
-							src={data.imageUrl || defaultImage}
-							alt={data.alt}
+							className="border border-gray-700"
+							src={data.image || defaultImage}
+							alt={data.caption}
 						/>
-						<figcaption className="text-center mt-1.5">{data.title}</figcaption>
+						<figcaption className="text-center mt-1.5 text-xs">
+							{data.caption}
+						</figcaption>
 					</figure>
 				</div>
 			);
@@ -95,27 +96,25 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<div className="grid grid-cols-[1.25rem_1fr] grid-rows-[1fr_1.25rem]">
 					<div className="flex items-end justify-center py-2 border-r">
 						<p className="[writing-mode:vertical-rl] rotate-180 text-2xs">
-							{data.artist}
+							{data.title?.slice(0, 20)}
 						</p>
 					</div>
 					<div>
 						<img
 							className="w-full h-full object-cover"
-							src={data.albumArt || coverArtImage}
+							src={data.image || coverArtImage}
 							alt={data.title}
 						/>
 					</div>
-					<div className="col-span-2 flex items-center bg-blue border-t border-gray-700 px-5">
-						<h2 className="text-2xs">
-							{data.artist} - {data.title}
-						</h2>
+					<div className="col-span-2 flex items-center bg-blue border-t border-gray-700 px-4">
+						<h2 className="text-2xs">{data.artist?.slice(0, 20)}</h2>
 					</div>
 				</div>
 			);
 		case "game":
 			return (
 				<RectangleBlockView
-					coverUrl={data.coverUrl}
+					image={data.image}
 					title={data.title}
 					year={data.releaseYear}
 					author={data.title}
@@ -124,7 +123,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 		case "movie":
 			return (
 				<RectangleBlockView
-					coverUrl={data.posterUrl}
+					image={data.image}
 					title={data.title}
 					year={data.releaseYear}
 					author={data.title}
@@ -133,7 +132,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 		case "book":
 			return (
 				<RectangleBlockView
-					coverUrl={data.coverUrl}
+					image={data.image}
 					title={data.title}
 					author={data.author}
 				/>
@@ -149,7 +148,6 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 
 export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 	const [isEditing, setIsEditing] = useState(data.initialEditing ?? false);
-
 	const startEdit = () => {
 		setIsEditing(true);
 	};

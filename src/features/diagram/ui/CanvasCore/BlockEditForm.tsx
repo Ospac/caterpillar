@@ -38,7 +38,8 @@ function TextBlockForm({
 				})}
 				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
 				autoFocus
-				className="w-full h-full resize-none bg-transparent text-[12px] leading-tight outline-none p-2"
+				className="w-full h-full resize-none bg-transparent text-xs leading-tight outline-none p-4"
+				placeholder="type"
 			/>
 		</fieldset>
 	);
@@ -49,7 +50,7 @@ function ImageBlockForm({
 	onDataChange,
 	onEditEnd,
 }: FormProps<ImageBlockData>) {
-	const { register, setValue } = useForm<ImageBlockData>({
+	const { register } = useForm<ImageBlockData>({
 		defaultValues: data,
 	});
 	return (
@@ -60,12 +61,10 @@ function ImageBlockForm({
 			}}
 		>
 			<Input
-				{...register("imageUrl", {
+				{...register("image", {
 					onChange: (e) => {
 						const url = e.target.value;
-						const filename = url.split("/").pop()?.split("?")[0] ?? "";
-						setValue("alt", filename);
-						onDataChange({ ...data, imageUrl: url, alt: filename });
+						onDataChange({ ...data, image: url });
 					},
 				})}
 				type="url"
@@ -73,11 +72,11 @@ function ImageBlockForm({
 				autoFocus={true}
 			/>
 			<Input
-				{...register("alt", {
-					onChange: (e) => onDataChange({ ...data, alt: e.target.value }),
+				{...register("caption", {
+					onChange: (e) => onDataChange({ ...data, caption: e.target.value }),
 				})}
 				type="text"
-				placeholder="Alt text"
+				placeholder="caption text"
 			/>
 			<div className="flex-1 border border-dashed border-gray-400 flex items-center justify-center text-[11px] text-gray-500">
 				drag &amp; drop
@@ -245,7 +244,10 @@ function GameBlockForm({
 				secondary: `(${r.releaseYear})`,
 			})}
 			onSelect={(r) =>
-				onDataChange({ ...data, title: r.title, releaseYear: r.releaseYear })
+				onDataChange({
+					...data,
+					...r,
+				})
 			}
 			onEditEnd={onEditEnd}
 		/>
@@ -267,7 +269,10 @@ function MovieBlockForm({
 				secondary: `(${r.releaseYear})`,
 			})}
 			onSelect={(r) =>
-				onDataChange({ ...data, title: r.title, releaseYear: r.releaseYear })
+				onDataChange({
+					...data,
+					...r,
+				})
 			}
 			onEditEnd={onEditEnd}
 		/>
@@ -288,9 +293,7 @@ function BookBlockForm({
 				r.author.toLowerCase().includes(q.toLowerCase())
 			}
 			renderResult={(r) => ({ title: r.title, secondary: `— ${r.author}` })}
-			onSelect={(r) =>
-				onDataChange({ ...data, title: r.title, author: r.author })
-			}
+			onSelect={(r) => onDataChange({ ...data, ...r })}
 			onEditEnd={onEditEnd}
 		/>
 	);
