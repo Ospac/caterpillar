@@ -71,7 +71,6 @@ export function CanvasCoreInner() {
 	const [nodeDockingState, setNodeDockingState] =
 		useState<RuntimeNodeDockingState>(initialRuntimeState.nodeDockingState);
 	const [showGuide, setShowGuide] = useState(false);
-	const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
 
 	const stagePixelSize = getStagePixelSize(visibleStage);
@@ -133,20 +132,13 @@ export function CanvasCoreInner() {
 					data: {
 						...newData,
 						onDataChange: existing.onDataChange,
-						onEditStart: existing.onEditStart,
-						onEditEnd: existing.onEditEnd,
 					},
 				};
 			}),
 		);
 	};
 
-	const handleEditStart = (nodeId: string) => setEditingNodeId(nodeId);
-	const handleEditEnd = (nodeId: string) =>
-		setEditingNodeId((curr) => (curr === nodeId ? null : curr));
-
 	const handleNodeDragStart = (_: MouseEvent, node: Node) => {
-		if (editingNodeId !== null) return;
 		setShowGuide(true);
 		const diagramNode = node as DiagramNode;
 		const span = getNodeSpan(diagramNode.data.blockType);
@@ -237,8 +229,7 @@ export function CanvasCoreInner() {
 				data: {
 					...createDefaultBlockData(blockType, ""),
 					onDataChange: (newData) => handleBlockDataChange(id, newData),
-					onEditStart: () => handleEditStart(id),
-					onEditEnd: () => handleEditEnd(id),
+					initialEditing: true,
 				},
 			};
 

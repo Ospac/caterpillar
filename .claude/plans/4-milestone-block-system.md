@@ -111,30 +111,9 @@ const handleBlockDataChange = (nodeId: string, newData: BlockData) => {
 // BlockNodeData에 onDataChange 콜백 포함, MenuNode의 onTypeSelect 패턴과 동일
 ```
 
-### Step 5. CanvasCoreInner 연동 🔲 일부 완료
+### Step 5. CanvasCoreInner 연동 ✅ 완료
 
-완료:
-- `handleMenuTypeSelect(menuNodeId, blockType)`: 메뉴 노드 → 블록 노드 변환 완료
-  1. 해당 메뉴 노드의 `position` 조회
-  2. `createDefaultBlockData(blockType, ...)` 생성
-  3. `"block"` 타입 노드 추가
-  4. `"menu"` 노드 제거
-
-미구현:
-- 새 노드 즉시 편집 상태 진입 (step 5 완료 후 연동)
-- `editingNodeId` 상태 추가
-- `onNodeDragStart` 가드: `editingNodeId !== null`이면 드래그 이벤트 무시
-
-### Step 6. 시각 상태 스타일 🔲 미구현
-
-| 상태 | 적용 조건 | 스타일 |
-|---|---|---|
-| 기본 | - | 현재 `bg-green border-gray-700` |
-| 호버 | `hover:` | 테두리 강조 |
-| 선택 | React Flow `selected` prop | 링 또는 그림자 |
-| 편집 중 | `editingNodeId === node.id` | 배경색 구분, 도킹 핸들 숨김 |
-| 도킹 가능 | 드래그 중 nearest cell 유효 | 프리뷰 셀 하이라이트 |
-| 도킹 불가 | 드래그 중 nearest cell 점유 | 붉은 색조 |
+- 새 노드 생성 즉시 편집 상태 진입: `BlockNodeData.initialEditing` 플래그 + `setEditingNodeId(id)` 호출
 
 ---
 

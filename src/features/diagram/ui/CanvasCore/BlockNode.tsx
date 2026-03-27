@@ -153,16 +153,14 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 }
 
 export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
-	const [isEditing, setIsEditing] = useState(false);
+	const [isEditing, setIsEditing] = useState(data.initialEditing ?? false);
 
 	const startEdit = () => {
 		setIsEditing(true);
-		data.onEditStart?.();
 	};
 
 	const endEdit = () => {
 		setIsEditing(false);
-		data.onEditEnd?.();
 	};
 
 	const span = getNodeSpan(data.blockType);
