@@ -14,28 +14,27 @@ export type BlockType = (typeof BLOCK_TYPES)[number];
 type BlockBase = {
 	blockType: BlockType;
 	title?: string;
-	description?: string;
 };
 
 export type TextBlockData = BlockBase & {
 	blockType: "text";
-	text: string;
+	text?: string;
 };
 
 export type ImageBlockData = BlockBase & {
 	blockType: "image";
-	imageUrl: string;
-	alt: string;
+	imageUrl?: string;
+	alt?: string;
 };
 
 export type LinkBlockData = BlockBase & {
 	blockType: "link";
-	url: string;
+	url?: string;
 	description?: string;
 };
 export type MusicBlockData = BlockBase & {
 	blockType: "music";
-	artist: string;
+	artist?: string;
 	albumArt?: string;
 };
 export type GameBlockData = BlockBase & {
@@ -50,7 +49,7 @@ export type MovieBlockData = BlockBase & {
 };
 export type BookBlockData = BlockBase & {
 	blockType: "book";
-	author: string;
+	author?: string;
 	coverUrl?: string;
 };
 export type BlockData =

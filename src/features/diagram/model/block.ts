@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { BlockData, BlockType, BlockValidationResult } from "./type";
+import type { BlockValidationResult } from "./type";
 
 const descriptionField = z.string().optional();
 
@@ -57,28 +57,6 @@ const bookSchema = z.object({
 	description: descriptionField,
 });
 
-export function createDefaultBlockData(
-	blockType: BlockType,
-	title: string,
-): BlockData {
-	switch (blockType) {
-		case "text":
-			return { blockType, title, text: title };
-		case "image":
-			return { blockType, title, imageUrl: "", alt: title };
-		case "link":
-			return { blockType, title, url: "" };
-		case "music":
-			return { blockType, title, artist: "" };
-		case "game":
-			return { blockType, title };
-		case "movie":
-			return { blockType, title };
-		case "book":
-			return { blockType, title, author: "" };
-	}
-}
-
 export function validateBlockData(input: unknown): BlockValidationResult {
 	if (
 		typeof input !== "object" ||
@@ -105,7 +83,6 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					blockType: "text",
 					title,
 					text,
-					description: r.data.description,
 				},
 			};
 		}
@@ -123,7 +100,6 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					title,
 					imageUrl: r.data.imageUrl ?? "",
 					alt: r.data.alt ?? title,
-					description: r.data.description,
 				},
 			};
 		}
@@ -153,7 +129,6 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					title,
 					artist: r.data.artist ?? "",
 					...(r.data.albumArt != null && { albumArt: r.data.albumArt }),
-					description: r.data.description,
 				},
 			};
 		}
@@ -170,7 +145,6 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					...(r.data.releaseYear != null && {
 						releaseYear: r.data.releaseYear,
 					}),
-					description: r.data.description,
 				},
 			};
 		}
@@ -187,7 +161,6 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					...(r.data.releaseYear != null && {
 						releaseYear: r.data.releaseYear,
 					}),
-					description: r.data.description,
 				},
 			};
 		}
@@ -203,7 +176,6 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					title,
 					author: r.data.author ?? "",
 					...(r.data.coverUrl != null && { coverUrl: r.data.coverUrl }),
-					description: r.data.description,
 				},
 			};
 		}

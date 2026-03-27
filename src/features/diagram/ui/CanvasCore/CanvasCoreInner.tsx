@@ -31,7 +31,6 @@ import {
 } from "../../lib/grid";
 import { getNodeSpan, WIDE_SPAN } from "../../lib/span";
 import type { DockedNodeState, GridStage, NodeSpan } from "../../lib/type";
-import { createDefaultBlockData } from "../../model/block";
 import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
@@ -227,7 +226,7 @@ export function CanvasCoreInner() {
 				type: "block",
 				position: menuNode.position,
 				data: {
-					...createDefaultBlockData(blockType, ""),
+					blockType,
 					onDataChange: (newData) => handleBlockDataChange(id, newData),
 					initialEditing: true,
 				},

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@rstest/core";
-import { createDefaultBlockData } from "../../model/block";
 import type { DiagramNode } from "../../model/type";
 import {
 	CELL_SIZE,
@@ -218,11 +217,11 @@ describe("grid(lib)", () => {
 			({
 				id,
 				position: { x, y },
-				data: createDefaultBlockData(blockType, id),
+				data: { blockType },
 				type: "block",
 			}) as DiagramNode;
 
-		it("2×2 텍스트 노드 하나는 4개 sub-cell을 점유한다", () => {
+		it("2x2 텍스트 노드 하나는 4개 sub-cell을 점유한다", () => {
 			const occupancy = getGridOccupancy([createNode("node-a", 0, 0)], 8);
 
 			expect(occupancy.occupiedCellCount).toEqual(4);
@@ -246,10 +245,7 @@ describe("grid(lib)", () => {
 
 		it("서로 다른 앵커의 2×2 노드 2개는 8개 셀을 점유하고 충돌 없음", () => {
 			const occupancy = getGridOccupancy(
-				[
-					createNode("node-a", 0, 0),
-					createNode("node-b", 4 * CELL_SIZE, 0),
-				],
+				[createNode("node-a", 0, 0), createNode("node-b", 4 * CELL_SIZE, 0)],
 				8,
 			);
 
@@ -261,10 +257,7 @@ describe("grid(lib)", () => {
 
 		it("같은 앵커에 2×2 노드 2개가 오면 4개 셀이 모두 충돌한다", () => {
 			const occupancy = getGridOccupancy(
-				[
-					createNode("node-a", 0, 0),
-					createNode("node-b", 10, 10),
-				],
+				[createNode("node-a", 0, 0), createNode("node-b", 10, 10)],
 				8,
 			);
 
@@ -277,16 +270,14 @@ describe("grid(lib)", () => {
 			// node-a: anchor {0,0} → {0,0},{1,0},{0,1},{1,1}
 			// node-b: anchor {1,0} → {1,0},{2,0},{1,1},{2,1}  → {1,0},{1,1} 충돌
 			const occupancy = getGridOccupancy(
-				[
-					createNode("node-a", 0, 0),
-					createNode("node-b", 1 * CELL_SIZE, 0),
-				],
+				[createNode("node-a", 0, 0), createNode("node-b", 1 * CELL_SIZE, 0)],
 				8,
 			);
 
-			expect(
-				Array.from(occupancy.conflictedCellKeys).sort(),
-			).toEqual(["1,0", "1,1"]);
+			expect(Array.from(occupancy.conflictedCellKeys).sort()).toEqual([
+				"1,0",
+				"1,1",
+			]);
 			expect(occupancy.cellToNodeId.get("0,0")).toEqual("node-a");
 			expect(occupancy.cellToNodeId.get("0,1")).toEqual("node-a");
 			expect(occupancy.cellToNodeId.get("2,0")).toEqual("node-b");

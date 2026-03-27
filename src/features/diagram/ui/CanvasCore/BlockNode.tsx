@@ -1,5 +1,5 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import templateImage from "assets/frankenstein.webp";
+import defaultImage from "assets/frankenstein.webp";
 import coverArtImage from "assets/ppqq.jpg";
 
 import { Fragment, type JSX, useState } from "react";
@@ -18,7 +18,30 @@ function NodeHandles() {
 		</Fragment>
 	);
 }
-
+interface RectangleBlockViewProps {
+	coverUrl?: string;
+	title?: string;
+	author?: string;
+	year?: number;
+}
+function RectangleBlockView({
+	coverUrl,
+	title,
+	author,
+	year,
+}: RectangleBlockViewProps) {
+	return (
+		<div className="flex flex-col h-full">
+			{coverUrl && (
+				<img className="w-full h-32 object-cover" src={coverUrl} alt={title} />
+			)}
+			<div className="flex flex-col flex-1 justify-center items-center p-3 gap-1">
+				<p className="font-medium text-center">{title}s</p>
+				{year && <p className="text-2xs text-gray-600">{year}</p>}
+			</div>
+		</div>
+	);
+}
 function containerClass(blockType: string): string {
 	switch (blockType) {
 		case "image":
@@ -33,7 +56,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 	switch (data.blockType) {
 		case "text":
 			return (
-				<div className="flex h-full text-center leading-tight p-4 overflow-y-scroll">
+				<div className="flex h-full text-center leading-tight p-4 overflow-y-auto">
 					{data.text}
 				</div>
 			);
@@ -43,7 +66,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 					<figure>
 						<img
 							className="outline-2 outline-purple-600"
-							src={data.imageUrl || templateImage}
+							src={data.imageUrl || defaultImage}
 							alt={data.alt}
 						/>
 						<figcaption className="text-center mt-1.5">{data.title}</figcaption>
@@ -55,7 +78,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<div className="flex flex-col h-full">
 					<img
 						className="shrink min-h-0 h-40"
-						src={templateImage}
+						src={defaultImage}
 						alt={data.title}
 					/>
 					<div className="flex flex-row items-center gap-1.5 bg-green py-0.5 px-3 border-t border-t-gray-700 shrink-0">
@@ -91,57 +114,29 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 			);
 		case "game":
 			return (
-				<div className="flex flex-col h-full">
-					{data.coverUrl && (
-						<img
-							className="w-full h-32 object-cover"
-							src={data.coverUrl}
-							alt={data.title}
-						/>
-					)}
-					<div className="flex flex-col flex-1 justify-center items-center p-3 gap-1">
-						<p className="font-medium text-center">{data.title || "Game"}</p>
-						{data.releaseYear && (
-							<p className="text-2xs text-gray-600">{data.releaseYear}</p>
-						)}
-					</div>
-				</div>
+				<RectangleBlockView
+					coverUrl={data.coverUrl}
+					title={data.title}
+					year={data.releaseYear}
+					author={data.title}
+				/>
 			);
 		case "movie":
 			return (
-				<div className="flex flex-col h-full">
-					{data.posterUrl && (
-						<img
-							className="w-full h-32 object-cover"
-							src={data.posterUrl}
-							alt={data.title}
-						/>
-					)}
-					<div className="flex flex-col flex-1 justify-center items-center p-3 gap-1">
-						<p className="font-medium text-center">{data.title || "Movie"}</p>
-						{data.releaseYear && (
-							<p className="text-2xs text-gray-600">{data.releaseYear}</p>
-						)}
-					</div>
-				</div>
+				<RectangleBlockView
+					coverUrl={data.posterUrl}
+					title={data.title}
+					year={data.releaseYear}
+					author={data.title}
+				/>
 			);
 		case "book":
 			return (
-				<div className="flex flex-col h-full">
-					{data.coverUrl && (
-						<img
-							className="w-full h-32 object-cover"
-							src={data.coverUrl}
-							alt={data.title}
-						/>
-					)}
-					<div className="flex flex-col flex-1 justify-center items-center p-3 gap-1">
-						<p className="font-medium text-center">{data.title || "Book"}</p>
-						{data.author && (
-							<p className="text-2xs text-gray-600">{data.author}</p>
-						)}
-					</div>
-				</div>
+				<RectangleBlockView
+					coverUrl={data.coverUrl}
+					title={data.title}
+					author={data.author}
+				/>
 			);
 		default:
 			return (
@@ -164,7 +159,6 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 	};
 
 	const span = getNodeSpan(data.blockType);
-
 	return (
 		// biome-ignore lint/a11y/noStaticElementInteractions: React Flow 노드 — 클릭으로 편집 진입
 		// biome-ignore lint/a11y/useKeyWithClickEvents: React Flow 캔버스는 마우스 인터랙션 기반

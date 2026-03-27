@@ -1,5 +1,4 @@
 import { describe, expect, it } from "@rstest/core";
-import { createDefaultBlockData } from "../block";
 import {
 	type CanvasDocument,
 	type ParsedCanvasDocument,
@@ -15,7 +14,7 @@ describe("document(model)", () => {
 				id: "node-1",
 				type: "block",
 				position: { x: 0, y: 0 },
-				data: createDefaultBlockData("text", "Node 1"),
+				data: { blockType: "text", text: "Node 1" },
 			},
 		],
 		edges: [
@@ -83,7 +82,7 @@ describe("document(model)", () => {
 						id: "node-1",
 						type: "block",
 						position: { x: Number.NaN, y: 0 },
-						data: createDefaultBlockData("text", "Node 1"),
+						data: { blockType: "text", text: "Node 1" },
 					},
 				],
 				edges: [],
@@ -98,7 +97,7 @@ describe("document(model)", () => {
 						id: "node-1",
 						type: "block",
 						position: { x: 0, y: Number.POSITIVE_INFINITY },
-						data: createDefaultBlockData("text", "Node 1"),
+						data: { blockType: "text", text: "Node 1" },
 					},
 				],
 				edges: [],
