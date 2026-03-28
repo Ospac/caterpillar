@@ -24,12 +24,7 @@ interface RectangleBlockViewProps {
 	author?: string;
 	year?: number;
 }
-function RectangleBlockView({
-	image,
-	title,
-	author,
-	year,
-}: RectangleBlockViewProps) {
+function RectangleBlockView({ image, title }: RectangleBlockViewProps) {
 	return (
 		<div className="flex flex-col h-full">
 			{image && (

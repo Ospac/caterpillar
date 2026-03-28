@@ -160,8 +160,10 @@ function getNearestEmptyCell(input: DockingInput): CellCoord | null {
 				continue;
 			}
 
-			const refCol = preferredCell?.col ?? Math.round(input.position.x / CELL_SIZE);
-			const refRow = preferredCell?.row ?? Math.round(input.position.y / CELL_SIZE);
+			const refCol =
+				preferredCell?.col ?? Math.round(input.position.x / CELL_SIZE);
+			const refRow =
+				preferredCell?.row ?? Math.round(input.position.y / CELL_SIZE);
 			const cellDistance = Math.abs(refCol - col) + Math.abs(refRow - row);
 			if (cellDistance < bestDistance) {
 				bestCell = cell;
