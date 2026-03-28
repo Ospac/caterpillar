@@ -32,33 +32,44 @@ src/
     model/              # 상태, 타입, 비즈니스 규칙
     ui/                 # React 컴포넌트
     lib/                # 기능 내부 유틸리티
-  shared/               # 전역 유틸리티 전용 (ui, lib, types, constants)
+  shared/               # 전역 유틸리티 전용 (ui, lib, types, constants, utils)
   routes/               # TanStack Router 파일 기반 라우트
 ```
 
 ### 4계층 모델 (diagram 기능)
 
-**1. Block 데이터 모델** (`model/block.ts`)
+**1. Block 데이터 모델** (`model/block.ts`, `model/type.ts`)
 - `BlockData`: `text | image | link | music | game | movie | book`에 대한 판별 유니온
 - 직접 입력 타입: text, image, link / 검색 타입: music, game, movie, book
 - 유효성 검사는 `validateBlockData()`를 통해 `ok | fallback | invalid` 반환
+- 런타임 전용 콜백 타입: `BlockNodeData = BlockData & { onDataChange?, onEditStart?, onEditEnd?, initialEditing? }`
 
 **2. 런타임 타입** (`model/runtime.ts`, `lib/type.ts`)
 - `DiagramNode`: block 또는 menu 데이터를 가진 캔버스 노드
 - `DockedNodeState`: `freePosition`(드래그 중), `dockedCell`(스냅됨), `lastValidDock`(롤백) 추적
 - 두 가지 좌표계: `XYPosition`(픽셀) ↔ `CellCoord`(그리드 col/row)
+- `NodeSpan { cols, rows }`: 노드가 차지하는 그리드 셀 크기 (기본 1×1, link 등 1×2)
 
 **3. 영속성 모델** (`model/document.ts`)
 - `CanvasDocument`: 직렬화 가능한 포맷 (visibleStage, nodes, edges만 포함)
 - `parseCanvasDocument()` / `serializeCanvasDocument()`로 왕복 처리
 
 **4. UI** (`ui/CanvasCore/CanvasCoreInner.tsx`)
-- 메인 오케스트레이터 (~1100줄); React hooks를 통해 모든 계층 연결
+- 메인 오케스트레이터 (~326줄); React hooks를 통해 모든 계층 연결
 - React Flow의 `useNodesState` / `useEdgesState` 사용
 
-### 그리드 & 도킹 시스템 (`lib/grid.ts`, `lib/docking.ts`)
+### 블록 노드 UI (`ui/CanvasCore/`)
 
-- 그리드 단계: 4×4, 7×7, 10×10 (NODE_SIZE = 215px)
+- `MenuNode` — 블록 타입 7종 인라인 선택. `data.onTypeSelect` 콜백으로 부모에 전달
+- `BlockNode` — `BlockView`(읽기) / `BlockEditForm`(편집) 전환. 편집 중 `nodrag` 클래스로 드래그 비활성화
+- `BlockEditForm` — 타입별 편집 폼 (직접 입력 3종 + 검색 기반 4종)
+- `Input` — 공통 input 컴포넌트 (`twMerge` + `clsx` 기반)
+- `cn.ts` (`src/shared/utils/`) — Tailwind 클래스 병합 유틸
+
+### 그리드 & 도킹 시스템 (`lib/grid.ts`, `lib/docking.ts`, `lib/span.ts`)
+
+- 그리드 단계: 4×4, 7×7, 10×10 (CELL_SIZE = 216px)
+- `NodeSpan` 기반 다중 크기 노드 지원: `getNodeSpan(blockType)` → 스팬 반환
 - 드래그 상태 머신: `dragStart` → `dragMove` → `dragStop`(가장 가까운 셀에 스냅) 또는 `dragCancel`(`lastValidDock` 복원)
 - 드롭 해결 우선순위: 유효한 dock → lastValidDock 폴백 → 가장 가까운 빈 셀 → 현재 위치 유지
 
@@ -81,8 +92,5 @@ src/
 
 ### Claude 작업용 (빠른 참조)
 - `.claude/FEATURE.md` — 코드 위치 인덱스, 핵심 타입/함수/규칙 요약
+- `.claude/ROADMAP.md` — 마일스톤 현황 및 다음 작업
 - `.claude/plans/` — 마일스톤별 구현 스펙
-
-### 상세 스펙 원본
-- `.codex/features/` — canvas, blocks, data, search, docking_guide, persistence, testing
-- `.codex/roadmap.md` — 마일스톤 및 TODO

@@ -14,44 +14,43 @@ export type BlockType = (typeof BLOCK_TYPES)[number];
 type BlockBase = {
 	blockType: BlockType;
 	title?: string;
-	description?: string;
 };
 
 export type TextBlockData = BlockBase & {
 	blockType: "text";
-	text: string;
+	text?: string;
 };
 
 export type ImageBlockData = BlockBase & {
 	blockType: "image";
-	imageUrl: string;
-	alt: string;
+	image?: string;
+	caption?: string;
 };
 
 export type LinkBlockData = BlockBase & {
 	blockType: "link";
-	url: string;
+	url?: string;
 	description?: string;
 };
 export type MusicBlockData = BlockBase & {
 	blockType: "music";
-	artist: string;
-	albumArt?: string;
+	artist?: string;
+	image?: string;
 };
 export type GameBlockData = BlockBase & {
 	blockType: "game";
-	coverUrl?: string;
+	image?: string;
 	releaseYear?: number;
 };
 export type MovieBlockData = BlockBase & {
 	blockType: "movie";
-	posterUrl?: string;
 	releaseYear?: number;
+	image?: string;
 };
 export type BookBlockData = BlockBase & {
 	blockType: "book";
-	author: string;
-	coverUrl?: string;
+	author?: string;
+	image?: string;
 };
 export type BlockData =
 	| TextBlockData
@@ -89,6 +88,7 @@ export type BlockNodeData = BlockData & {
 	onDataChange?: (newData: BlockData) => void;
 	onEditStart?: () => void;
 	onEditEnd?: () => void;
+	initialEditing?: boolean;
 };
 
 export type DiagramNodeData = BlockNodeData | MenuNodeData;

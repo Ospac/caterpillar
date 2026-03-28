@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { getStagePixelSize, NODE_SIZE } from "../../lib/grid";
+import { CELL_SIZE, getStagePixelSize } from "../../lib/grid";
 import type { GridStage } from "../../lib/type";
 
 const CELL_MARGIN = 2;
@@ -61,8 +61,8 @@ export default function GridGuideOverlay({ stage }: { stage: GridStage }) {
 					id={patternId}
 					x="0"
 					y="0"
-					width={NODE_SIZE}
-					height={NODE_SIZE}
+					width={CELL_SIZE}
+					height={CELL_SIZE}
 					patternUnits="userSpaceOnUse"
 				>
 					<rect
@@ -70,8 +70,8 @@ export default function GridGuideOverlay({ stage }: { stage: GridStage }) {
 						stroke={CELL_STROKE_COLOR}
 						x={CELL_MARGIN}
 						y={CELL_MARGIN}
-						width={NODE_SIZE - CELL_MARGIN * 2}
-						height={NODE_SIZE - CELL_MARGIN * 2}
+						width={CELL_SIZE - CELL_MARGIN * 2}
+						height={CELL_SIZE - CELL_MARGIN * 2}
 						fill={CELL_FILL}
 						strokeWidth={CELL_STROKE_WIDTH}
 					/>

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { BlockData, BlockType, BlockValidationResult } from "./type";
+import type { BlockValidationResult } from "./type";
 
 const descriptionField = z.string().optional();
 
@@ -13,8 +13,8 @@ const textSchema = z.object({
 const imageSchema = z.object({
 	blockType: z.literal("image"),
 	title: z.string().nullish(),
-	imageUrl: z.string().nullish(),
-	alt: z.string().nullish(),
+	image: z.string().nullish(),
+	caption: z.string().nullish(),
 	description: descriptionField,
 });
 
@@ -29,14 +29,14 @@ const musicSchema = z.object({
 	blockType: z.literal("music"),
 	title: z.string().nullish(),
 	artist: z.string().nullish(),
-	albumArt: z.string().nullish(),
+	image: z.string().nullish(),
 	description: descriptionField,
 });
 
 const gameSchema = z.object({
 	blockType: z.literal("game"),
 	title: z.string().nullish(),
-	coverUrl: z.string().nullish(),
+	image: z.string().nullish(),
 	releaseYear: z.number().nullish(),
 	description: descriptionField,
 });
@@ -44,7 +44,7 @@ const gameSchema = z.object({
 const movieSchema = z.object({
 	blockType: z.literal("movie"),
 	title: z.string().nullish(),
-	posterUrl: z.string().nullish(),
+	image: z.string().nullish(),
 	releaseYear: z.number().nullish(),
 	description: descriptionField,
 });
@@ -53,31 +53,9 @@ const bookSchema = z.object({
 	blockType: z.literal("book"),
 	title: z.string().nullish(),
 	author: z.string().nullish(),
-	coverUrl: z.string().nullish(),
+	image: z.string().nullish(),
 	description: descriptionField,
 });
-
-export function createDefaultBlockData(
-	blockType: BlockType,
-	title: string,
-): BlockData {
-	switch (blockType) {
-		case "text":
-			return { blockType, title, text: title };
-		case "image":
-			return { blockType, title, imageUrl: "", alt: title };
-		case "link":
-			return { blockType, title, url: "" };
-		case "music":
-			return { blockType, title, artist: "" };
-		case "game":
-			return { blockType, title };
-		case "movie":
-			return { blockType, title };
-		case "book":
-			return { blockType, title, author: "" };
-	}
-}
 
 export function validateBlockData(input: unknown): BlockValidationResult {
 	if (
@@ -105,7 +83,6 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					blockType: "text",
 					title,
 					text,
-					description: r.data.description,
 				},
 			};
 		}
@@ -115,15 +92,14 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 			const title = r.data.title ?? "Image";
 			return {
 				status:
-					r.data.title != null && r.data.imageUrl != null && r.data.alt != null
+					r.data.title != null && r.data.image != null && r.data.caption != null
 						? "ok"
 						: "fallback",
 				data: {
 					blockType: "image",
 					title,
-					imageUrl: r.data.imageUrl ?? "",
-					alt: r.data.alt ?? title,
-					description: r.data.description,
+					image: r.data.image ?? "",
+					caption: r.data.caption ?? title,
 				},
 			};
 		}
@@ -152,8 +128,7 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					blockType: "music",
 					title,
 					artist: r.data.artist ?? "",
-					...(r.data.albumArt != null && { albumArt: r.data.albumArt }),
-					description: r.data.description,
+					...(r.data.image != null && { image: r.data.image }),
 				},
 			};
 		}
@@ -166,11 +141,10 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 				data: {
 					blockType: "game",
 					title,
-					...(r.data.coverUrl != null && { coverUrl: r.data.coverUrl }),
+					...(r.data.image != null && { image: r.data.image }),
 					...(r.data.releaseYear != null && {
 						releaseYear: r.data.releaseYear,
 					}),
-					description: r.data.description,
 				},
 			};
 		}
@@ -183,11 +157,10 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 				data: {
 					blockType: "movie",
 					title,
-					...(r.data.posterUrl != null && { posterUrl: r.data.posterUrl }),
+					...(r.data.image != null && { image: r.data.image }),
 					...(r.data.releaseYear != null && {
 						releaseYear: r.data.releaseYear,
 					}),
-					description: r.data.description,
 				},
 			};
 		}
@@ -202,8 +175,7 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 					blockType: "book",
 					title,
 					author: r.data.author ?? "",
-					...(r.data.coverUrl != null && { coverUrl: r.data.coverUrl }),
-					description: r.data.description,
+					...(r.data.image != null && { image: r.data.image }),
 				},
 			};
 		}

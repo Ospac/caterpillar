@@ -6,6 +6,11 @@ export type CellCoord = {
 	col: number;
 	row: number;
 };
+
+export type NodeSpan = {
+	cols: number;
+	rows: number;
+};
 export type XYPosition = {
 	x: number;
 	y: number;
@@ -70,6 +75,7 @@ export type DockingInput = {
 	position: XYPosition;
 	stage: GridStage;
 	occupancy: GridOccupancy;
+	span: NodeSpan;
 	ignoreNodeId?: string;
 	lastValidDock: CellCoord | null;
 };

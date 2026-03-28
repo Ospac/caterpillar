@@ -1,9 +1,10 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import templateImage from "assets/frankenstein.webp";
+import defaultImage from "assets/frankenstein.webp";
 import coverArtImage from "assets/ppqq.jpg";
 
 import { Fragment, type JSX, useState } from "react";
-import { NODE_SIZE } from "../../lib/grid";
+import { CELL_SIZE } from "../../lib/grid";
+import { getNodeSpan } from "../../lib/span";
 import type { BlockData, BlockNodeData } from "../../model/type";
 import BlockEditForm from "./BlockEditForm";
 
@@ -17,7 +18,24 @@ function NodeHandles() {
 		</Fragment>
 	);
 }
-
+interface RectangleBlockViewProps {
+	image?: string;
+	title?: string;
+	author?: string;
+	year?: number;
+}
+function RectangleBlockView({ image, title }: RectangleBlockViewProps) {
+	return (
+		<div className="flex flex-col h-full">
+			{image && (
+				<img className="w-full h-40 object-cover" src={image} alt={title} />
+			)}
+			<div className="flex flex-col flex-1 justify-center items-center p-1 gap-1">
+				<p className="font-medium text-center text-2xs">{title}</p>
+			</div>
+		</div>
+	);
+}
 function containerClass(blockType: string): string {
 	switch (blockType) {
 		case "image":
@@ -32,7 +50,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 	switch (data.blockType) {
 		case "text":
 			return (
-				<div className="flex h-full text-center leading-tight p-4 overflow-y-scroll">
+				<div className="flex h-full text-center leading-tight p-4 overflow-y-auto break-all">
 					{data.text}
 				</div>
 			);
@@ -41,11 +59,13 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<div className="h-full p-2.5">
 					<figure>
 						<img
-							className="outline-2 outline-purple-600"
-							src={data.imageUrl || templateImage}
-							alt={data.alt}
+							className="border border-gray-700"
+							src={data.image || defaultImage}
+							alt={data.caption}
 						/>
-						<figcaption className="text-center mt-1.5">{data.title}</figcaption>
+						<figcaption className="text-center mt-1.5 text-xs">
+							{data.caption}
+						</figcaption>
 					</figure>
 				</div>
 			);
@@ -54,7 +74,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<div className="flex flex-col h-full">
 					<img
 						className="shrink min-h-0 h-40"
-						src={templateImage}
+						src={defaultImage}
 						alt={data.title}
 					/>
 					<div className="flex flex-row items-center gap-1.5 bg-green py-0.5 px-3 border-t border-t-gray-700 shrink-0">
@@ -71,76 +91,46 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<div className="grid grid-cols-[1.25rem_1fr] grid-rows-[1fr_1.25rem]">
 					<div className="flex items-end justify-center py-2 border-r">
 						<p className="[writing-mode:vertical-rl] rotate-180 text-2xs">
-							{data.artist}
+							{data.title?.slice(0, 20)}
 						</p>
 					</div>
 					<div>
 						<img
 							className="w-full h-full object-cover"
-							src={data.albumArt || coverArtImage}
+							src={data.image || coverArtImage}
 							alt={data.title}
 						/>
 					</div>
-					<div className="col-span-2 flex items-center bg-blue border-t border-gray-700 px-5">
-						<h2 className="text-2xs">
-							{data.artist} - {data.title}
-						</h2>
+					<div className="col-span-2 flex items-center bg-blue border-t border-gray-700 px-4">
+						<h2 className="text-2xs">{data.artist?.slice(0, 20)}</h2>
 					</div>
 				</div>
 			);
 		case "game":
 			return (
-				<div className="flex flex-col h-full">
-					{data.coverUrl && (
-						<img
-							className="w-full h-32 object-cover"
-							src={data.coverUrl}
-							alt={data.title}
-						/>
-					)}
-					<div className="flex flex-col flex-1 justify-center items-center p-3 gap-1">
-						<p className="font-medium text-center">{data.title || "Game"}</p>
-						{data.releaseYear && (
-							<p className="text-2xs text-gray-600">{data.releaseYear}</p>
-						)}
-					</div>
-				</div>
+				<RectangleBlockView
+					image={data.image}
+					title={data.title}
+					year={data.releaseYear}
+					author={data.title}
+				/>
 			);
 		case "movie":
 			return (
-				<div className="flex flex-col h-full">
-					{data.posterUrl && (
-						<img
-							className="w-full h-32 object-cover"
-							src={data.posterUrl}
-							alt={data.title}
-						/>
-					)}
-					<div className="flex flex-col flex-1 justify-center items-center p-3 gap-1">
-						<p className="font-medium text-center">{data.title || "Movie"}</p>
-						{data.releaseYear && (
-							<p className="text-2xs text-gray-600">{data.releaseYear}</p>
-						)}
-					</div>
-				</div>
+				<RectangleBlockView
+					image={data.image}
+					title={data.title}
+					year={data.releaseYear}
+					author={data.title}
+				/>
 			);
 		case "book":
 			return (
-				<div className="flex flex-col h-full">
-					{data.coverUrl && (
-						<img
-							className="w-full h-32 object-cover"
-							src={data.coverUrl}
-							alt={data.title}
-						/>
-					)}
-					<div className="flex flex-col flex-1 justify-center items-center p-3 gap-1">
-						<p className="font-medium text-center">{data.title || "Book"}</p>
-						{data.author && (
-							<p className="text-2xs text-gray-600">{data.author}</p>
-						)}
-					</div>
-				</div>
+				<RectangleBlockView
+					image={data.image}
+					title={data.title}
+					author={data.author}
+				/>
 			);
 		default:
 			return (
@@ -152,8 +142,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 }
 
 export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
-	const [isEditing, setIsEditing] = useState(false);
-
+	const [isEditing, setIsEditing] = useState(data.initialEditing ?? false);
 	const startEdit = () => {
 		setIsEditing(true);
 		data.onEditStart?.();
@@ -164,12 +153,13 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 		data.onEditEnd?.();
 	};
 
+	const span = getNodeSpan(data.blockType);
 	return (
 		// biome-ignore lint/a11y/noStaticElementInteractions: React Flow 노드 — 클릭으로 편집 진입
 		// biome-ignore lint/a11y/useKeyWithClickEvents: React Flow 캔버스는 마우스 인터랙션 기반
 		<div
-			className={containerClass(data.blockType)}
-			style={{ width: NODE_SIZE, height: NODE_SIZE }}
+			className={`${containerClass(data.blockType)}${isEditing ? " nodrag" : ""}`}
+			style={{ width: span.cols * CELL_SIZE, height: span.rows * CELL_SIZE }}
 			onClick={!isEditing ? startEdit : undefined}
 		>
 			<NodeHandles />

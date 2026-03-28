@@ -1,5 +1,5 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { NODE_SIZE } from "../../lib/grid";
+import { CELL_SIZE } from "features/diagram/lib/grid";
 import type { MenuNodeData } from "../../model/type";
 
 const BLOCK_TYPE_BUTTONS = [
@@ -16,7 +16,7 @@ export default function MenuNode({ data }: NodeProps<Node<MenuNodeData>>) {
 	return (
 		<div
 			className="border border-gray-700 bg-white text-sm text-gray-900"
-			style={{ width: NODE_SIZE, height: NODE_SIZE }}
+			style={{ width: CELL_SIZE * 2, height: CELL_SIZE * 2 }}
 		>
 			<Handle type="source" position={Position.Top} id="top" />
 			<Handle type="source" position={Position.Bottom} id="bottom" />

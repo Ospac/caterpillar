@@ -1,6 +1,7 @@
 import type { Edge } from "@xyflow/react";
 import { createDockedNodeState } from "../lib/docking";
 import { GRID_STAGES } from "../lib/grid";
+import { getNodeSpan } from "../lib/span";
 import type { DockedNodeState, GridStage } from "../lib/type";
 import {
 	type CanvasDocument,
@@ -23,7 +24,14 @@ export function createRuntimeNodeDockingState(
 	stage: GridStage,
 ): RuntimeNodeDockingState {
 	return Object.fromEntries(
-		nodes.map((node) => [node.id, createDockedNodeState(node.position, stage)]),
+		nodes.map((node) => [
+			node.id,
+			createDockedNodeState(
+				node.position,
+				stage,
+				getNodeSpan(node.data.blockType),
+			),
+		]),
 	);
 }
 const INITIAL_STAGE = GRID_STAGES[0];

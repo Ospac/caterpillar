@@ -20,17 +20,17 @@ import {
 	transitionDockedNodeState,
 } from "../../lib/docking";
 import {
+	CELL_SIZE,
 	clampPositionToStage,
 	getGridOccupancy,
 	getNextStage,
 	getStagePixelSize,
-	isNodeCenterOutsideStage,
+	isNodeEscapingStage,
 	MAX_GRID_STAGE,
-	NODE_SIZE,
 	syncNodeDockingState,
 } from "../../lib/grid";
-import type { DockedNodeState, GridStage } from "../../lib/type";
-import { createDefaultBlockData } from "../../model/block";
+import { getNodeSpan, WIDE_SPAN } from "../../lib/span";
+import type { DockedNodeState, GridStage, NodeSpan } from "../../lib/type";
 import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
@@ -70,7 +70,6 @@ export function CanvasCoreInner() {
 	const [nodeDockingState, setNodeDockingState] =
 		useState<RuntimeNodeDockingState>(initialRuntimeState.nodeDockingState);
 	const [showGuide, setShowGuide] = useState(false);
-	const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
 	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
 
 	const stagePixelSize = getStagePixelSize(visibleStage);
@@ -106,11 +105,13 @@ export function CanvasCoreInner() {
 	const updateNodeDockingState = (
 		nodeId: string,
 		position: { x: number; y: number },
+		span: NodeSpan,
 		updater: (state: DockedNodeState) => DockedNodeState,
 	) => {
 		setNodeDockingState((currentState) => {
 			const baseState =
-				currentState[nodeId] ?? createDockedNodeState(position, visibleStage);
+				currentState[nodeId] ??
+				createDockedNodeState(position, visibleStage, span);
 
 			return {
 				...currentState,
@@ -130,70 +131,82 @@ export function CanvasCoreInner() {
 					data: {
 						...newData,
 						onDataChange: existing.onDataChange,
-						onEditStart: existing.onEditStart,
-						onEditEnd: existing.onEditEnd,
 					},
 				};
 			}),
 		);
 	};
 
-	const handleEditStart = (nodeId: string) => setEditingNodeId(nodeId);
-	const handleEditEnd = (nodeId: string) =>
-		setEditingNodeId((curr) => (curr === nodeId ? null : curr));
-
 	const handleNodeDragStart = (_: MouseEvent, node: Node) => {
-		if (editingNodeId !== null) return;
 		setShowGuide(true);
-		updateNodeDockingState(node.id, node.position, (state) =>
-			transitionDockedNodeState(state, {
-				type: "dragStart",
-				position: node.position,
-			}),
+		const diagramNode = node as DiagramNode;
+		const span = getNodeSpan(diagramNode.data.blockType);
+		updateNodeDockingState(
+			diagramNode.id,
+			diagramNode.position,
+			span,
+			(state) =>
+				transitionDockedNodeState(state, {
+					type: "dragStart",
+					position: diagramNode.position,
+				}),
 		);
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
-		updateNodeDockingState(node.id, node.position, (state) =>
-			transitionDockedNodeState(state, {
-				type: "dragMove",
-				position: node.position,
-			}),
+		const diagramNode = node as DiagramNode;
+		const span = getNodeSpan(diagramNode.data.blockType);
+		updateNodeDockingState(
+			diagramNode.id,
+			diagramNode.position,
+			span,
+			(state) =>
+				transitionDockedNodeState(state, {
+					type: "dragMove",
+					position: diagramNode.position,
+				}),
 		);
 		setVisibleStage((currentStage) =>
-			isNodeCenterOutsideStage(node.position, currentStage)
+			isNodeEscapingStage(diagramNode.position, currentStage, span)
 				? getNextStage(currentStage)
 				: currentStage,
 		);
 	};
 
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
+		const diagramNode = node as DiagramNode;
+		const span = getNodeSpan(diagramNode.data.blockType);
+		const currentDockingState =
+			nodeDockingState[diagramNode.id] ??
+			createDockedNodeState(diagramNode.position, visibleStage, span);
+
 		setVisibleStage((currentStage) => {
-			const currentDockingState =
-				nodeDockingState[node.id] ??
-				createDockedNodeState(node.position, visibleStage);
 			const resolution = resolveDropPosition({
-				position: node.position,
+				position: diagramNode.position,
 				stage: currentStage,
 				occupancy,
-				ignoreNodeId: node.id,
+				span,
+				ignoreNodeId: diagramNode.id,
 				lastValidDock: currentDockingState.lastValidDock,
 			});
-
 			setNodes((currentNodes) =>
 				currentNodes.map((currentNode) =>
-					currentNode.id === node.id
+					currentNode.id === diagramNode.id
 						? { ...currentNode, position: resolution.position }
 						: currentNode,
 				),
 			);
 
-			updateNodeDockingState(node.id, resolution.position, (state) =>
-				transitionDockedNodeState(state, {
-					type: "dragStop",
-					position: resolution.position,
-					dockedCell: resolution.cell,
-				}),
+			updateNodeDockingState(
+				diagramNode.id,
+				resolution.position,
+				span,
+				(state) =>
+					transitionDockedNodeState(state, {
+						type: "dragStop",
+						position: resolution.position,
+						dockedCell: resolution.cell,
+					}),
 			);
 			return currentStage; // No change to stage, just reading current value
 		});
@@ -213,10 +226,9 @@ export function CanvasCoreInner() {
 				type: "block",
 				position: menuNode.position,
 				data: {
-					...createDefaultBlockData(blockType, ""),
+					blockType,
 					onDataChange: (newData) => handleBlockDataChange(id, newData),
-					onEditStart: () => handleEditStart(id),
-					onEditEnd: () => handleEditEnd(id),
+					initialEditing: true,
 				},
 			};
 
@@ -233,10 +245,11 @@ export function CanvasCoreInner() {
 			type: "menu",
 			position: clampPositionToStage(
 				{
-					x: stagePixelSize / 2 - NODE_SIZE / 2,
-					y: stagePixelSize / 2 - NODE_SIZE / 2,
+					x: stagePixelSize / 2 - CELL_SIZE,
+					y: stagePixelSize / 2 - CELL_SIZE,
 				},
 				visibleStage,
+				WIDE_SPAN,
 			),
 			data: {
 				blockType: "menu",
@@ -248,7 +261,7 @@ export function CanvasCoreInner() {
 	};
 
 	useEffect(() => {
-		// node를 add, delete 할때, nodeDockingState를 업데이트
+		// TODO: node를 add, delete 할때, nodeDockingState를 업데이트하는 로직 -> 핸들러에 위치 시키기(you might not need an effect)
 		setNodeDockingState((currentState) =>
 			syncNodeDockingState(currentState, nodes, visibleStage),
 		);
@@ -289,7 +302,7 @@ export function CanvasCoreInner() {
 					nodeExtent={nodeExtent}
 					defaultViewport={LOCKED_VIEWPORT}
 					snapToGrid={false}
-					snapGrid={[NODE_SIZE, NODE_SIZE]}
+					snapGrid={[CELL_SIZE, CELL_SIZE]}
 					autoPanOnNodeDrag={false}
 					autoPanOnConnect={false}
 					connectionMode={ConnectionMode.Loose}
