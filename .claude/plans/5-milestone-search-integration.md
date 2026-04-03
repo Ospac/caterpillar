@@ -100,7 +100,7 @@ interface SearchResult {
 
 **파일:** `netlify/functions/search-music.ts`
 
-- 외부 호출: `GET http://ws.audioscrobbler.com/2.0/?method=album.search&album={q}&api_key={LASTFM_API_KEY}&format=json&limit=10`
+- 외부 호출: `GET https://ws.audioscrobbler.com/2.0/?method=album.search&album={q}&api_key={LASTFM_API_KEY}&format=json&limit=10`
 - 환경 변수: `LASTFM_API_KEY`
 - 매핑:
   ```
@@ -114,9 +114,14 @@ interface SearchResult {
 **파일:** `netlify/functions/search-game.ts`
 
 - **2단계 호출** 필요:
-  1. `POST https://api.igdb.com/v4/games` — 게임 검색 (body: `search "{q}"; fields name,cover,first_release_date; limit 10;`)
-  2. `POST https://api.igdb.com/v4/covers` — 커버 이미지 ID 일괄 조회 (body: `fields image_id; where id = (id1,id2,...); limit 10;`)
+  1. `POST https://api.igdb.com/v4/games` — 게임 검색
+     - body: `search "{q}"; fields name,cover,first_release_date; limit 10;`
+     - headers: `Client-ID: {IGDB_CLIENT_ID}`, `Accept: application/json`
+  2. `POST https://api.igdb.com/v4/covers` — 커버 이미지 ID 일괄 조회
+     - body: `fields image_id; where id = (id1,id2,...); limit 10;`
+     - headers: `Client-ID: {IGDB_CLIENT_ID}`, `Content-Type: text/plain`
 - 환경 변수: `IGDB_CLIENT_ID`, `IGDB_ACCESS_TOKEN`
+  - Access token은 60일마다 만료됨. 갱신 필요 시 `POST https://id.twitch.tv/oauth2/token?client_id={IGDB_CLIENT_ID}&client_secret={IGDB_SECRET}&grant_type=client_credentials` 호출
 - 이미지 URL 구성: `https://images.igdb.com/igdb/image/upload/t_cover_big/{image_id}.jpg`
 - 매핑:
   ```
@@ -130,7 +135,8 @@ interface SearchResult {
 **파일:** `netlify/functions/search-movie.ts`
 
 - 외부 호출: `GET https://api.themoviedb.org/3/search/movie?query={q}&language=ko-KR&page=1`
-- 환경 변수: `TMDB_BEARER_TOKEN`
+- headers: `Authorization: Bearer {TMDB_ACCESS_TOKEN}`, `Accept: application/json`
+- 환경 변수: `TMDB_ACCESS_TOKEN`
 - 매핑:
   ```
   result.title        → title
@@ -144,6 +150,7 @@ interface SearchResult {
 **파일:** `netlify/functions/search-book.ts`
 
 - 외부 호출: `GET https://www.googleapis.com/books/v1/volumes?q={q}&maxResults=10&langRestrict=ko&key={GOOGLE_BOOKS_API_KEY}`
+- headers: `Referer: https://ctpr.netlify.app/` (API 키 HTTP 리퍼러 제한 대응)
 - 환경 변수: `GOOGLE_BOOKS_API_KEY`
 - 매핑:
   ```
@@ -319,15 +326,6 @@ const { data, isLoading, isError } = useQuery(
   status = 200
 ```
 
-**파일:** `.env.local` (gitignore 대상)
-
-```
-LASTFM_API_KEY=
-IGDB_CLIENT_ID=
-IGDB_ACCESS_TOKEN=
-TMDB_BEARER_TOKEN=
-GOOGLE_BOOKS_API_KEY=
-```
 
 - 로컬 개발: `netlify dev` 명령으로 Functions + 프론트엔드 동시 실행
 - 프로덕션: Netlify 대시보드에서 환경 변수 설정
@@ -352,19 +350,6 @@ GOOGLE_BOOKS_API_KEY=
 
 **핵심 원칙:** 검색 에러는 해당 블록 폼 안에서만 표시. 캔버스 노드/엣지/도킹 상태에 영향 없음.
 
----
-
-## 환경 변수 요약
-
-| 변수 | API | 발급처 |
-|---|---|---|
-| `LASTFM_API_KEY` | Last.fm | https://www.last.fm/api/account/create |
-| `IGDB_CLIENT_ID` | IGDB (Twitch) | https://dev.twitch.tv/console |
-| `IGDB_ACCESS_TOKEN` | IGDB (Twitch) | Twitch OAuth token endpoint |
-| `TMDB_BEARER_TOKEN` | TMDB | https://www.themoviedb.org/settings/api |
-| `GOOGLE_BOOKS_API_KEY` | Google Books | https://console.cloud.google.com |
-
----
 
 ## 검증 체크리스트
 
