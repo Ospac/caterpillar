@@ -219,41 +219,6 @@ export async function searchMusic(query: string) {
 
 **파일:** `src/features/diagram/lib/api/queries.ts`
 
-```ts
-import { queryOptions } from "@tanstack/react-query"
-
-export const searchQueries = {
-  music: (query: string) =>
-    queryOptions({
-      queryKey: ["search", "music", query],
-      queryFn: () => searchMusic(query),
-      enabled: query.length >= 2,
-      staleTime: 1000 * 60 * 5,
-    }),
-  game: (query: string) =>
-    queryOptions({
-      queryKey: ["search", "game", query],
-      queryFn: () => searchGame(query),
-      enabled: query.length >= 2,
-      staleTime: 1000 * 60 * 5,
-    }),
-  movie: (query: string) =>
-    queryOptions({
-      queryKey: ["search", "movie", query],
-      queryFn: () => searchMovie(query),
-      enabled: query.length >= 2,
-      staleTime: 1000 * 60 * 5,
-    }),
-  book: (query: string) =>
-    queryOptions({
-      queryKey: ["search", "book", query],
-      queryFn: () => searchBook(query),
-      enabled: query.length >= 2,
-      staleTime: 1000 * 60 * 5,
-    }),
-}
-```
-
 #### 컴포넌트 연동
 
 **변경 전:**
