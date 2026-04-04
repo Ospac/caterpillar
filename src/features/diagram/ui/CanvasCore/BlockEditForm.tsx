@@ -1,11 +1,7 @@
 import type {
 	BlockData,
-	BookBlockData,
-	GameBlockData,
 	ImageBlockData,
 	LinkBlockData,
-	MovieBlockData,
-	MusicBlockData,
 	TextBlockData,
 } from "features/diagram/model/type";
 import { useForm } from "react-hook-form";
@@ -17,7 +13,9 @@ type FormProps<T extends BlockData> = {
 	onDataChange: (newData: BlockData) => void;
 	onEditEnd: () => void;
 };
-
+const handleOutsideClick = (e: React.FocusEvent, onEditEnd: () => void) => {
+	if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
+};
 function TextBlockForm({
 	data,
 	onDataChange,
@@ -27,9 +25,7 @@ function TextBlockForm({
 	return (
 		<fieldset
 			className="h-full"
-			onBlur={(e) => {
-				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
-			}}
+			onBlur={(e) => handleOutsideClick(e, onEditEnd)}
 		>
 			<textarea
 				{...register("text", {
@@ -55,9 +51,7 @@ function ImageBlockForm({
 	return (
 		<fieldset
 			className="h-full p-2 flex flex-col gap-1.5 "
-			onBlur={(e) => {
-				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
-			}}
+			onBlur={(e) => handleOutsideClick(e, onEditEnd)}
 		>
 			<Input
 				{...register("image", {
@@ -95,9 +89,7 @@ function LinkBlockForm({
 	return (
 		<fieldset
 			className="h-full p-2 flex flex-col gap-1.5 "
-			onBlur={(e) => {
-				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
-			}}
+			onBlur={(e) => handleOutsideClick(e, onEditEnd)}
 		>
 			<Input
 				{...register("url", {
@@ -126,81 +118,6 @@ function LinkBlockForm({
 				placeholder="description"
 			/>
 		</fieldset>
-	);
-}
-
-function MusicBlockForm({
-	data,
-	onDataChange,
-	onEditEnd,
-}: FormProps<MusicBlockData>) {
-	return (
-		<SearchBlockForm
-			searchType="music"
-			placeholder="Search music..."
-			onSelect={(r) =>
-				onDataChange({ ...data, title: r.title, secondary: r.secondary, image: r.image })
-			}
-			onEditEnd={onEditEnd}
-			footer={
-				data.title ? (
-					<div className="border-t border-gray-300 px-2 py-1 text-[10px] text-gray-600 bg-white/50">
-						{data.title}
-					</div>
-				) : undefined
-			}
-		/>
-	);
-}
-
-function GameBlockForm({
-	data,
-	onDataChange,
-	onEditEnd,
-}: FormProps<GameBlockData>) {
-	return (
-		<SearchBlockForm
-			searchType="game"
-			placeholder="Search game..."
-			onSelect={(r) =>
-				onDataChange({ ...data, title: r.title, year: r.secondary, image: r.image })
-			}
-			onEditEnd={onEditEnd}
-		/>
-	);
-}
-
-function MovieBlockForm({
-	data,
-	onDataChange,
-	onEditEnd,
-}: FormProps<MovieBlockData>) {
-	return (
-		<SearchBlockForm
-			searchType="movie"
-			placeholder="Search movie..."
-			onSelect={(r) =>
-				onDataChange({ ...data, title: r.title, year: r.secondary, image: r.image })
-			}
-			onEditEnd={onEditEnd}
-		/>
-	);
-}
-
-function BookBlockForm({
-	data,
-	onDataChange,
-	onEditEnd,
-}: FormProps<BookBlockData>) {
-	return (
-		<SearchBlockForm
-			searchType="book"
-			placeholder="Search book..."
-			onSelect={(r) =>
-				onDataChange({ ...data, title: r.title, secondary: r.secondary, image: r.image })
-			}
-			onEditEnd={onEditEnd}
-		/>
 	);
 }
 
@@ -241,32 +158,40 @@ export default function BlockEditForm({
 			);
 		case "music":
 			return (
-				<MusicBlockForm
-					data={data}
+				<SearchBlockForm
+					selectedData={data}
+					searchType="music"
+					placeholder="Search music..."
 					onDataChange={onDataChange}
 					onEditEnd={onEditEnd}
 				/>
 			);
 		case "game":
 			return (
-				<GameBlockForm
-					data={data}
+				<SearchBlockForm
+					selectedData={data}
+					searchType="game"
+					placeholder="Search game..."
 					onDataChange={onDataChange}
 					onEditEnd={onEditEnd}
 				/>
 			);
 		case "movie":
 			return (
-				<MovieBlockForm
-					data={data}
+				<SearchBlockForm
+					selectedData={data}
+					searchType="movie"
+					placeholder="Search movie..."
 					onDataChange={onDataChange}
 					onEditEnd={onEditEnd}
 				/>
 			);
 		case "book":
 			return (
-				<BookBlockForm
-					data={data}
+				<SearchBlockForm
+					selectedData={data}
+					searchType="book"
+					placeholder="Search book..."
 					onDataChange={onDataChange}
 					onEditEnd={onEditEnd}
 				/>

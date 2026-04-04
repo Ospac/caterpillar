@@ -1,40 +1,44 @@
 import { useQuery } from "@tanstack/react-query";
+import defaultImage from "assets/frankenstein.webp";
+import type { SearchType } from "features/diagram/lib/api/endpoint";
 import { searchQueries } from "features/diagram/lib/api/queries";
 import type { SearchResult } from "features/diagram/lib/api/types";
 import { useDebouncedValue } from "features/diagram/lib/hooks/useDebouncedValue";
-import type { ReactNode } from "react";
+import type { BlockData, SearchBlockData } from "features/diagram/model/type";
 import { useState } from "react";
-import type { SearchType } from "features/diagram/lib/api/endpoint";
 
 interface SearchBlockFormProps {
+	selectedData: SearchBlockData;
 	searchType: SearchType;
 	placeholder: string;
-	onSelect: (item: SearchResult) => void;
+	onDataChange: (newData: BlockData) => void;
 	onEditEnd: () => void;
-	footer?: ReactNode;
 }
 
 export function SearchBlockForm({
+	selectedData,
 	searchType,
 	placeholder,
-	onSelect,
+	onDataChange,
 	onEditEnd,
-	footer,
 }: SearchBlockFormProps) {
 	const [query, setQuery] = useState("");
 	const debouncedQuery = useDebouncedValue(query, 300);
 	const { data, isLoading, isError, refetch } = useQuery(
 		searchQueries[searchType](debouncedQuery),
 	);
+	const onItemSelect = (item: SearchResult) => {
+		onDataChange({
+			...selectedData,
+			title: item.title,
+			secondary: item.secondary,
+			image: item.image,
+			year: item.year,
+		});
+	};
 	const items = data ?? [];
-
 	return (
-		<fieldset
-			className="h-full flex flex-col "
-			onBlur={(e) => {
-				if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
-			}}
-		>
+		<fieldset className="h-full flex flex-col ">
 			<input
 				type="text"
 				value={query}
@@ -66,15 +70,22 @@ export function SearchBlockForm({
 						<button
 							key={r.title + r.secondary}
 							type="button"
-							className=" w-full text-left px-2 py-1 text-[11px] hover:bg-gray-100"
+							className="flex gap-2 w-full text-left px-2 py-1 text-[11px] hover:bg-gray-100"
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => {
-								onSelect(r);
+								onItemSelect(r);
 								onEditEnd();
 							}}
 						>
-							<span className="font-medium">{r.title}</span>
-							<span className="text-gray-500"> {r.secondary}</span>
+							<img
+								className="w-8 h-8 inline"
+								src={r.image || defaultImage}
+								alt={r.title}
+							/>
+							<div className="flex flex-col gap-1">
+								<span className="font-medium">{r.title}</span>
+								<span className="text-gray-500"> {r.secondary}</span>
+							</div>
 						</button>
 					))
 				) : (
@@ -83,7 +94,16 @@ export function SearchBlockForm({
 					</div>
 				)}
 			</div>
-			{footer}
+			{!query && selectedData.title && (
+				<button
+					type="button"
+					onClick={onEditEnd}
+					className="flex gap-1 border-t border-gray-300 px-2 py-1 text-[10px] text-gray-600 bg-white/50"
+				>
+					<span className="font-medium">{selectedData.title}</span>
+					<span className="text-gray-400"> {selectedData.secondary}</span>
+				</button>
+			)}
 		</fieldset>
 	);
 }

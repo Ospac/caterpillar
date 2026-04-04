@@ -1,6 +1,12 @@
 import type { Context } from "@netlify/functions";
 import { ENDPOINT, getQuery, jsonError, jsonOk } from "./_shared";
 
+interface Album {
+	name: string;
+	artist: string;
+	image: { size: string; "#text": string }[];
+}
+
 export default async (request: Request, _context: Context) => {
 	const query = getQuery(request);
 	if (!query) return jsonError("Missing query parameter", 400);
@@ -24,19 +30,15 @@ export default async (request: Request, _context: Context) => {
 	const json = await response.json();
 	const albums = json?.results?.albummatches?.album ?? [];
 
-	const results = albums.map(
-		(album: {
-			name: string;
-			artist: string;
-			image: { size: string; "#text": string }[];
-		}) => ({
-			title: album.name,
-			secondary: album.artist,
-			image:
-				album.image?.find((img) => img.size === "large")?.["#text"] ||
-				undefined,
-		}),
-	);
+	const results = albums.map((album: Album) => ({
+		title: album.name,
+		secondary: album.artist,
+		image:
+			album.image[2]["#text"] ||
+			album.image[3]["#text"] ||
+			album.image[1]["#text"] ||
+			undefined,
+	}));
 
 	return jsonOk(results);
 };

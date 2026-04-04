@@ -1,6 +1,5 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import defaultImage from "assets/frankenstein.webp";
-import coverArtImage from "assets/ppqq.jpg";
 
 import { Fragment, type JSX, useState } from "react";
 import { CELL_SIZE } from "../../lib/grid";
@@ -24,14 +23,26 @@ interface RectangleBlockViewProps {
 	secondary?: string;
 	year?: string;
 }
-function RectangleBlockView({ image, title }: RectangleBlockViewProps) {
+function RectangleBlockView({
+	image,
+	title,
+	secondary,
+	year,
+}: RectangleBlockViewProps) {
 	return (
 		<div className="flex flex-col h-full">
 			{image && (
-				<img className="w-full h-40 object-cover" src={image} alt={title} />
+				<img
+					className="w-full h-40 object-cover border-b border-b-gray-400"
+					src={image}
+					alt={title}
+				/>
 			)}
 			<div className="flex flex-col flex-1 justify-center items-center p-1 gap-1">
 				<p className="font-medium text-center text-2xs">{title}</p>
+				<p className="font-medium text-center text-2xs text-gray-500">
+					{secondary}({year})
+				</p>
 			</div>
 		</div>
 	);
@@ -97,7 +108,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 					<div>
 						<img
 							className="w-full h-full object-cover"
-							src={data.image || coverArtImage}
+							src={data.image || defaultImage}
 							alt={data.title}
 						/>
 					</div>
@@ -128,6 +139,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 					image={data.image}
 					title={data.title}
 					secondary={data.secondary}
+					year={data.year}
 				/>
 			);
 		default:

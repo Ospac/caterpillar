@@ -1,6 +1,13 @@
 import type { Context } from "@netlify/functions";
 import { ENDPOINT, getQuery, jsonError, jsonOk } from "./_shared";
 
+interface Book {
+	title: string;
+	authors?: string[];
+	imageLinks?: { thumbnail?: string; smallThumbnail?: string };
+	publishedDate?: string;
+}
+
 export default async (request: Request, _context: Context) => {
 	const query = getQuery(request);
 	const apiKey = Netlify.env.get("GOOGLE_BOOKS_API_KEY");
@@ -26,11 +33,7 @@ export default async (request: Request, _context: Context) => {
 
 	const json = await response.json();
 	const items: {
-		volumeInfo: {
-			title: string;
-			authors?: string[];
-			imageLinks?: { thumbnail?: string; smallThumbnail?: string };
-		};
+		volumeInfo: Book;
 	}[] = json?.items ?? [];
 
 	const results = items.map((item) => {
@@ -41,6 +44,7 @@ export default async (request: Request, _context: Context) => {
 
 		return {
 			title: info.title,
+			year: info.publishedDate?.slice(0, 4),
 			secondary: info.authors?.[0] ?? "",
 			image,
 		};
