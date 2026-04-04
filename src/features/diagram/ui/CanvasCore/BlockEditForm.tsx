@@ -139,7 +139,7 @@ function MusicBlockForm({
 			searchType="music"
 			placeholder="Search music..."
 			onSelect={(r) =>
-				onDataChange({ ...data, title: r.title, artist: r.secondary })
+				onDataChange({ ...data, title: r.title, secondary: r.secondary, image: r.image })
 			}
 			onEditEnd={onEditEnd}
 			footer={
@@ -163,12 +163,7 @@ function GameBlockForm({
 			searchType="game"
 			placeholder="Search game..."
 			onSelect={(r) =>
-				onDataChange({
-					...data,
-					title: r.title,
-					releaseYear: r.secondary ? Number.parseInt(r.secondary, 10) || undefined : undefined,
-					image: r.image,
-				})
+				onDataChange({ ...data, title: r.title, year: r.secondary, image: r.image })
 			}
 			onEditEnd={onEditEnd}
 		/>
@@ -185,12 +180,7 @@ function MovieBlockForm({
 			searchType="movie"
 			placeholder="Search movie..."
 			onSelect={(r) =>
-				onDataChange({
-					...data,
-					title: r.title,
-					releaseYear: r.secondary ? Number.parseInt(r.secondary, 10) || undefined : undefined,
-					image: r.image,
-				})
+				onDataChange({ ...data, title: r.title, year: r.secondary, image: r.image })
 			}
 			onEditEnd={onEditEnd}
 		/>
@@ -207,7 +197,7 @@ function BookBlockForm({
 			searchType="book"
 			placeholder="Search book..."
 			onSelect={(r) =>
-				onDataChange({ ...data, title: r.title, author: r.secondary, image: r.image })
+				onDataChange({ ...data, title: r.title, secondary: r.secondary, image: r.image })
 			}
 			onEditEnd={onEditEnd}
 		/>

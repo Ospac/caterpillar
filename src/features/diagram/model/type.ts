@@ -34,22 +34,22 @@ export type LinkBlockData = BlockBase & {
 };
 export type MusicBlockData = BlockBase & {
 	blockType: "music";
-	artist?: string;
+	secondary?: string;
 	image?: string;
 };
 export type GameBlockData = BlockBase & {
 	blockType: "game";
 	image?: string;
-	releaseYear?: number;
+	year?: string;
 };
 export type MovieBlockData = BlockBase & {
 	blockType: "movie";
-	releaseYear?: number;
+	year?: string;
 	image?: string;
 };
 export type BookBlockData = BlockBase & {
 	blockType: "book";
-	author?: string;
+	secondary?: string;
 	image?: string;
 };
 export type BlockData =

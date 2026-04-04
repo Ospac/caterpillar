@@ -21,8 +21,8 @@ function NodeHandles() {
 interface RectangleBlockViewProps {
 	image?: string;
 	title?: string;
-	author?: string;
-	year?: number;
+	secondary?: string;
+	year?: string;
 }
 function RectangleBlockView({ image, title }: RectangleBlockViewProps) {
 	return (
@@ -102,7 +102,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 						/>
 					</div>
 					<div className="col-span-2 flex items-center bg-blue border-t border-gray-700 px-4">
-						<h2 className="text-2xs">{data.artist?.slice(0, 20)}</h2>
+						<h2 className="text-2xs">{data.secondary?.slice(0, 20)}</h2>
 					</div>
 				</div>
 			);
@@ -111,8 +111,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<RectangleBlockView
 					image={data.image}
 					title={data.title}
-					year={data.releaseYear}
-					author={data.title}
+					year={data.year}
 				/>
 			);
 		case "movie":
@@ -120,8 +119,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<RectangleBlockView
 					image={data.image}
 					title={data.title}
-					year={data.releaseYear}
-					author={data.title}
+					year={data.year}
 				/>
 			);
 		case "book":
@@ -129,7 +127,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<RectangleBlockView
 					image={data.image}
 					title={data.title}
-					author={data.author}
+					secondary={data.secondary}
 				/>
 			);
 		default:

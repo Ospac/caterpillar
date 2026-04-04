@@ -50,7 +50,7 @@ describe("document(model)", () => {
 						id: "node-1",
 						type: "block",
 						position: { x: 0, y: 0 },
-						data: { blockType: "link" },
+						data: { blockType: "link", url: "" },
 					},
 				],
 				edges: [],
@@ -64,7 +64,6 @@ describe("document(model)", () => {
 					position: { x: 0, y: 0 },
 					data: {
 						blockType: "link",
-						title: "Link",
 						url: "",
 					},
 				},

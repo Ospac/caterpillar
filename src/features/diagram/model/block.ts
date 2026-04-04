@@ -1,61 +1,75 @@
 import { z } from "zod";
-import type { BlockValidationResult } from "./type";
-
-const descriptionField = z.string().optional();
+import type { BlockData, BlockValidationResult } from "./type";
 
 const textSchema = z.object({
 	blockType: z.literal("text"),
-	title: z.string().nullish(),
-	text: z.string().nullish(),
-	description: descriptionField,
+	text: z.string(),
 });
 
 const imageSchema = z.object({
 	blockType: z.literal("image"),
-	title: z.string().nullish(),
-	image: z.string().nullish(),
-	caption: z.string().nullish(),
-	description: descriptionField,
+	caption: z.string().optional(),
+	image: z.string(),
 });
 
 const linkSchema = z.object({
 	blockType: z.literal("link"),
-	title: z.string().nullish(),
-	url: z.string().nullish(),
-	description: descriptionField,
+	url: z.string(),
+	description: z.string().optional(),
 });
 
+const contentSchema = z.object({
+	title: z.string(),
+	secondary: z.string(),
+	image: z.string().optional(),
+	year: z.string().optional(),
+});
 const musicSchema = z.object({
 	blockType: z.literal("music"),
-	title: z.string().nullish(),
-	artist: z.string().nullish(),
-	image: z.string().nullish(),
-	description: descriptionField,
+	...contentSchema.shape,
 });
 
 const gameSchema = z.object({
 	blockType: z.literal("game"),
-	title: z.string().nullish(),
-	image: z.string().nullish(),
-	releaseYear: z.number().nullish(),
-	description: descriptionField,
+	...contentSchema.shape,
 });
 
 const movieSchema = z.object({
 	blockType: z.literal("movie"),
-	title: z.string().nullish(),
-	image: z.string().nullish(),
-	releaseYear: z.number().nullish(),
-	description: descriptionField,
+	...contentSchema.shape,
 });
 
 const bookSchema = z.object({
 	blockType: z.literal("book"),
-	title: z.string().nullish(),
-	author: z.string().nullish(),
-	image: z.string().nullish(),
-	description: descriptionField,
+	...contentSchema.shape,
 });
+
+type ContentData = z.infer<typeof contentSchema>;
+
+function buildSearchResult<T extends "music" | "game" | "movie" | "book">(
+	blockType: T,
+	data: ContentData,
+): { status: "ok" | "fallback"; data: BlockData } {
+	const title = data.title || blockType;
+	const usesSecondary = blockType === "music" || blockType === "book";
+	const extraFields = usesSecondary
+		? { secondary: data.secondary }
+		: data.year != null
+			? { year: data.year }
+			: {};
+	return {
+		status:
+			data.title && (usesSecondary ? !!data.secondary : true)
+				? "ok"
+				: "fallback",
+		data: {
+			blockType,
+			title,
+			...extraFields,
+			...(data.image != null && { image: data.image }),
+		} as BlockData,
+	};
+}
 
 export function validateBlockData(input: unknown): BlockValidationResult {
 	if (
@@ -75,13 +89,11 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 		case "text": {
 			const r = textSchema.safeParse(input);
 			if (!r.success) return { status: "invalid", reason: r.error.message };
-			const title = r.data.title ?? r.data.text ?? "Untitled";
-			const text = r.data.text ?? title;
+			const text = r.data.text || "";
 			return {
-				status: r.data.title != null && r.data.text != null ? "ok" : "fallback",
+				status: r.data.text != null ? "ok" : "fallback",
 				data: {
 					blockType: "text",
-					title,
 					text,
 				},
 			};
@@ -89,95 +101,49 @@ export function validateBlockData(input: unknown): BlockValidationResult {
 		case "image": {
 			const r = imageSchema.safeParse(input);
 			if (!r.success) return { status: "invalid", reason: r.error.message };
-			const title = r.data.title ?? "Image";
+			const caption = r.data.caption ?? "";
 			return {
-				status:
-					r.data.title != null && r.data.image != null && r.data.caption != null
-						? "ok"
-						: "fallback",
+				status: r.data.image && r.data.caption ? "ok" : "fallback",
 				data: {
 					blockType: "image",
-					title,
+					caption,
 					image: r.data.image ?? "",
-					caption: r.data.caption ?? title,
 				},
 			};
 		}
 		case "link": {
 			const r = linkSchema.safeParse(input);
 			if (!r.success) return { status: "invalid", reason: r.error.message };
-			const title = r.data.title ?? "Link";
 			return {
-				status: r.data.title != null && r.data.url != null ? "ok" : "fallback",
+				status: r.data.url ? "ok" : "fallback",
 				data: {
 					blockType: "link",
-					title,
-					url: r.data.url ?? "",
-					description: r.data.description,
+					url: r.data.url,
+					...(r.data.description != null && {
+						description: r.data.description,
+					}),
 				},
 			};
 		}
 		case "music": {
 			const r = musicSchema.safeParse(input);
 			if (!r.success) return { status: "invalid", reason: r.error.message };
-			const title = r.data.title ?? "Music";
-			return {
-				status:
-					r.data.title != null && r.data.artist != null ? "ok" : "fallback",
-				data: {
-					blockType: "music",
-					title,
-					artist: r.data.artist ?? "",
-					...(r.data.image != null && { image: r.data.image }),
-				},
-			};
+			return buildSearchResult("music", r.data);
 		}
 		case "game": {
 			const r = gameSchema.safeParse(input);
 			if (!r.success) return { status: "invalid", reason: r.error.message };
-			const title = r.data.title ?? "Game";
-			return {
-				status: r.data.title != null ? "ok" : "fallback",
-				data: {
-					blockType: "game",
-					title,
-					...(r.data.image != null && { image: r.data.image }),
-					...(r.data.releaseYear != null && {
-						releaseYear: r.data.releaseYear,
-					}),
-				},
-			};
+			return buildSearchResult("game", r.data);
 		}
 		case "movie": {
 			const r = movieSchema.safeParse(input);
 			if (!r.success) return { status: "invalid", reason: r.error.message };
-			const title = r.data.title ?? "Movie";
-			return {
-				status: r.data.title != null ? "ok" : "fallback",
-				data: {
-					blockType: "movie",
-					title,
-					...(r.data.image != null && { image: r.data.image }),
-					...(r.data.releaseYear != null && {
-						releaseYear: r.data.releaseYear,
-					}),
-				},
-			};
+			return buildSearchResult("movie", r.data);
 		}
 		case "book": {
 			const r = bookSchema.safeParse(input);
 			if (!r.success) return { status: "invalid", reason: r.error.message };
-			const title = r.data.title ?? "Book";
-			return {
-				status:
-					r.data.title != null && r.data.author != null ? "ok" : "fallback",
-				data: {
-					blockType: "book",
-					title,
-					author: r.data.author ?? "",
-					...(r.data.image != null && { image: r.data.image }),
-				},
-			};
+			return buildSearchResult("book", r.data);
 		}
 		default:
 			return {

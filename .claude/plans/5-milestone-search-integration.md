@@ -256,18 +256,33 @@ const { data, isLoading, isError } = useQuery(
 - 빈 결과 → "결과 없음" 상태 표시
 - 기존 클라이언트 필터링 로직 제거
 
-### Step 5. BlockData 매핑
+### Step 5. BlockData 구조 통일
 
-검색 결과 선택 시 `SearchResult` → `BlockData` 필드 매핑:
+검색 기반 블록 타입(`MusicBlockData`, `GameBlockData`, `MovieBlockData`, `BookBlockData`)의 필드명을 `SearchResult`와 동일하게 통일한다. 별도 매핑 없이 선택 결과를 그대로 `BlockData`에 할당할 수 있다.
 
-| SearchResult | MusicBlockData | GameBlockData | MovieBlockData | BookBlockData |
-|---|---|---|---|---|
-| `title` | `title` | `title` | `title` | `title` |
-| `secondary` | `artist` | — | — | `author` |
-| `year` | — | `releaseYear` (number 변환) | `releaseYear` (number 변환) | — |
-| `image` | `image` | `image` | `image` | `image` |
+**변경 전 → 변경 후:**
 
-이 매핑은 각 블록 폼의 `onSelect` 콜백에서 수행.
+| 블록 타입 | 기존 필드 | 변경 후 필드 |
+|---|---|---|
+| `MusicBlockData` | `artist: string` | `secondary: string` |
+| `GameBlockData` | `releaseYear: number` | `year: string` |
+| `MovieBlockData` | `releaseYear: number` | `year: string` |
+| `BookBlockData` | `author: string` | `secondary: string` |
+
+4개 검색 블록 타입 모두 공통 구조를 갖는다:
+
+```ts
+interface SearchableBlockData {
+  title: string
+  secondary: string
+  year?: string
+  image?: string
+}
+```
+
+- `model/block.ts`의 각 블록 타입 정의 수정
+- `model/type.ts`, `model/mock.ts`, `ui/` 등 필드명 참조 위치 일괄 수정
+- `onSelect` 콜백에서 필드 변환 로직 불필요 — `SearchResult` 객체를 직접 spread
 
 ### Step 6. 개발 환경 설정
 
