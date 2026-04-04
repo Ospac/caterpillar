@@ -1,4 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import "@xyflow/react/dist/style.css";
 
@@ -24,6 +25,7 @@ declare module "@tanstack/react-router" {
 const App = () => {
 	return (
 		<QueryClientProvider client={queryClient}>
+			<ReactQueryDevtools initialIsOpen={false} />
 			<RouterProvider router={router} />
 		</QueryClientProvider>
 	);
