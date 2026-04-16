@@ -227,9 +227,12 @@ export function CanvasCoreInner() {
 				position: menuNode.position,
 				data: {
 					blockType,
-					onDataChange: (newData) => handleBlockDataChange(id, newData),
+					title: "",
+					secondary: "",
+					onDataChange: (newData: BlockData) =>
+						handleBlockDataChange(id, newData),
 					initialEditing: true,
-				},
+				} as BlockNodeData,
 			};
 
 			return [...currentNodes.filter((n) => n.id !== menuNodeId), newNode];

@@ -25,21 +25,20 @@ Netlify Functions만 호출한다.
                                    (서버사이드)
 SearchBlockForm
   └─ useSearchQuery(query)
-       └─ fetch("/api/search-music")  → /api/search-music.ts     → Last.fm
-       └─ fetch("/api/search-game")   → /api/search-game.ts      → IGDB
-       └─ fetch("/api/search-movie")  → /api/search-movie.ts     → TMDB
-       └─ fetch("/api/search-book")   → /api/search-book.ts      → Google Books
+       └─ fetch("/api/search-music")  → functions/search-music.mts → Last.fm
+       └─ fetch("/api/search-game")   → functions/search-game.mts  → IGDB
+       └─ fetch("/api/search-movie")  → functions/search-movie.mts → TMDB
+       └─ fetch("/api/search-book")   → functions/search-book.mts  → Google Books
 ```
 
 ### 디렉토리 구조
 
 ```text
-netlify/
-  functions/
-    search-music.ts          # Last.fm 프록시
-    search-game.ts           # IGDB 프록시 (인증 + 커버 이미지 조회 포함)
-    search-movie.ts          # TMDB 프록시
-    search-book.ts           # Google Books 프록시
+functions/
+  search-music.mts          # Last.fm 프록시
+  search-game.mts           # IGDB 프록시 (인증 + 커버 이미지 조회 포함)
+  search-movie.mts          # TMDB 프록시
+  search-book.mts           # Google Books 프록시
 
 src/features/diagram/
   lib/api/
@@ -98,7 +97,7 @@ interface SearchResult {
 
 #### 2-1. search-music (Last.fm)
 
-**파일:** `netlify/functions/search-music.ts`
+**파일:** `functions/search-music.mts`
 
 - 외부 호출: `GET https://ws.audioscrobbler.com/2.0/?method=album.search&album={q}&api_key={LASTFM_API_KEY}&format=json&limit=10`
 - 환경 변수: `LASTFM_API_KEY`
@@ -111,7 +110,7 @@ interface SearchResult {
 
 #### 2-2. search-game (IGDB)
 
-**파일:** `netlify/functions/search-game.ts`
+**파일:** `functions/search-game.mts`
 
 - **2단계 호출** 필요:
   1. `POST https://api.igdb.com/v4/games` — 게임 검색
@@ -126,13 +125,14 @@ interface SearchResult {
 - 매핑:
   ```
   game.name                             → title
-  game.first_release_date (Unix → 연도)  → secondary
+  ""                                    → secondary
+  game.first_release_date (Unix → 연도)  → year
   cover URL                             → image
   ```
 
 #### 2-3. search-movie (TMDB)
 
-**파일:** `netlify/functions/search-movie.ts`
+**파일:** `functions/search-movie.mts`
 
 - 외부 호출: `GET https://api.themoviedb.org/3/search/movie?query={q}&language=ko-KR&page=1`
 - headers: `Authorization: Bearer {TMDB_ACCESS_TOKEN}`, `Accept: application/json`
@@ -147,7 +147,7 @@ interface SearchResult {
 
 #### 2-4. search-book (Google Books)
 
-**파일:** `netlify/functions/search-book.ts`
+**파일:** `functions/search-book.mts`
 
 - 외부 호출: `GET https://www.googleapis.com/books/v1/volumes?q={q}&maxResults=10&langRestrict=ko&key={GOOGLE_BOOKS_API_KEY}`
 - headers: `Referer: https://ctpr.netlify.app/` (API 키 HTTP 리퍼러 제한 대응)

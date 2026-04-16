@@ -80,7 +80,7 @@
 
 ```
 items[n].volumeInfo.title          → BookBlockData.title
-items[n].volumeInfo.authors[0]     → BookBlockData.author
+items[n].volumeInfo.authors[0]     → BookBlockData.secondary
 items[n].volumeInfo.imageLinks.thumbnail → BookBlockData.image
 ```
 

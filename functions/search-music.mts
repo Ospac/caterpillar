@@ -33,12 +33,20 @@ export default async (request: Request, _context: Context) => {
 	const results = albums.map((album: Album) => ({
 		title: album.name,
 		secondary: album.artist,
-		image:
-			album.image[2]["#text"] ||
-			album.image[3]["#text"] ||
-			album.image[1]["#text"] ||
-			undefined,
+		image: getAlbumImage(album.image),
 	}));
 
 	return jsonOk(results);
 };
+
+function getAlbumImage(images?: Album["image"]): string | undefined {
+	if (!images || images.length === 0) return undefined;
+	// 우선순위: large(2) > extralarge(3) > medium(1)
+	return (
+		images[2]?.["#text"] ||
+		images[3]?.["#text"] ||
+		images[1]?.["#text"] ||
+		images[0]?.["#text"] ||
+		undefined
+	);
+}

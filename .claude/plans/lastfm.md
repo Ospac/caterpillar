@@ -60,7 +60,7 @@ album.image[size="medium"]["#text"] → MusicBlockData.image
 ### 예시 요청
 
 ```
-GET http://ws.audioscrobbler.com/2.0/?method=album.search&album=believe&api_key=YOUR_KEY&format=json
+GET https://ws.audioscrobbler.com/2.0/?method=album.search&album=believe&api_key=YOUR_KEY&format=json
 ```
 
 ---

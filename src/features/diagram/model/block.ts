@@ -51,21 +51,13 @@ function buildSearchResult<T extends "music" | "game" | "movie" | "book">(
 	data: ContentData,
 ): { status: "ok" | "fallback"; data: BlockData } {
 	const title = data.title || blockType;
-	const usesSecondary = blockType === "music" || blockType === "book";
-	const extraFields = usesSecondary
-		? { secondary: data.secondary }
-		: data.year != null
-			? { year: data.year }
-			: {};
 	return {
-		status:
-			data.title && (usesSecondary ? !!data.secondary : true)
-				? "ok"
-				: "fallback",
+		status: data.title ? "ok" : "fallback",
 		data: {
 			blockType,
 			title,
-			...extraFields,
+			secondary: data.secondary ?? "",
+			...(data.year != null && { year: data.year }),
 			...(data.image != null && { image: data.image }),
 		} as BlockData,
 	};

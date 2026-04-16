@@ -124,7 +124,7 @@ https://images.igdb.com/igdb/image/upload/t_{size}/{image_id}.jpg
 
 ```
 game.name                                    → GameBlockData.title
-game.first_release_date (Unix → 연도)         → GameBlockData.releaseYear
+game.first_release_date (Unix → 연도)         → GameBlockData.year
 cover.image_id → t_cover_big URL             → GameBlockData.image
 ```
 
