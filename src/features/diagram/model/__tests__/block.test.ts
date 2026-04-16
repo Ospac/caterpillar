@@ -84,7 +84,7 @@ describe("block(model)", () => {
 			status: "fallback",
 			data: {
 				blockType: "music",
-				title: "Music",
+				title: "music",
 				secondary: "",
 			},
 		});
@@ -116,7 +116,8 @@ describe("block(model)", () => {
 			status: "fallback",
 			data: {
 				blockType: "game",
-				title: "Game",
+				title: "game",
+				secondary: "",
 			},
 		});
 	});
@@ -134,6 +135,7 @@ describe("block(model)", () => {
 			data: {
 				blockType: "game",
 				title: "Elden Ring",
+				secondary: "",
 				year: "2022",
 			},
 		});
@@ -146,7 +148,8 @@ describe("block(model)", () => {
 			status: "fallback",
 			data: {
 				blockType: "movie",
-				title: "Movie",
+				title: "movie",
+				secondary: "",
 			},
 		});
 	});
@@ -165,6 +168,7 @@ describe("block(model)", () => {
 			data: {
 				blockType: "movie",
 				title: "Inception",
+				secondary: "",
 				image: "https://example.com/poster.jpg",
 				year: "2010",
 			},
@@ -178,7 +182,7 @@ describe("block(model)", () => {
 			status: "fallback",
 			data: {
 				blockType: "book",
-				title: "Book",
+				title: "book",
 				secondary: "",
 			},
 		});
