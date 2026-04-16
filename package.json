@@ -16,9 +16,11 @@
 	"dependencies": {
 		"@tailwindcss/postcss": "^4.1.18",
 		"@tanstack/react-query": "^5.90.21",
+		"@tanstack/react-query-devtools": "^5.96.2",
 		"@tanstack/react-router": "^1.163.3",
 		"@tanstack/react-router-devtools": "^1.163.3",
 		"@xyflow/react": "^12.8.6",
+		"axios": "^1.14.0",
 		"clsx": "^2.1.1",
 		"postcss": "^8.5.1",
 		"react": "^19.0.0",
@@ -30,6 +32,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.5",
+		"@netlify/functions": "^5.1.5",
 		"@rsbuild/core": "^1.2.4",
 		"@rsbuild/plugin-babel": "^1.1.1",
 		"@rsbuild/plugin-react": "^1.1.0",

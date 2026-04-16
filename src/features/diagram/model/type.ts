@@ -15,7 +15,11 @@ type BlockBase = {
 	blockType: BlockType;
 	title?: string;
 };
-
+type SearchBlockBase = BlockBase & {
+	secondary: string;
+	image?: string;
+	year?: string;
+};
 export type TextBlockData = BlockBase & {
 	blockType: "text";
 	text?: string;
@@ -32,30 +36,28 @@ export type LinkBlockData = BlockBase & {
 	url?: string;
 	description?: string;
 };
-export type MusicBlockData = BlockBase & {
+export type MusicBlockData = SearchBlockBase & {
 	blockType: "music";
-	artist?: string;
-	image?: string;
 };
-export type GameBlockData = BlockBase & {
+export type GameBlockData = SearchBlockBase & {
 	blockType: "game";
-	image?: string;
-	releaseYear?: number;
 };
-export type MovieBlockData = BlockBase & {
+export type MovieBlockData = SearchBlockBase & {
 	blockType: "movie";
-	releaseYear?: number;
-	image?: string;
 };
-export type BookBlockData = BlockBase & {
+export type BookBlockData = SearchBlockBase & {
 	blockType: "book";
-	author?: string;
-	image?: string;
 };
 export type BlockData =
 	| TextBlockData
 	| ImageBlockData
 	| LinkBlockData
+	| MusicBlockData
+	| GameBlockData
+	| MovieBlockData
+	| BookBlockData;
+
+export type SearchBlockData =
 	| MusicBlockData
 	| GameBlockData
 	| MovieBlockData

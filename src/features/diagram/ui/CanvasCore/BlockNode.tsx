@@ -1,6 +1,5 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import defaultImage from "assets/frankenstein.webp";
-import coverArtImage from "assets/ppqq.jpg";
 
 import { Fragment, type JSX, useState } from "react";
 import { CELL_SIZE } from "../../lib/grid";
@@ -21,17 +20,30 @@ function NodeHandles() {
 interface RectangleBlockViewProps {
 	image?: string;
 	title?: string;
-	author?: string;
-	year?: number;
+	secondary?: string;
+	year?: string;
 }
-function RectangleBlockView({ image, title }: RectangleBlockViewProps) {
+function RectangleBlockView({
+	image,
+	title,
+	secondary,
+	year,
+}: RectangleBlockViewProps) {
 	return (
 		<div className="flex flex-col h-full">
 			{image && (
-				<img className="w-full h-40 object-cover" src={image} alt={title} />
+				<img
+					className="w-full h-40 object-cover border-b border-b-gray-400"
+					src={image}
+					alt={title}
+				/>
 			)}
 			<div className="flex flex-col flex-1 justify-center items-center p-1 gap-1">
 				<p className="font-medium text-center text-2xs">{title}</p>
+				<p className="font-medium text-center text-2xs text-gray-500">
+					{secondary}
+					{year ? ` (${year})` : ""}
+				</p>
 			</div>
 		</div>
 	);
@@ -97,12 +109,12 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 					<div>
 						<img
 							className="w-full h-full object-cover"
-							src={data.image || coverArtImage}
+							src={data.image || defaultImage}
 							alt={data.title}
 						/>
 					</div>
 					<div className="col-span-2 flex items-center bg-blue border-t border-gray-700 px-4">
-						<h2 className="text-2xs">{data.artist?.slice(0, 20)}</h2>
+						<h2 className="text-2xs">{data.secondary?.slice(0, 20)}</h2>
 					</div>
 				</div>
 			);
@@ -111,8 +123,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<RectangleBlockView
 					image={data.image}
 					title={data.title}
-					year={data.releaseYear}
-					author={data.title}
+					year={data.year}
 				/>
 			);
 		case "movie":
@@ -120,8 +131,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<RectangleBlockView
 					image={data.image}
 					title={data.title}
-					year={data.releaseYear}
-					author={data.title}
+					year={data.year}
 				/>
 			);
 		case "book":
@@ -129,7 +139,8 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<RectangleBlockView
 					image={data.image}
 					title={data.title}
-					author={data.author}
+					secondary={data.secondary}
+					year={data.year}
 				/>
 			);
 		default:
