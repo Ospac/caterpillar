@@ -41,7 +41,8 @@ function RectangleBlockView({
 			<div className="flex flex-col flex-1 justify-center items-center p-1 gap-1">
 				<p className="font-medium text-center text-2xs">{title}</p>
 				<p className="font-medium text-center text-2xs text-gray-500">
-					{secondary}({year})
+					{secondary}
+					{year ? ` (${year})` : ""}
 				</p>
 			</div>
 		</div>
