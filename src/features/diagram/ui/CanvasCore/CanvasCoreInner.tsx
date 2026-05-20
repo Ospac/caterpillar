@@ -284,7 +284,7 @@ export function CanvasCoreInner() {
 					/* TODO: minZoom, maxZoom값을 GridGuideOverlay, nodeExtent와 통합 (2번째, 3번째 status에서 Zoom 낮추기) */
 					minZoom={1}
 					maxZoom={1}
-				></ReactFlow>
+				/>
 			</div>
 		</div>
 	);

@@ -1,49 +1,46 @@
-@import 'tailwindcss' source('../');
+@import "tailwindcss" source("../");
 
 @layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
-  }
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentcolor);
+	}
 }
 @theme inline {
-  --color-light-green: #F2FFFA;
-  --color-green: #D8FFB8;
-  --color-pink: #FFD4F0;
-  --color-orange: #FFCCA3;
-  --color-blue: #50CDFF;
-  --color-yellow: #FFEA9E;
-  --color-red: #FF8181;
-  --color-purple: #8381FF;
-  --color-pinky: #FD84FF;
+	--color-light-green: #f2fffa;
+	--color-green: #d8ffb8;
+	--color-pink: #ffd4f0;
+	--color-orange: #ffcca3;
+	--color-blue: #50cdff;
+	--color-yellow: #ffea9e;
+	--color-red: #ff8181;
+	--color-purple: #8381ff;
+	--color-pinky: #fd84ff;
 
-  --text-2xs: 0.625rem;
-  --text-2xs--line-height: calc(1 / 0.625);
-
+	--text-2xs: 0.625rem;
+	--text-2xs--line-height: calc(1 / 0.625);
 }
 html {
-  color-scheme: light dark;
+	color-scheme: light dark;
 }
 * {
-  @apply border-gray-200 dark:border-gray-800;
+	@apply border-gray-200 dark:border-gray-800;
 }
 body {
-  @apply bg-gray-50 text-gray-950 dark:bg-gray-900 dark:text-gray-200;
+	@apply bg-gray-50 text-gray-950 dark:bg-gray-900 dark:text-gray-200;
 }
-::-webkit-scrollbar{
-  width: 0.5rem;
+::-webkit-scrollbar {
+	width: 0.5rem;
 }
 ::-webkit-scrollbar-track {
-  background: color-mix(in oklab, var(--color-gray-500) 70%, transparent);
-
+	background: color-mix(in oklab, var(--color-gray-500) 70%, transparent);
 }
-::-webkit-scrollbar-thumb{
-  background-color: color-mix(in oklab, var(--color-pinky) 30%, transparent);
-  
+::-webkit-scrollbar-thumb {
+	background-color: color-mix(in oklab, var(--color-pinky) 30%, transparent);
 }
 button {
-  cursor: pointer;
+	cursor: pointer;
 }
