@@ -1,14 +1,6 @@
-import {
-	CELL_SIZE,
-	cellCoordToPosition,
-	getNodeCells,
-	isNodeEscapingStage,
-	positionToAnchorCell,
-} from "./grid";
 import type {
 	CellCoord,
 	DockedNodeState,
-	DockingEvent,
 	DockingInput,
 	FallbackInput,
 	FallbackResolution,
@@ -17,10 +9,14 @@ import type {
 	NodeSpan,
 	ResolveDropResult,
 	XYPosition,
-} from "./type";
-
-export const SNAP_IN_DISTANCE = 40;
-export const SNAP_OUT_DISTANCE = 56;
+} from "./geometry";
+import {
+	CELL_SIZE,
+	cellCoordToPosition,
+	getNodeCells,
+	isNodeEscapingStage,
+	positionToAnchorCell,
+} from "./grid";
 
 export const DROP_REASONS = {
 	validDock: "valid-dock",
@@ -34,15 +30,6 @@ export const FALLBACK_STRATEGIES = {
 	nearestEmptyCell: "nearest-empty-cell",
 } as const;
 
-export const DRAG_EVENT_TRANSITIONS = {
-	dragStart: "freePosition만 현재 좌표로 갱신하고 도킹 기준점은 유지한다.",
-	dragMove: "freePosition만 드래그 좌표로 갱신한다.",
-	dragStop:
-		"최종 좌표와 확정 dockedCell을 반영하고, 유효한 dockedCell이면 lastValidDock도 갱신한다.",
-	dragCancel:
-		"lastValidDock 또는 dockedCell 기준 위치로 freePosition을 복구한다.",
-} as const;
-
 export function createDockedNodeState(
 	position: XYPosition,
 	stage: GridStage,
@@ -51,39 +38,19 @@ export function createDockedNodeState(
 	const dockedCell = positionToAnchorCell(position, stage, span);
 
 	return {
-		freePosition: position,
 		dockedCell,
 		lastValidDock: dockedCell,
 	};
 }
 
-export function transitionDockedNodeState(
+export function commitDockedNodeState(
 	state: DockedNodeState,
-	event: DockingEvent,
+	dockedCell: CellCoord | null,
 ): DockedNodeState {
-	switch (event.type) {
-		case "dragStart":
-		case "dragMove":
-			return {
-				...state,
-				freePosition: event.position,
-			};
-		case "dragStop":
-			return {
-				freePosition: event.position,
-				dockedCell: event.dockedCell,
-				lastValidDock: event.dockedCell ?? state.lastValidDock,
-			};
-		case "dragCancel": {
-			const anchorCell = state.lastValidDock ?? state.dockedCell;
-			return {
-				...state,
-				freePosition: anchorCell
-					? cellCoordToPosition(anchorCell)
-					: state.freePosition,
-			};
-		}
-	}
+	return {
+		dockedCell,
+		lastValidDock: dockedCell ?? state.lastValidDock,
+	};
 }
 
 /**

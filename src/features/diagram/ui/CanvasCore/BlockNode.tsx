@@ -2,9 +2,10 @@ import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import defaultImage from "assets/frankenstein.webp";
 
 import { Fragment, type JSX, useState } from "react";
+import { getNodeSpan } from "../../lib/blockSpan";
 import { CELL_SIZE } from "../../lib/grid";
-import { getNodeSpan } from "../../lib/span";
-import type { BlockData, BlockNodeData } from "../../model/type";
+import type { BlockData } from "../../model/blockTypes";
+import type { BlockNodeData } from "../../model/nodeTypes";
 import BlockEditForm from "./BlockEditForm";
 
 function NodeHandles() {
@@ -156,12 +157,10 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 	const [isEditing, setIsEditing] = useState(data.initialEditing ?? false);
 	const startEdit = () => {
 		setIsEditing(true);
-		data.onEditStart?.();
 	};
 
 	const endEdit = () => {
 		setIsEditing(false);
-		data.onEditEnd?.();
 	};
 
 	const span = getNodeSpan(data.blockType);

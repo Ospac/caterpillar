@@ -14,11 +14,13 @@ import {
 } from "@xyflow/react";
 
 import { type MouseEvent, useEffect, useRef, useState } from "react";
+import { getNodeSpan, WIDE_SPAN } from "../../lib/blockSpan";
 import {
+	commitDockedNodeState,
 	createDockedNodeState,
 	resolveDropPosition,
-	transitionDockedNodeState,
 } from "../../lib/docking";
+import type { DockedNodeState, GridStage, NodeSpan } from "../../lib/geometry";
 import {
 	CELL_SIZE,
 	clampPositionToStage,
@@ -29,19 +31,14 @@ import {
 	MAX_GRID_STAGE,
 	syncNodeDockingState,
 } from "../../lib/grid";
-import { getNodeSpan, WIDE_SPAN } from "../../lib/span";
-import type { DockedNodeState, GridStage, NodeSpan } from "../../lib/type";
+import type { BlockData, BlockType } from "../../model/blockTypes";
+import type { DiagramNode } from "../../model/nodeTypes";
+import { isBlockNode } from "../../model/nodeTypes";
 import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
 	type RuntimeNodeDockingState,
 } from "../../model/runtime";
-import type {
-	BlockData,
-	BlockNodeData,
-	BlockType,
-	DiagramNode,
-} from "../../model/type";
 import BlockNode from "./BlockNode";
 import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
@@ -123,49 +120,25 @@ export function CanvasCoreInner() {
 	const handleBlockDataChange = (nodeId: string, newData: BlockData) => {
 		setNodes((curr) =>
 			curr.map((n) => {
-				if (n.id !== nodeId) return n;
-				//TODO: 타입 단언 대신 타입 좁히기 적용
-				const existing = n.data as BlockNodeData;
+				if (n.id !== nodeId || !isBlockNode(n)) return n;
 				return {
 					...n,
 					data: {
 						...newData,
-						onDataChange: existing.onDataChange,
+						onDataChange: n.data.onDataChange,
 					},
 				};
 			}),
 		);
 	};
 
-	const handleNodeDragStart = (_: MouseEvent, node: Node) => {
+	const handleNodeDragStart = (_: MouseEvent, _node: Node) => {
 		setShowGuide(true);
-		const diagramNode = node as DiagramNode;
-		const span = getNodeSpan(diagramNode.data.blockType);
-		updateNodeDockingState(
-			diagramNode.id,
-			diagramNode.position,
-			span,
-			(state) =>
-				transitionDockedNodeState(state, {
-					type: "dragStart",
-					position: diagramNode.position,
-				}),
-		);
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
 		const diagramNode = node as DiagramNode;
 		const span = getNodeSpan(diagramNode.data.blockType);
-		updateNodeDockingState(
-			diagramNode.id,
-			diagramNode.position,
-			span,
-			(state) =>
-				transitionDockedNodeState(state, {
-					type: "dragMove",
-					position: diagramNode.position,
-				}),
-		);
 		setVisibleStage((currentStage) =>
 			isNodeEscapingStage(diagramNode.position, currentStage, span)
 				? getNextStage(currentStage)
@@ -180,36 +153,26 @@ export function CanvasCoreInner() {
 			nodeDockingState[diagramNode.id] ??
 			createDockedNodeState(diagramNode.position, visibleStage, span);
 
-		setVisibleStage((currentStage) => {
-			const resolution = resolveDropPosition({
-				position: diagramNode.position,
-				stage: currentStage,
-				occupancy,
-				span,
-				ignoreNodeId: diagramNode.id,
-				lastValidDock: currentDockingState.lastValidDock,
-			});
-			setNodes((currentNodes) =>
-				currentNodes.map((currentNode) =>
-					currentNode.id === diagramNode.id
-						? { ...currentNode, position: resolution.position }
-						: currentNode,
-				),
-			);
-
-			updateNodeDockingState(
-				diagramNode.id,
-				resolution.position,
-				span,
-				(state) =>
-					transitionDockedNodeState(state, {
-						type: "dragStop",
-						position: resolution.position,
-						dockedCell: resolution.cell,
-					}),
-			);
-			return currentStage; // No change to stage, just reading current value
+		const resolution = resolveDropPosition({
+			position: diagramNode.position,
+			stage: visibleStage,
+			occupancy,
+			span,
+			ignoreNodeId: diagramNode.id,
+			lastValidDock: currentDockingState.lastValidDock,
 		});
+
+		setNodes((currentNodes) =>
+			currentNodes.map((currentNode) =>
+				currentNode.id === diagramNode.id
+					? { ...currentNode, position: resolution.position }
+					: currentNode,
+			),
+		);
+
+		updateNodeDockingState(diagramNode.id, resolution.position, span, (state) =>
+			commitDockedNodeState(state, resolution.cell),
+		);
 		setShowGuide(false);
 	};
 
@@ -232,7 +195,7 @@ export function CanvasCoreInner() {
 					onDataChange: (newData: BlockData) =>
 						handleBlockDataChange(id, newData),
 					initialEditing: true,
-				} as BlockNodeData,
+				},
 			};
 
 			return [...currentNodes.filter((n) => n.id !== menuNodeId), newNode];
@@ -264,7 +227,6 @@ export function CanvasCoreInner() {
 	};
 
 	useEffect(() => {
-		// TODO: node를 add, delete 할때, nodeDockingState를 업데이트하는 로직 -> 핸들러에 위치 시키기(you might not need an effect)
 		setNodeDockingState((currentState) =>
 			syncNodeDockingState(currentState, nodes, visibleStage),
 		);

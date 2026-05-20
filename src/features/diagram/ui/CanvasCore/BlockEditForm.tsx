@@ -3,7 +3,7 @@ import type {
 	ImageBlockData,
 	LinkBlockData,
 	TextBlockData,
-} from "features/diagram/model/type";
+} from "features/diagram/model/blockTypes";
 import { useForm } from "react-hook-form";
 import Input from "./Input";
 import { SearchBlockForm } from "./SearchBlockForm";

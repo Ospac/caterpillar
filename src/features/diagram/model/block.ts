@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { BlockData, BlockValidationResult } from "./type";
+import type { BlockData, BlockValidationResult } from "./blockTypes";
 
 const textSchema = z.object({
 	blockType: z.literal("text"),

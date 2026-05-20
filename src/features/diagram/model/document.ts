@@ -1,9 +1,9 @@
 import type { Edge } from "@xyflow/react";
+import type { GridStage, XYPosition } from "../lib/geometry";
 import { GRID_STAGES } from "../lib/grid";
-import type { GridStage, XYPosition } from "../lib/type";
 import { validateBlockData } from "./block";
+import type { DiagramNode, DiagramNodeType } from "./nodeTypes";
 import type { CanvasRuntimeState } from "./runtime";
-import type { DiagramNode, DiagramNodeType } from "./type";
 
 const DIAGRAM_NODE_TYPES: ReadonlySet<string> = new Set<DiagramNodeType>([
 	"menu",
@@ -122,6 +122,19 @@ function parseEdgeItem(value: unknown): EdgeItem | null {
 	};
 }
 
+function serializeNodeData(node: DiagramNode): DiagramNode["data"] {
+	if (node.type === "menu") {
+		return { blockType: "menu" };
+	}
+
+	const validation = validateBlockData(node.data);
+	if (validation.status === "invalid") {
+		throw new Error(validation.reason);
+	}
+
+	return validation.data;
+}
+
 export function serializeCanvasDocument(
 	runtimeState: ParsedCanvasDocument,
 ): CanvasDocument {
@@ -131,7 +144,7 @@ export function serializeCanvasDocument(
 			id: node.id,
 			type: node.type ?? "menu",
 			position: node.position,
-			data: node.data,
+			data: serializeNodeData(node),
 		})),
 		edges: runtimeState.edges.map((edge) => ({
 			id: edge.id,

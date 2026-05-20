@@ -112,4 +112,52 @@ describe("document(model)", () => {
 			documentFixture,
 		);
 	});
+
+	it("직렬화할 때 런타임 콜백은 저장하지 않는다", () => {
+		expect(
+			serializeCanvasDocument({
+				visibleStage: 8,
+				nodes: [
+					{
+						id: "node-1",
+						type: "block",
+						position: { x: 0, y: 0 },
+						data: {
+							blockType: "text",
+							text: "Node 1",
+							onDataChange: () => {},
+							initialEditing: true,
+						},
+					},
+					{
+						id: "node-2",
+						type: "menu",
+						position: { x: 108, y: 108 },
+						data: {
+							blockType: "menu",
+							onTypeSelect: () => {},
+						},
+					},
+				],
+				edges: [],
+			}),
+		).toEqual({
+			visibleStage: 8,
+			nodes: [
+				{
+					id: "node-1",
+					type: "block",
+					position: { x: 0, y: 0 },
+					data: { blockType: "text", text: "Node 1" },
+				},
+				{
+					id: "node-2",
+					type: "menu",
+					position: { x: 108, y: 108 },
+					data: { blockType: "menu" },
+				},
+			],
+			edges: [],
+		});
+	});
 });

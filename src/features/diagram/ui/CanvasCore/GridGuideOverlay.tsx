@@ -1,6 +1,6 @@
 import { useId } from "react";
+import type { GridStage } from "../../lib/geometry";
 import { CELL_SIZE, getStagePixelSize } from "../../lib/grid";
-import type { GridStage } from "../../lib/type";
 
 const CELL_MARGIN = 2;
 const CELL_STROKE_WIDTH = 1;
