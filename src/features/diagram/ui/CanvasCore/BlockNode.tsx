@@ -1,5 +1,5 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import defaultImage from "assets/frankenstein.webp";
+import defaultImage from "@/assets/frankenstein.webp";
 
 import { Fragment, type JSX, useState } from "react";
 import { getNodeSpan } from "../../lib/blockSpan";

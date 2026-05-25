@@ -1,4 +1,4 @@
-import type { DiagramNode } from "../model/nodeTypes";
+import type { DiagramNode } from "@/features/diagram/model/nodeTypes";
 import { getNodeSpan } from "./blockSpan";
 import { createDockedNodeState } from "./docking";
 import type {

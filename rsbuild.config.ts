@@ -11,7 +11,12 @@ export default defineConfig({
         opts.plugins?.unshift('babel-plugin-react-compiler');
       },
   })
-  ],
+	],
+	resolve: {
+    alias: {
+      '@/*': './src/*',
+    },
+  },	
   tools: {
     rspack: {
       plugins: [tanstackRouter({ target: 'react', autoCodeSplitting: true })],

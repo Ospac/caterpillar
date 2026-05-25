@@ -1,6 +1,6 @@
 import type { ClassValue } from "clsx";
 import type { InputHTMLAttributes } from "react";
-import { cn } from "shared/utils/cn";
+import { cn } from "@/shared/utils/cn";
 
 interface InputProps
 	extends Omit<InputHTMLAttributes<HTMLInputElement>, "className"> {
