@@ -1,10 +1,10 @@
-import type { Context } from "@netlify/functions";
+import type { SearchResult } from "@/features/diagram/lib/api/types";
 import {
+	createSearchClient,
 	ENDPOINT,
-	getQuery,
-	jsonError,
-	jsonOk,
-	responseNotOk,
+	requireEnv,
+	responseNotOkFromAxiosResponse,
+	withSearchQuery,
 } from "./_shared";
 
 interface Album {
@@ -13,35 +13,51 @@ interface Album {
 	image: { size: string; "#text": string }[];
 }
 
-export default async (request: Request, _context: Context) => {
-	const query = getQuery(request);
-	if (!query) return jsonError("Missing query parameter", 400);
+interface LastFmAlbumSearchResponse {
+	results?: {
+		albummatches?: {
+			album?: Album[];
+		};
+	};
+}
 
-	const apiKey = Netlify.env.get("LASTFM_API_KEY");
-	if (!apiKey) return jsonError("API key not configured", 500);
+const lastFmClient = createSearchClient();
 
-	const apiUrl = new URL(ENDPOINT.lastfm.music);
-	apiUrl.searchParams.set("method", "album.search");
-	apiUrl.searchParams.set("album", query);
-	apiUrl.searchParams.set("api_key", apiKey);
-	apiUrl.searchParams.set("format", "json");
-	apiUrl.searchParams.set("limit", "10");
-	const response = await fetch(apiUrl.toString());
-	if (!response.ok) {
-		return responseNotOk(response, "Failed to fetch from Last.fm");
-	}
+export default withSearchQuery({
+	errorMessage: "Failed to fetch from Last.fm",
+	handler: async ({ query }) => {
+		const apiKey = requireEnv({ name: "LASTFM_API_KEY" });
+		if (apiKey instanceof Response) return apiKey;
 
-	const json = await response.json();
-	const albums = json?.results?.albummatches?.album ?? [];
+		const response = await lastFmClient.get<LastFmAlbumSearchResponse>(
+			ENDPOINT.lastfm.music,
+			{
+				params: {
+					method: "album.search",
+					album: query,
+					api_key: apiKey,
+					format: "json",
+					limit: "10",
+				},
+			},
+		);
+		const error = responseNotOkFromAxiosResponse({
+			response,
+			message: "Failed to fetch from Last.fm",
+		});
+		if (error) return error;
 
-	const results = albums.map((album: Album) => ({
+		return formatAlbums(response.data?.results?.albummatches?.album ?? []);
+	},
+});
+
+function formatAlbums(albums: Album[]): SearchResult[] {
+	return albums.map((album) => ({
 		title: album.name,
 		secondary: album.artist,
 		image: getAlbumImage(album.image),
 	}));
-
-	return jsonOk(results);
-};
+}
 
 function getAlbumImage(images?: Album["image"]): string | undefined {
 	if (!images || images.length === 0) return undefined;

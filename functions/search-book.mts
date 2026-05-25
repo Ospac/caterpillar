@@ -1,10 +1,10 @@
-import type { Context } from "@netlify/functions";
+import type { SearchResult } from "@/features/diagram/lib/api/types";
 import {
+	createSearchClient,
 	ENDPOINT,
-	getQuery,
-	jsonError,
-	jsonOk,
-	responseNotOk,
+	requireEnv,
+	responseNotOkFromAxiosResponse,
+	withSearchQuery,
 } from "./_shared";
 
 interface Book {
@@ -14,35 +14,48 @@ interface Book {
 	publishedDate?: string;
 }
 
-export default async (request: Request, _context: Context) => {
-	const query = getQuery(request);
-	const apiKey = Netlify.env.get("GOOGLE_BOOKS_API_KEY");
-	const domain = Netlify.env.get("PRODUCTION_DOMAIN");
+interface GoogleBooksResponse {
+	items?: { volumeInfo: Book }[];
+}
 
-	if (!query) return jsonError("Missing query parameter", 400);
-	if (!apiKey) return jsonError("API key not configured", 500);
-	if (!domain) return jsonError("Domain name not configured", 500);
+const googleBooksClient = createSearchClient();
 
-	const apiUrl = new URL(ENDPOINT.googleBooks.books);
-	apiUrl.searchParams.set("q", query);
-	apiUrl.searchParams.set("maxResults", "10");
-	apiUrl.searchParams.set("langRestrict", "ko");
-	apiUrl.searchParams.set("key", apiKey);
+export default withSearchQuery({
+	errorMessage: "Failed to fetch from Google Books",
+	handler: async ({ query }) => {
+		const apiKey = requireEnv({ name: "GOOGLE_BOOKS_API_KEY" });
+		if (apiKey instanceof Response) return apiKey;
 
-	const response = await fetch(apiUrl.toString(), {
-		headers: { Referer: domain },
-	});
+		const domain = requireEnv({
+			name: "PRODUCTION_DOMAIN",
+			message: "Domain name not configured",
+		});
+		if (domain instanceof Response) return domain;
 
-	if (!response.ok) {
-		return responseNotOk(response, "Failed to fetch from Google Books");
-	}
+		const response = await googleBooksClient.get<GoogleBooksResponse>(
+			ENDPOINT.googleBooks.books,
+			{
+				params: {
+					q: query,
+					maxResults: "10",
+					langRestrict: "ko",
+					key: apiKey,
+				},
+				headers: { Referer: domain },
+			},
+		);
+		const error = responseNotOkFromAxiosResponse({
+			response,
+			message: "Failed to fetch from Google Books",
+		});
+		if (error) return error;
 
-	const json = await response.json();
-	const items: {
-		volumeInfo: Book;
-	}[] = json?.items ?? [];
+		return formatBooks(response.data?.items ?? []);
+	},
+});
 
-	const results = items.map((item) => {
+function formatBooks(items: { volumeInfo: Book }[]): SearchResult[] {
+	return items.map((item) => {
 		const info = item.volumeInfo;
 		const rawImage =
 			info.imageLinks?.thumbnail ?? info.imageLinks?.smallThumbnail;
@@ -55,6 +68,4 @@ export default async (request: Request, _context: Context) => {
 			image,
 		};
 	});
-
-	return jsonOk(results);
-};
+}

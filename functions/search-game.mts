@@ -1,128 +1,157 @@
 import { getStore } from "@netlify/blobs";
-import type { Context } from "@netlify/functions";
-import axios, {
-	AxiosHeaders,
-	type AxiosResponse,
-	type InternalAxiosRequestConfig,
-} from "axios";
+import type { AxiosInstance } from "axios";
 import type { SearchResult } from "@/features/diagram/lib/api/types";
-
 import {
+	createSearchClient,
 	ENDPOINT,
-	getQuery,
 	getYear,
-	jsonError,
-	jsonOk,
-	responseNotOkFromAxios,
+	requireEnv,
+	responseNotOkFromAxiosResponse,
+	withSearchQuery,
 } from "./_shared";
 
-type RetryableAxiosRequestConfig = InternalAxiosRequestConfig & {
-	_retry?: boolean;
-};
-interface game {
+interface Game {
 	id: number;
 	name: string;
 	cover?: number;
 	first_release_date?: number;
 }
-const igdbClient = axios.create({});
 
-export default async (request: Request, _context: Context) => {
-	const query = getQuery(request);
-	const store = getStore("tokens");
-	const clientSecret = Netlify.env.get("IGDB_SECRET");
-	const clientId = Netlify.env.get("IGDB_CLIENT_ID");
-	let accessToken = await store.get("access_token", { type: "text" });
+interface Cover {
+	id: number;
+	image_id: string;
+}
 
-	if (!query) return jsonError("Missing query parameter", 400);
-	if (!clientSecret) {
-		throw new Error("IGDB_SECRET not configured");
-	}
-	if (!clientId) {
-		throw new Error("IGDB_CLIENT_ID not configured");
-	}
-	if (!accessToken) {
-		accessToken = await getAccessToken(clientId, clientSecret);
-		await store.set("access_token", accessToken);
-	}
-	igdbClient.interceptors.request.use((config) => {
-		const headers = AxiosHeaders.from(config.headers);
-		headers.set("Client-ID", clientId);
-		headers.set("Authorization", `Bearer ${accessToken}`);
-		headers.set("Accept", "application/json");
-		headers.set("Content-Type", "text/plain");
-		config.headers = headers;
-		return config;
+interface IgdbConfig {
+	clientId: string;
+	clientSecret: string;
+	accessToken: string;
+}
+
+const authClient = createSearchClient();
+
+export default withSearchQuery({
+	errorMessage: "Failed to fetch from IGDB",
+	handler: async ({ query }) => {
+		const configOrError = await loadIgdbConfig();
+		if (configOrError instanceof Response) return configOrError;
+
+		const searchResult = await searchGames(query, configOrError);
+		if (searchResult instanceof Response) return searchResult;
+
+		const { games, client } = searchResult;
+		const coverMap = await fetchCoverMap(client, games);
+
+		return formatGames(games, coverMap);
+	},
+});
+
+async function loadIgdbConfig(): Promise<IgdbConfig | Response> {
+	const clientSecret = requireEnv({
+		name: "IGDB_SECRET",
+		message: "IGDB_SECRET not configured",
 	});
+	if (clientSecret instanceof Response) return clientSecret;
 
-	igdbClient.interceptors.response.use(
-		async (response: AxiosResponse) => {
-			const originalConfig = response.config as RetryableAxiosRequestConfig;
+	const clientId = requireEnv({
+		name: "IGDB_CLIENT_ID",
+		message: "IGDB_CLIENT_ID not configured",
+	});
+	if (clientId instanceof Response) return clientId;
 
-			if (response.status !== 401 || originalConfig._retry) {
-				return response;
-			}
+	const store = getStore("tokens");
+	const storedToken = await store.get("access_token", { type: "text" });
+	const accessToken =
+		storedToken ?? (await refreshAccessToken(clientId, clientSecret));
 
-			originalConfig._retry = true;
-			accessToken = await getAccessToken(clientId, clientSecret);
-			await store.set("access_token", accessToken);
+	if (!storedToken) await store.set("access_token", accessToken);
 
-			return igdbClient.request(originalConfig);
+	return { clientId, clientSecret, accessToken };
+}
+
+async function searchGames(
+	query: string,
+	config: IgdbConfig,
+): Promise<{ games: Game[]; client: AxiosInstance } | Response> {
+	let currentConfig = config;
+	let client = createIgdbClient(currentConfig);
+	let response = await requestGames(client, query);
+
+	if (response.status === 401) {
+		currentConfig = {
+			...currentConfig,
+			accessToken: await refreshAccessToken(
+				currentConfig.clientId,
+				currentConfig.clientSecret,
+			),
+		};
+		await getStore("tokens").set("access_token", currentConfig.accessToken);
+		client = createIgdbClient(currentConfig);
+		response = await requestGames(client, query);
+	}
+
+	const error = responseNotOkFromAxiosResponse({
+		response,
+		message: "Failed to fetch from IGDB",
+	});
+	if (error) return error;
+
+	return { games: response.data, client };
+}
+
+function createIgdbClient({ clientId, accessToken }: IgdbConfig) {
+	return createSearchClient({
+		headers: {
+			"Client-ID": clientId,
+			Authorization: `Bearer ${accessToken}`,
+			"Content-Type": "text/plain",
 		},
-		(error) => Promise.reject(error),
-	);
+	});
+}
 
-	// Step 1: Search games
-	const gameResponse = await igdbClient.post<game[]>(
+function requestGames(client: AxiosInstance, query: string) {
+	return client.post<Game[]>(
 		ENDPOINT.igdb.games,
 		`search "${query}"; fields name,cover,first_release_date; limit 10;`,
 	);
+}
 
-	if (gameResponse.status < 200 || gameResponse.status >= 300) {
-		return responseNotOkFromAxios(gameResponse, "Failed to fetch from IGDB");
+async function fetchCoverMap(client: AxiosInstance, games: Game[]) {
+	const coverIds = games.flatMap((game) =>
+		game.cover === undefined ? [] : [game.cover],
+	);
+	if (coverIds.length === 0) return new Map<number, string>();
+
+	const response = await client.post<Cover[]>(
+		ENDPOINT.igdb.covers,
+		`fields image_id; where id = (${coverIds.join(",")}); limit 10;`,
+	);
+	if (response.status < 200 || response.status >= 300) {
+		return new Map<number, string>();
 	}
 
-	const games = gameResponse.data;
+	return new Map(
+		response.data.map((cover) => [
+			cover.id,
+			`${ENDPOINT.igdb.cover}${cover.image_id}.jpg`,
+		]),
+	);
+}
 
-	// Step 2: Fetch cover images
-	const coverIds = games.filter((g) => g.cover).map((g) => g.cover);
-	let coverMap = new Map<number, string>();
-
-	if (coverIds.length > 0) {
-		const coversResponse = await igdbClient.post<
-			{ id: number; image_id: string }[]
-		>(
-			ENDPOINT.igdb.covers,
-			`fields image_id; where id = (${coverIds.join(",")}); limit 10;`,
-		);
-
-		if (coversResponse.status >= 200 && coversResponse.status < 300) {
-			coverMap = new Map(
-				coversResponse.data.map((c) => [
-					c.id,
-					`${ENDPOINT.igdb.cover}${c.image_id}.jpg`,
-				]),
-			);
-		}
-	}
-	const results = formatGames(games, coverMap);
-	return jsonOk(results);
-};
-
-const formatGames = (
-	games: game[],
+function formatGames(
+	games: Game[],
 	coverMap: Map<number, string>,
-): SearchResult[] => {
+): SearchResult[] {
 	return games.map((game) => ({
 		title: game.name,
 		secondary: "",
 		year: game.first_release_date ? getYear(game.first_release_date) : "",
 		image: game.cover ? coverMap.get(game.cover) : undefined,
 	}));
-};
+}
 
-async function getAccessToken(clientId: string, clientSecret: string) {
-	const response = await axios.post<{ access_token: string }>(
+async function refreshAccessToken(clientId: string, clientSecret: string) {
+	const response = await authClient.post<{ access_token: string }>(
 		ENDPOINT.igdb.authentication,
 		new URLSearchParams([
 			["client_secret", clientSecret],

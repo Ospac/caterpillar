@@ -1,43 +1,56 @@
-import type { Context } from "@netlify/functions";
+import type { SearchResult } from "@/features/diagram/lib/api/types";
 import {
+	createSearchClient,
 	ENDPOINT,
-	getQuery,
-	jsonError,
-	jsonOk,
-	responseNotOk,
+	requireEnv,
+	responseNotOkFromAxiosResponse,
+	withSearchQuery,
 } from "./_shared";
 
-export default async (request: Request, _context: Context) => {
-	const query = getQuery(request);
+interface Movie {
+	title: string;
+	release_date?: string;
+	poster_path?: string | null;
+}
 
-	const bearerToken = Netlify.env.get("TMDB_API_ACCESS_TOKEN");
+interface TmdbSearchResponse {
+	results?: Movie[];
+}
 
-	if (!query) return jsonError("Missing query parameter", 400);
-	if (!bearerToken) return jsonError("API token not configured", 500);
-	const apiUrl = new URL(ENDPOINT.tmdb.movie);
-	apiUrl.searchParams.set("query", query);
-	apiUrl.searchParams.set("language", "ko-KR");
-	apiUrl.searchParams.set("page", "1");
+const tmdbClient = createSearchClient();
 
-	const response = await fetch(apiUrl.toString(), {
-		headers: {
-			Authorization: `Bearer ${bearerToken}`,
-			Accept: "application/json",
-		},
-	});
+export default withSearchQuery({
+	errorMessage: "Failed to fetch from TMDB",
+	handler: async ({ query }) => {
+		const bearerToken = requireEnv({
+			name: "TMDB_API_ACCESS_TOKEN",
+			message: "API token not configured",
+		});
+		if (bearerToken instanceof Response) return bearerToken;
 
-	if (!response.ok) {
-		return responseNotOk(response, "Failed to fetch from TMDB");
-	}
+		const response = await tmdbClient.get<TmdbSearchResponse>(
+			ENDPOINT.tmdb.movie,
+			{
+				params: {
+					query,
+					language: "ko-KR",
+					page: "1",
+				},
+				headers: { Authorization: `Bearer ${bearerToken}` },
+			},
+		);
+		const error = responseNotOkFromAxiosResponse({
+			response,
+			message: "Failed to fetch from TMDB",
+		});
+		if (error) return error;
 
-	const json = await response.json();
-	const movies: {
-		title: string;
-		release_date?: string;
-		poster_path?: string | null;
-	}[] = json?.results ?? [];
+		return formatMovies(response.data?.results ?? []);
+	},
+});
 
-	const results = movies.map((movie) => {
+function formatMovies(movies: Movie[]): SearchResult[] {
+	return movies.map((movie) => {
 		const year = movie.release_date?.slice(0, 4);
 		return {
 			title: movie.title,
@@ -48,6 +61,4 @@ export default async (request: Request, _context: Context) => {
 				: undefined,
 		};
 	});
-
-	return jsonOk(results);
-};
+}
