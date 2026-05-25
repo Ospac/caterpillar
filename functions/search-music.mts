@@ -1,5 +1,11 @@
 import type { Context } from "@netlify/functions";
-import { ENDPOINT, getQuery, jsonError, jsonOk } from "./_shared";
+import {
+	ENDPOINT,
+	getQuery,
+	jsonError,
+	jsonOk,
+	responseNotOk,
+} from "./_shared";
 
 interface Album {
 	name: string;
@@ -20,11 +26,9 @@ export default async (request: Request, _context: Context) => {
 	apiUrl.searchParams.set("api_key", apiKey);
 	apiUrl.searchParams.set("format", "json");
 	apiUrl.searchParams.set("limit", "10");
-
 	const response = await fetch(apiUrl.toString());
-
 	if (!response.ok) {
-		return jsonError("Failed to fetch from Last.fm", response.status);
+		return responseNotOk(response, "Failed to fetch from Last.fm");
 	}
 
 	const json = await response.json();

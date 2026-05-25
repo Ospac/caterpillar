@@ -26,6 +26,22 @@ export function jsonOk(data: unknown): Response {
 	return new Response(JSON.stringify(data), { headers: JSON_HEADERS });
 }
 
+export async function responseNotOk(
+	response: Response,
+	message: string,
+): Promise<Response> {
+	const context = Netlify.env.get("context");
+	if (context === "production") return jsonError(message, response.status);
+	return jsonError(await response.json(), response.status);
+}
+export function responseNotOkFromAxios(
+	response: { data: unknown; status: number },
+	message: string,
+): Response {
+	const context = Netlify.env.get("context");
+	if (context === "production") return jsonError(message, response.status);
+	return jsonError(JSON.stringify(response.data), response.status);
+}
 export function jsonError(message: string, status: number): Response {
 	return new Response(JSON.stringify({ error: message }), {
 		status,

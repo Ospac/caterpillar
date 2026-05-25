@@ -1,10 +1,16 @@
 import type { Context } from "@netlify/functions";
-import { ENDPOINT, getQuery, jsonError, jsonOk } from "./_shared";
+import {
+	ENDPOINT,
+	getQuery,
+	jsonError,
+	jsonOk,
+	responseNotOk,
+} from "./_shared";
 
 export default async (request: Request, _context: Context) => {
 	const query = getQuery(request);
 
-	const bearerToken = Netlify.env.get("TMDB_ACCESS_TOKEN");
+	const bearerToken = Netlify.env.get("TMDB_API_ACCESS_TOKEN");
 
 	if (!query) return jsonError("Missing query parameter", 400);
 	if (!bearerToken) return jsonError("API token not configured", 500);
@@ -21,7 +27,7 @@ export default async (request: Request, _context: Context) => {
 	});
 
 	if (!response.ok) {
-		return jsonError("Failed to fetch from TMDB", response.status);
+		return responseNotOk(response, "Failed to fetch from TMDB");
 	}
 
 	const json = await response.json();

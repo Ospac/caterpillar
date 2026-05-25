@@ -6,6 +6,8 @@
 		"dev": "rsbuild dev --port 3000",
 		"build": "rsbuild build && tsc --noEmit",
 		"preview": "rsbuild preview",
+		"netlify:dev": "netlify dev",
+		"netlify:prod": "netlify dev --context production",
 		"test": "rstest run",
 		"test:watch": "rstest watch",
 		"format": "biome format",
@@ -15,6 +17,7 @@
 		"reporter": "biome check --reporter=summary"
 	},
 	"dependencies": {
+		"@netlify/blobs": "^10.7.8",
 		"@tailwindcss/postcss": "^4.1.18",
 		"@tanstack/react-query": "^5.90.21",
 		"@tanstack/react-query-devtools": "^5.96.2",

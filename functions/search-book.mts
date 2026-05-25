@@ -1,5 +1,11 @@
 import type { Context } from "@netlify/functions";
-import { ENDPOINT, getQuery, jsonError, jsonOk } from "./_shared";
+import {
+	ENDPOINT,
+	getQuery,
+	jsonError,
+	jsonOk,
+	responseNotOk,
+} from "./_shared";
 
 interface Book {
 	title: string;
@@ -28,7 +34,7 @@ export default async (request: Request, _context: Context) => {
 	});
 
 	if (!response.ok) {
-		return jsonError("Failed to fetch from Google Books", response.status);
+		return responseNotOk(response, "Failed to fetch from Google Books");
 	}
 
 	const json = await response.json();
