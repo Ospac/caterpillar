@@ -44,6 +44,7 @@ import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
 
 const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
+const EDITING_NODE_Z_INDEX = 1000;
 const nodeTypes: NodeTypes = {
 	menu: MenuNode,
 	block: BlockNode,
@@ -126,9 +127,24 @@ export function CanvasCoreInner() {
 					data: {
 						...newData,
 						onDataChange: n.data.onDataChange,
+						initialEditing: n.data.initialEditing,
+						onEditStateChange: n.data.onEditStateChange,
 					},
 				};
 			}),
+		);
+	};
+
+	const handleBlockEditStateChange = (nodeId: string, isEditing: boolean) => {
+		setNodes((currentNodes) =>
+			currentNodes.map((currentNode) =>
+				currentNode.id === nodeId
+					? {
+							...currentNode,
+							zIndex: isEditing ? EDITING_NODE_Z_INDEX : undefined,
+						}
+					: currentNode,
+			),
 		);
 	};
 
@@ -194,6 +210,8 @@ export function CanvasCoreInner() {
 					secondary: "",
 					onDataChange: (newData: BlockData) =>
 						handleBlockDataChange(id, newData),
+					onEditStateChange: (isEditing: boolean) =>
+						handleBlockEditStateChange(id, isEditing),
 					initialEditing: true,
 				},
 			};

@@ -1,11 +1,14 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { Fragment, type JSX, useState } from "react";
+import { Fragment, type JSX, useEffect, useState } from "react";
 import defaultImage from "@/assets/frankenstein.webp";
 import { getNodeSpan } from "../../lib/blockSpan";
 import { CELL_SIZE } from "../../lib/grid";
-import type { BlockData } from "../../model/blockTypes";
+import type { BlockData, BlockType } from "../../model/blockTypes";
 import type { BlockNodeData } from "../../model/nodeTypes";
 import BlockEditForm from "./BlockEditForm";
+
+const SEARCH_EDIT_SPAN = { cols: 2, rows: 4 } as const;
+const SEARCH_BLOCK_TYPES = new Set<BlockType>(["music", "game", "movie", "book"]);
 
 function NodeHandles() {
 	return (
@@ -154,6 +157,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 
 export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 	const [isEditing, setIsEditing] = useState(data.initialEditing ?? false);
+	const { onEditStateChange } = data;
 	const startEdit = () => {
 		setIsEditing(true);
 	};
@@ -173,7 +177,15 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 			return;
 		}
 	};
-	const span = getNodeSpan(data.blockType);
+	useEffect(() => {
+		onEditStateChange?.(isEditing);
+	}, [isEditing, onEditStateChange]);
+
+	const span =
+		isEditing && SEARCH_BLOCK_TYPES.has(data.blockType)
+			? SEARCH_EDIT_SPAN
+			: getNodeSpan(data.blockType);
+
 	return (
 		// biome-ignore lint/a11y/useSemanticElements: <ReactFlow BlockNode>
 		<div

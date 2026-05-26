@@ -9,6 +9,7 @@ export type MenuNodeData = {
 export type BlockNodeData = BlockData & {
 	onDataChange?: (newData: BlockData) => void;
 	initialEditing?: boolean;
+	onEditStateChange?: (isEditing: boolean) => void;
 };
 
 export type DiagramNodeData = BlockNodeData | MenuNodeData;

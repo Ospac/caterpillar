@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import defaultImage from "@/assets/frankenstein.webp";
 import type { SearchType } from "@/features/diagram/lib/api/searchApi";
 import { searchQueries } from "@/features/diagram/lib/api/searchQueries";
@@ -26,6 +26,8 @@ export function SearchBlockForm({
 	onEditEnd,
 }: SearchBlockFormProps) {
 	const [query, setQuery] = useState("");
+	const searchInputId = useId();
+	const searchInputRef = useRef<HTMLInputElement>(null);
 	const debouncedQuery = useDebouncedValue(query, 300);
 	const { data, isLoading, isError, refetch } = useQuery(
 		searchQueries[searchType](debouncedQuery),
@@ -40,14 +42,20 @@ export function SearchBlockForm({
 		});
 	};
 	const items = data ?? [];
+
+	//TODO: focus 동작 X
+	useEffect(() => {
+		searchInputRef.current?.focus();
+	}, []);
+
 	return (
 		<fieldset className="h-full flex flex-col ">
 			<input
+				ref={searchInputRef}
+				id={searchInputId}
 				type="text"
 				value={query}
 				placeholder={placeholder}
-				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
-				autoFocus
 				className=" w-full border-b border-gray-400 bg-transparent px-2 py-1 text-[11px] outline-none"
 				onChange={(e) => setQuery(e.target.value)}
 			/>
@@ -71,7 +79,7 @@ export function SearchBlockForm({
 				) : items.length > 0 ? (
 					items.map((r) => (
 						<button
-							key={r.title + r.secondary}
+							key={r.title + r.secondary + r.year}
 							type="button"
 							className="flex gap-2 w-full text-left px-2 py-1 text-[11px] hover:bg-gray-100"
 							onMouseDown={(e) => e.preventDefault()}
