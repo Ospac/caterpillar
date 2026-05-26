@@ -157,19 +157,27 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 	const startEdit = () => {
 		setIsEditing(true);
 	};
-
 	const endEdit = () => {
 		setIsEditing(false);
 	};
 
+	const handleClick = !isEditing ? startEdit : endEdit;
+
+	const onKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter" || e.key === " ") {
+			handleClick();
+		}
+	};
 	const span = getNodeSpan(data.blockType);
 	return (
-		// biome-ignore lint/a11y/noStaticElementInteractions: React Flow 노드 — 클릭으로 편집 진입
-		// biome-ignore lint/a11y/useKeyWithClickEvents: React Flow 캔버스는 마우스 인터랙션 기반
+		// biome-ignore lint/a11y/useSemanticElements: <ReactFlow BlockNode>
 		<div
+			tabIndex={0}
 			className={`${containerClass(data.blockType)}`}
 			style={{ width: span.cols * CELL_SIZE, height: span.rows * CELL_SIZE }}
-			onClick={!isEditing ? startEdit : undefined}
+			onClick={handleClick}
+			onKeyDown={onKeyDown}
+			role={"button"}
 		>
 			<NodeHandles />
 			{isEditing ? (
