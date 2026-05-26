@@ -28,6 +28,7 @@
 		"clsx": "^2.1.1",
 		"postcss": "^8.5.1",
 		"react": "^19.0.0",
+		"react-aria": "^3.48.0",
 		"react-dom": "^19.0.0",
 		"react-hook-form": "^7.72.0",
 		"tailwind-merge": "^3.5.0",

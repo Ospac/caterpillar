@@ -160,12 +160,17 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 	const endEdit = () => {
 		setIsEditing(false);
 	};
+	const nothing = () => {};
 
-	const handleClick = !isEditing ? startEdit : endEdit;
+	const handleClick = !isEditing ? startEdit : nothing;
 
 	const onKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" || e.key === " ") {
+		if (e.key === "Enter" && e.shiftKey) {
+			return;
+		}
+		if (e.key === "Enter") {
 			handleClick();
+			return;
 		}
 	};
 	const span = getNodeSpan(data.blockType);
