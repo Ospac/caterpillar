@@ -1,7 +1,6 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import defaultImage from "@/assets/frankenstein.webp";
-
 import { Fragment, type JSX, useState } from "react";
+import defaultImage from "@/assets/frankenstein.webp";
 import { getNodeSpan } from "../../lib/blockSpan";
 import { CELL_SIZE } from "../../lib/grid";
 import type { BlockData } from "../../model/blockTypes";

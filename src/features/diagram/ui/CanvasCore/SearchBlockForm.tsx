@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import defaultImage from "@/assets/frankenstein.webp";
 import type { SearchType } from "@/features/diagram/lib/api/searchApi";
 import { searchQueries } from "@/features/diagram/lib/api/searchQueries";
@@ -8,7 +9,6 @@ import type {
 	BlockData,
 	SearchBlockData,
 } from "@/features/diagram/model/blockTypes";
-import { useState } from "react";
 
 interface SearchBlockFormProps {
 	selectedData: SearchBlockData;
