@@ -107,6 +107,9 @@ export function jsonError({
 export function getQuery(request: Request): string | null {
 	return new URL(request.url).searchParams.get("q");
 }
+export function escapeIgdbSearchTerm(value: string): string {
+	return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/;/g, " ");
+}
 export function requireEnv({
 	name,
 	message = "API key not configured",

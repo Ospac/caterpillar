@@ -4,6 +4,7 @@ import type { SearchResult } from "@/features/diagram/lib/api/types";
 import {
 	createSearchClient,
 	ENDPOINT,
+	escapeIgdbSearchTerm,
 	getYear,
 	requireEnv,
 	responseNotOkFromAxiosResponse,
@@ -112,7 +113,7 @@ function createIgdbClient({ clientId, accessToken }: IgdbConfig) {
 function requestGames(client: AxiosInstance, query: string) {
 	return client.post<Game[]>(
 		ENDPOINT.igdb.games,
-		`search "${query}"; fields name,cover,first_release_date; limit 10;`,
+		`search "${escapeIgdbSearchTerm(query)}"; fields name,cover,first_release_date; limit 10;`,
 	);
 }
 
