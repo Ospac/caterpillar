@@ -4,6 +4,7 @@ import defaultImage from "@/assets/frankenstein.webp";
 import { getNodeSpan } from "../../lib/blockSpan";
 import { CELL_SIZE } from "../../lib/grid";
 import type { BlockData, BlockType } from "../../model/blockTypes";
+import { useCanvasStore } from "../../model/canvasStore";
 import type { BlockNodeData } from "../../model/nodeTypes";
 import BlockEditForm from "./BlockEditForm";
 
@@ -160,10 +161,19 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 	}
 }
 
-export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
-	const [isEditing, setIsEditing] = useState(data.initialEditing ?? false);
-	const { onEditStateChange } = data;
+export default function BlockNode({
+	id,
+	data,
+}: NodeProps<Node<BlockNodeData>>) {
+	const canvasMode = useCanvasStore((state) => state.mode);
+	const updateBlockData = useCanvasStore((state) => state.updateBlockData);
+	const isCanvasEditMode = canvasMode === "edit";
+
+	const [isEditing, setIsEditing] = useState(
+		(data.initialEditing ?? false) && isCanvasEditMode,
+	);
 	const startEdit = () => {
+		if (!isCanvasEditMode) return;
 		setIsEditing(true);
 	};
 	const endEdit = () => {
@@ -183,8 +193,10 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 		}
 	};
 	useEffect(() => {
-		onEditStateChange?.(isEditing);
-	}, [isEditing, onEditStateChange]);
+		if (!isCanvasEditMode && isEditing) {
+			setIsEditing(false);
+		}
+	}, [isCanvasEditMode, isEditing]);
 
 	const span =
 		isEditing && SEARCH_BLOCK_TYPES.has(data.blockType)
@@ -205,7 +217,7 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 			{isEditing ? (
 				<BlockEditForm
 					data={data}
-					onDataChange={(newData) => data.onDataChange?.(newData)}
+					onDataChange={(newData) => updateBlockData(id, newData)}
 					onEditEnd={endEdit}
 				/>
 			) : (

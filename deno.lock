@@ -12,6 +12,7 @@
     "packageJson": {
       "dependencies": [
         "npm:@biomejs/biome@^2.4.5",
+        "npm:@netlify/blobs@^10.7.8",
         "npm:@netlify/functions@^5.1.5",
         "npm:@rsbuild/core@^1.2.4",
         "npm:@rsbuild/plugin-babel@^1.1.1",
@@ -34,13 +35,15 @@
         "npm:clsx@^2.1.1",
         "npm:happy-dom@^20.8.3",
         "npm:postcss@^8.5.1",
+        "npm:react-aria@^3.48.0",
         "npm:react-dom@19",
         "npm:react-hook-form@^7.72.0",
         "npm:react@19",
         "npm:tailwind-merge@^3.5.0",
         "npm:tailwindcss@^4.1.18",
         "npm:typescript@^5.6.2",
-        "npm:zod@^4.3.6"
+        "npm:zod@^4.3.6",
+        "npm:zustand@^5.0.13"
       ]
     }
   }

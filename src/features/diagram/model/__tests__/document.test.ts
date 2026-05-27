@@ -125,7 +125,6 @@ describe("document(model)", () => {
 						data: {
 							blockType: "text",
 							text: "Node 1",
-							onDataChange: () => {},
 							initialEditing: true,
 						},
 					},
@@ -135,7 +134,6 @@ describe("document(model)", () => {
 						position: { x: 108, y: 108 },
 						data: {
 							blockType: "menu",
-							onTypeSelect: () => {},
 						},
 					},
 				],

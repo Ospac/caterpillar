@@ -11,33 +11,24 @@ import {
 	type Viewport,
 } from "@xyflow/react";
 
-import {
-	type MouseEvent,
-	useEffect,
-	useReducer,
-	useRef,
-	useState,
-} from "react";
+import { type MouseEvent, useEffect, useReducer, useState } from "react";
 import { getNodeSpan } from "../../lib/blockSpan";
 import { createDockedNodeState, resolveDropPosition } from "../../lib/docking";
 import {
 	CELL_SIZE,
 	getGridOccupancy,
+	getNextStage,
 	getStagePixelSize,
+	isNodeEscapingStage,
 	MAX_GRID_STAGE,
 } from "../../lib/grid";
-import type { BlockData, BlockType } from "../../model/blockTypes";
-import { addNode } from "../../model/document";
+import { useCanvasStore } from "../../model/canvasStore";
 import type { DiagramNode } from "../../model/nodeTypes";
 import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
 } from "../../model/runtime";
 import BlockNode from "./BlockNode";
-import {
-	canvasGraphReducer,
-	createCanvasGraphState,
-} from "./canvasGraphReducer";
 import {
 	canvasRuntimeReducer,
 	createCanvasReducerState,
@@ -66,72 +57,64 @@ export function CanvasCoreInner() {
 		initialRuntimeState,
 		createCanvasReducerState,
 	);
-	const [graphState, dispatchGraphState] = useReducer(
-		canvasGraphReducer,
-		initialRuntimeState,
-		createCanvasGraphState,
+	const mode = useCanvasStore((state) => state.mode);
+	const nodes = useCanvasStore((state) => state.nodes);
+	const edges = useCanvasStore((state) => state.edges);
+	const visibleStage = useCanvasStore((state) => state.visibleStage);
+	const setMode = useCanvasStore((state) => state.setMode);
+	const setVisibleStage = useCanvasStore((state) => state.setVisibleStage);
+	const addMenuNode = useCanvasStore((state) => state.addMenuNode);
+	const connectEdge = useCanvasStore((state) => state.connectEdge);
+	const removeEdge = useCanvasStore((state) => state.removeEdge);
+	const applyNodesChange = useCanvasStore((state) => state.applyNodesChange);
+	const applyEdgesChange = useCanvasStore((state) => state.applyEdgesChange);
+	const commitNodePosition = useCanvasStore(
+		(state) => state.commitNodePosition,
 	);
-
-	const { nodes, edges } = graphState;
-	const { visibleStage, nodeDockingState, showGuide } = canvasState;
+	const { nodeDockingState, showGuide } = canvasState;
+	const isEditMode = mode === "edit";
 
 	const stagePixelSize = getStagePixelSize(visibleStage);
 	const occupancy = getGridOccupancy(nodes, visibleStage);
-	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
-
-	const getNextNodeId = () => {
-		const id = `node-${nodeIdRef.current}`;
-		nodeIdRef.current += 1;
-		return id;
-	};
 
 	const onConnect = (connection: Connection) => {
-		dispatchGraphState({ type: "edgeConnected", connection });
+		if (!isEditMode) return;
+		connectEdge(connection);
 	};
 
 	const onNodesChange: OnNodesChange<DiagramNode> = (changes) => {
-		dispatchGraphState({ type: "nodesChanged", changes });
+		if (!isEditMode) return;
+		applyNodesChange(changes);
 	};
 
 	const onEdgesChange: OnEdgesChange<Edge> = (changes) => {
-		dispatchGraphState({ type: "edgesChanged", changes });
+		if (!isEditMode) return;
+		applyEdgesChange(changes);
 	};
 
 	const handleEdgeDoubleClick = (_: MouseEvent, edge: Edge) => {
-		dispatchGraphState({ type: "edgeRemoved", edgeId: edge.id });
-	};
-
-	const handleBlockDataChange = (nodeId: string, newData: BlockData) => {
-		dispatchGraphState({
-			type: "blockDataChanged",
-			nodeId,
-			data: newData,
-		});
-	};
-
-	const handleBlockEditStateChange = (nodeId: string, isEditing: boolean) => {
-		dispatchGraphState({
-			type: "blockEditStateChanged",
-			nodeId,
-			isEditing,
-		});
+		if (!isEditMode) return;
+		removeEdge(edge.id);
 	};
 
 	const handleNodeDragStart = (_: MouseEvent, _node: Node) => {
+		if (!isEditMode) return;
 		dispatchCanvasState({ type: "dragStarted" });
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
+		if (!isEditMode) return;
+
 		const diagramNode = node as DiagramNode;
 		const span = getNodeSpan(diagramNode.data.blockType);
-		dispatchCanvasState({
-			type: "nodeDragged",
-			position: diagramNode.position,
-			span,
-		});
+		if (isNodeEscapingStage(diagramNode.position, visibleStage, span)) {
+			setVisibleStage(getNextStage(visibleStage));
+		}
 	};
 
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
+		if (!isEditMode) return;
+
 		const diagramNode = node as DiagramNode;
 		const span = getNodeSpan(diagramNode.data.blockType);
 		const currentDockingState =
@@ -147,58 +130,60 @@ export function CanvasCoreInner() {
 			lastValidDock: currentDockingState.lastValidDock,
 		});
 
-		dispatchGraphState({
-			type: "nodePositionChanged",
-			nodeId: diagramNode.id,
-			position: resolution.position,
-		});
+		commitNodePosition(diagramNode.id, resolution.position);
 
 		dispatchCanvasState({
 			type: "nodeDropCommitted",
 			nodeId: diagramNode.id,
 			position: resolution.position,
 			span,
+			visibleStage,
 			dockedCell: resolution.cell,
 		});
 	};
 
-	const handleMenuTypeSelect = (menuNodeId: string, blockType: BlockType) => {
-		dispatchGraphState({
-			type: "menuTypeSelected",
-			menuNodeId,
-			blockNodeId: getNextNodeId(),
-			blockType,
-			onDataChange: handleBlockDataChange,
-			onEditStateChange: handleBlockEditStateChange,
-		});
-	};
-
 	const handleAddNode = () => {
-		dispatchGraphState({
-			type: "nodeAdded",
-			node: addNode({
-				id: getNextNodeId(),
-				onTypeSelect: handleMenuTypeSelect,
-				position: {
-					x: 0,
-					y: 0,
-				},
-				visibleStage,
-			}),
+		if (!isEditMode) return;
+		addMenuNode({
+			x: 0,
+			y: 0,
 		});
 	};
 
 	useEffect(() => {
-		dispatchCanvasState({ type: "nodesSynced", nodes });
-	}, [nodes]);
+		dispatchCanvasState({ type: "nodesSynced", nodes, visibleStage });
+	}, [nodes, visibleStage]);
 
 	return (
 		<div className="h-full w-full overflow-auto rounded-lg border border-gray-300 bg-light-green p-4">
+			<div className="absolute left-6 top-3 z-20 flex gap-1 rounded border border-gray-300 bg-white p-0.5 text-xs">
+				<button
+					type="button"
+					aria-pressed={mode === "read"}
+					onClick={() => setMode("read")}
+					className={`px-2.5 py-1 ${
+						mode === "read" ? "bg-gray-900 text-white" : "text-gray-800"
+					}`}
+				>
+					Read
+				</button>
+				<button
+					type="button"
+					aria-pressed={mode === "edit"}
+					onClick={() => setMode("edit")}
+					className={`px-2.5 py-1 ${
+						mode === "edit" ? "bg-gray-900 text-white" : "text-gray-800"
+					}`}
+				>
+					Edit
+				</button>
+			</div>
 			<div className="absolute left-56 top-3 z-20 flex gap-2">
 				<button
 					type="button"
 					onClick={handleAddNode}
-					className="rounded border border-gray-300 bg-white px-2.5 py-1 text-xs text-gray-800"
+					disabled={!isEditMode}
+					className="rounded border border-gray-300 bg-white px-2.5 py-1 text-xs text-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
 				>
 					Add Node
 				</button>
@@ -227,6 +212,9 @@ export function CanvasCoreInner() {
 					nodeTypes={nodeTypes}
 					nodeExtent={NODE_EXTENT}
 					defaultViewport={LOCKED_VIEWPORT}
+					nodesDraggable={isEditMode}
+					nodesConnectable={isEditMode}
+					elementsSelectable={isEditMode}
 					snapToGrid={false}
 					snapGrid={[CELL_SIZE, CELL_SIZE]}
 					autoPanOnNodeDrag={false}
@@ -238,7 +226,7 @@ export function CanvasCoreInner() {
 					zoomOnDoubleClick={false}
 					zoomOnPinch={false}
 					zoomOnScroll={false}
-					deleteKeyCode={["Backspace", "Delete"]}
+					deleteKeyCode={isEditMode ? ["Backspace", "Delete"] : null}
 					proOptions={{
 						hideAttribution: true,
 					}}
