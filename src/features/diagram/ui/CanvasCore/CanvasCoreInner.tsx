@@ -179,7 +179,10 @@ export function CanvasCoreInner() {
 			node: addNode({
 				id: getNextNodeId(),
 				onTypeSelect: handleMenuTypeSelect,
-				stagePixelSize,
+				position: {
+					x: 0,
+					y: 0,
+				},
 				visibleStage,
 			}),
 		});

@@ -225,27 +225,20 @@ export const makeBlockNodeWhenMenuTypeSelect = ({
 interface AddNodeOptions {
 	id: string;
 	onTypeSelect: (id: string, blockType: BlockType) => void;
-	stagePixelSize: number;
+	position: XYPosition;
 	visibleStage: GridStage;
 }
 
 export const addNode = ({
 	id,
 	onTypeSelect,
-	stagePixelSize,
+	position,
 	visibleStage,
 }: AddNodeOptions): DiagramNode => {
 	return {
 		id,
 		type: "menu",
-		position: clampPositionToStage(
-			{
-				x: stagePixelSize / 2 - CELL_SIZE,
-				y: stagePixelSize / 2 - CELL_SIZE,
-			},
-			visibleStage,
-			WIDE_SPAN,
-		),
+		position: clampPositionToStage(position, visibleStage, WIDE_SPAN),
 		data: {
 			blockType: "menu",
 			onTypeSelect: (blockType) => onTypeSelect(id, blockType),
