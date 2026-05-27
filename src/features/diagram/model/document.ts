@@ -1,7 +1,9 @@
 import type { Edge } from "@xyflow/react";
+import { WIDE_SPAN } from "../lib/blockSpan";
 import type { GridStage, XYPosition } from "../lib/geometry";
-import { GRID_STAGES } from "../lib/grid";
+import { CELL_SIZE, clampPositionToStage, GRID_STAGES } from "../lib/grid";
 import { validateBlockData } from "./block";
+import type { BlockData, BlockType } from "./blockTypes";
 import type { DiagramNode, DiagramNodeType } from "./nodeTypes";
 import type { CanvasRuntimeState } from "./runtime";
 
@@ -189,3 +191,64 @@ export function parseCanvasDocument(
 		edges,
 	};
 }
+
+interface MakeBlockNodeWhenMenuTypeSelectOptions {
+	id: string;
+	blockType: BlockType;
+	menuNodePosition: XYPosition;
+	onDataChange: (id: string, newData: BlockData) => void;
+	onEditStateChange: (id: string, isEditing: boolean) => void;
+}
+export const makeBlockNodeWhenMenuTypeSelect = ({
+	id,
+	blockType,
+	menuNodePosition,
+	onDataChange,
+	onEditStateChange,
+}: MakeBlockNodeWhenMenuTypeSelectOptions): DiagramNode => {
+	return {
+		id,
+		type: "block",
+		position: menuNodePosition,
+		data: {
+			blockType,
+			title: "",
+			secondary: "",
+			onDataChange: (newData: BlockData) => onDataChange(id, newData),
+			onEditStateChange: (isEditing: boolean) =>
+				onEditStateChange(id, isEditing),
+			initialEditing: true,
+		},
+	};
+};
+
+interface AddNodeOptions {
+	id: string;
+	onTypeSelect: (id: string, blockType: BlockType) => void;
+	stagePixelSize: number;
+	visibleStage: GridStage;
+}
+
+export const addNode = ({
+	id,
+	onTypeSelect,
+	stagePixelSize,
+	visibleStage,
+}: AddNodeOptions): DiagramNode => {
+	return {
+		id,
+		type: "menu",
+		position: clampPositionToStage(
+			{
+				x: stagePixelSize / 2 - CELL_SIZE,
+				y: stagePixelSize / 2 - CELL_SIZE,
+			},
+			visibleStage,
+			WIDE_SPAN,
+		),
+		data: {
+			blockType: "menu",
+			onTypeSelect: (blockType) => onTypeSelect(id, blockType),
+		},
+	};
+};

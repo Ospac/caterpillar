@@ -1,15 +1,13 @@
 import {
-	addEdge,
 	type Connection,
 	ConnectionMode,
 	type CoordinateExtent,
 	type Edge,
-	MarkerType,
 	type Node,
 	type NodeTypes,
+	type OnEdgesChange,
+	type OnNodesChange,
 	ReactFlow,
-	useEdgesState,
-	useNodesState,
 	type Viewport,
 } from "@xyflow/react";
 
@@ -20,23 +18,26 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { getNodeSpan, WIDE_SPAN } from "../../lib/blockSpan";
+import { getNodeSpan } from "../../lib/blockSpan";
 import { createDockedNodeState, resolveDropPosition } from "../../lib/docking";
 import {
 	CELL_SIZE,
-	clampPositionToStage,
 	getGridOccupancy,
 	getStagePixelSize,
 	MAX_GRID_STAGE,
 } from "../../lib/grid";
 import type { BlockData, BlockType } from "../../model/blockTypes";
+import { addNode, makeBlockNodeWhenMenuTypeSelect } from "../../model/document";
 import type { DiagramNode } from "../../model/nodeTypes";
-import { isBlockNode } from "../../model/nodeTypes";
 import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
 } from "../../model/runtime";
 import BlockNode from "./BlockNode";
+import {
+	canvasGraphReducer,
+	createCanvasGraphState,
+} from "./canvasGraphReducer";
 import {
 	canvasRuntimeReducer,
 	createCanvasReducerState,
@@ -45,7 +46,6 @@ import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
 
 const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
-const EDITING_NODE_Z_INDEX = 1000;
 const MAX_STAGE_PIXEL_SIZE = getStagePixelSize(MAX_GRID_STAGE);
 const NODE_EXTENT: CoordinateExtent = [
 	[0, 0],
@@ -66,67 +66,55 @@ export function CanvasCoreInner() {
 		initialRuntimeState,
 		createCanvasReducerState,
 	);
-	const [nodes, setNodes, onNodesChange] = useNodesState<DiagramNode>(
-		initialRuntimeState.nodes,
+	const [graphState, dispatchGraphState] = useReducer(
+		canvasGraphReducer,
+		initialRuntimeState,
+		createCanvasGraphState,
 	);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(
-		initialRuntimeState.edges,
-	);
-	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
 
+	const { nodes, edges } = graphState;
 	const { visibleStage, nodeDockingState, showGuide } = canvasState;
+
 	const stagePixelSize = getStagePixelSize(visibleStage);
 	const occupancy = getGridOccupancy(nodes, visibleStage);
+	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
+
+	const getNextNodeId = () => {
+		const id = `node-${nodeIdRef.current}`;
+		nodeIdRef.current += 1;
+		return id;
+	};
 
 	const onConnect = (connection: Connection) => {
-		setEdges((currentEdges) =>
-			addEdge(
-				{
-					...connection,
-					type: "smoothstep",
-					markerEnd: {
-						type: MarkerType.ArrowClosed,
-					},
-				},
-				currentEdges,
-			),
-		);
+		dispatchGraphState({ type: "edgeConnected", connection });
+	};
+
+	const onNodesChange: OnNodesChange<DiagramNode> = (changes) => {
+		dispatchGraphState({ type: "nodesChanged", changes });
+	};
+
+	const onEdgesChange: OnEdgesChange<Edge> = (changes) => {
+		dispatchGraphState({ type: "edgesChanged", changes });
 	};
 
 	const handleEdgeDoubleClick = (_: MouseEvent, edge: Edge) => {
-		setEdges((currentEdges) =>
-			currentEdges.filter((currentEdge) => currentEdge.id !== edge.id),
-		);
+		dispatchGraphState({ type: "edgeRemoved", edgeId: edge.id });
 	};
 
 	const handleBlockDataChange = (nodeId: string, newData: BlockData) => {
-		setNodes((curr) =>
-			curr.map((n) => {
-				if (n.id !== nodeId || !isBlockNode(n)) return n;
-				return {
-					...n,
-					data: {
-						...newData,
-						onDataChange: n.data.onDataChange,
-						initialEditing: n.data.initialEditing,
-						onEditStateChange: n.data.onEditStateChange,
-					},
-				};
-			}),
-		);
+		dispatchGraphState({
+			type: "blockDataChanged",
+			nodeId,
+			data: newData,
+		});
 	};
 
 	const handleBlockEditStateChange = (nodeId: string, isEditing: boolean) => {
-		setNodes((currentNodes) =>
-			currentNodes.map((currentNode) =>
-				currentNode.id === nodeId
-					? {
-							...currentNode,
-							zIndex: isEditing ? EDITING_NODE_Z_INDEX : undefined,
-						}
-					: currentNode,
-			),
-		);
+		dispatchGraphState({
+			type: "blockEditStateChanged",
+			nodeId,
+			isEditing,
+		});
 	};
 
 	const handleNodeDragStart = (_: MouseEvent, _node: Node) => {
@@ -159,13 +147,11 @@ export function CanvasCoreInner() {
 			lastValidDock: currentDockingState.lastValidDock,
 		});
 
-		setNodes((currentNodes) =>
-			currentNodes.map((currentNode) =>
-				currentNode.id === diagramNode.id
-					? { ...currentNode, position: resolution.position }
-					: currentNode,
-			),
-		);
+		dispatchGraphState({
+			type: "nodePositionChanged",
+			nodeId: diagramNode.id,
+			position: resolution.position,
+		});
 
 		dispatchCanvasState({
 			type: "nodeDropCommitted",
@@ -177,60 +163,40 @@ export function CanvasCoreInner() {
 	};
 
 	const handleMenuTypeSelect = (menuNodeId: string, blockType: BlockType) => {
-		const id = `node-${nodeIdRef.current}`;
-		nodeIdRef.current += 1;
+		console.log("MenuTypeSelect");
+		const menuNode = nodes.find((node) => node.id === menuNodeId);
+		if (!menuNode) return;
 
-		setNodes((currentNodes) => {
-			const menuNode = currentNodes.find((n) => n.id === menuNodeId);
-			if (!menuNode) return currentNodes;
-
-			const newNode: DiagramNode = {
-				id,
-				type: "block",
-				position: menuNode.position,
-				data: {
-					blockType,
-					title: "",
-					secondary: "",
-					onDataChange: (newData: BlockData) =>
-						handleBlockDataChange(id, newData),
-					onEditStateChange: (isEditing: boolean) =>
-						handleBlockEditStateChange(id, isEditing),
-					initialEditing: true,
-				},
-			};
-
-			return [...currentNodes.filter((n) => n.id !== menuNodeId), newNode];
+		dispatchGraphState({
+			type: "menuReplacedWithBlock",
+			menuNodeId,
+			node: makeBlockNodeWhenMenuTypeSelect({
+				id: getNextNodeId(),
+				blockType,
+				menuNodePosition: menuNode.position,
+				onDataChange: handleBlockDataChange,
+				onEditStateChange: handleBlockEditStateChange,
+			}),
 		});
+		console.log("MenuTypeSelect: dispatch");
 	};
 
 	const handleAddNode = () => {
-		const id = `node-${nodeIdRef.current}`;
-		nodeIdRef.current += 1;
-
-		const nextNode: DiagramNode = {
-			id,
-			type: "menu",
-			position: clampPositionToStage(
-				{
-					x: stagePixelSize / 2 - CELL_SIZE,
-					y: stagePixelSize / 2 - CELL_SIZE,
-				},
+		dispatchGraphState({
+			type: "nodeAdded",
+			node: addNode({
+				id: getNextNodeId(),
+				onTypeSelect: handleMenuTypeSelect,
+				stagePixelSize,
 				visibleStage,
-				WIDE_SPAN,
-			),
-			data: {
-				blockType: "menu",
-				onTypeSelect: (blockType) => handleMenuTypeSelect(id, blockType),
-			},
-		};
-
-		setNodes((currentNodes) => [...currentNodes, nextNode]);
+			}),
+		});
 	};
 
 	useEffect(() => {
 		dispatchCanvasState({ type: "nodesSynced", nodes });
 	}, [nodes]);
+
 	return (
 		<div className="h-full w-full overflow-auto rounded-lg border border-gray-300 bg-light-green p-4">
 			<div className="absolute left-56 top-3 z-20 flex gap-2">
