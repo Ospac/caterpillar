@@ -9,7 +9,8 @@ import {
 	type NodeChange,
 } from "@xyflow/react";
 
-import type { BlockData } from "../../model/blockTypes";
+import type { BlockData, BlockType } from "../../model/blockTypes";
+import { makeBlockNodeWhenMenuTypeSelect } from "../../model/document";
 import type { DiagramNode } from "../../model/nodeTypes";
 import { isBlockNode } from "../../model/nodeTypes";
 
@@ -51,9 +52,12 @@ export type CanvasGraphAction =
 			position: DiagramNode["position"];
 	  }
 	| {
-			type: "menuReplacedWithBlock";
+			type: "menuTypeSelected";
 			menuNodeId: string;
-			node: DiagramNode;
+			blockNodeId: string;
+			blockType: BlockType;
+			onDataChange: (id: string, newData: BlockData) => void;
+			onEditStateChange: (id: string, isEditing: boolean) => void;
 	  }
 	| {
 			type: "nodeAdded";
@@ -140,14 +144,26 @@ export function canvasGraphReducer(
 						: node,
 				),
 			};
-		case "menuReplacedWithBlock":
+		case "menuTypeSelected": {
+			const menuNode = state.nodes.find(
+				(node) => node.id === action.menuNodeId,
+			);
+			if (!menuNode) return state;
+
 			return {
 				...state,
 				nodes: [
 					...state.nodes.filter((node) => node.id !== action.menuNodeId),
-					action.node,
+					makeBlockNodeWhenMenuTypeSelect({
+						id: action.blockNodeId,
+						blockType: action.blockType,
+						menuNodePosition: menuNode.position,
+						onDataChange: action.onDataChange,
+						onEditStateChange: action.onEditStateChange,
+					}),
 				],
 			};
+		}
 		case "nodeAdded":
 			return {
 				...state,

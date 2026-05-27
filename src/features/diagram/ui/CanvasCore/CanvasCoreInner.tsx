@@ -27,7 +27,7 @@ import {
 	MAX_GRID_STAGE,
 } from "../../lib/grid";
 import type { BlockData, BlockType } from "../../model/blockTypes";
-import { addNode, makeBlockNodeWhenMenuTypeSelect } from "../../model/document";
+import { addNode } from "../../model/document";
 import type { DiagramNode } from "../../model/nodeTypes";
 import {
 	type CanvasRuntimeState,
@@ -163,22 +163,14 @@ export function CanvasCoreInner() {
 	};
 
 	const handleMenuTypeSelect = (menuNodeId: string, blockType: BlockType) => {
-		console.log("MenuTypeSelect");
-		const menuNode = nodes.find((node) => node.id === menuNodeId);
-		if (!menuNode) return;
-
 		dispatchGraphState({
-			type: "menuReplacedWithBlock",
+			type: "menuTypeSelected",
 			menuNodeId,
-			node: makeBlockNodeWhenMenuTypeSelect({
-				id: getNextNodeId(),
-				blockType,
-				menuNodePosition: menuNode.position,
-				onDataChange: handleBlockDataChange,
-				onEditStateChange: handleBlockEditStateChange,
-			}),
+			blockNodeId: getNextNodeId(),
+			blockType,
+			onDataChange: handleBlockDataChange,
+			onEditStateChange: handleBlockEditStateChange,
 		});
-		console.log("MenuTypeSelect: dispatch");
 	};
 
 	const handleAddNode = () => {
