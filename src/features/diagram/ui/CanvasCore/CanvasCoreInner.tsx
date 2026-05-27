@@ -13,23 +13,21 @@ import {
 	type Viewport,
 } from "@xyflow/react";
 
-import { type MouseEvent, useEffect, useRef, useState } from "react";
-import { getNodeSpan, WIDE_SPAN } from "../../lib/blockSpan";
 import {
-	commitDockedNodeState,
-	createDockedNodeState,
-	resolveDropPosition,
-} from "../../lib/docking";
-import type { DockedNodeState, GridStage, NodeSpan } from "../../lib/geometry";
+	type MouseEvent,
+	useEffect,
+	useReducer,
+	useRef,
+	useState,
+} from "react";
+import { getNodeSpan, WIDE_SPAN } from "../../lib/blockSpan";
+import { createDockedNodeState, resolveDropPosition } from "../../lib/docking";
 import {
 	CELL_SIZE,
 	clampPositionToStage,
 	getGridOccupancy,
-	getNextStage,
 	getStagePixelSize,
-	isNodeEscapingStage,
 	MAX_GRID_STAGE,
-	syncNodeDockingState,
 } from "../../lib/grid";
 import type { BlockData, BlockType } from "../../model/blockTypes";
 import type { DiagramNode } from "../../model/nodeTypes";
@@ -37,14 +35,22 @@ import { isBlockNode } from "../../model/nodeTypes";
 import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
-	type RuntimeNodeDockingState,
 } from "../../model/runtime";
 import BlockNode from "./BlockNode";
+import {
+	canvasRuntimeReducer,
+	createCanvasReducerState,
+} from "./canvasRuntimeReducer";
 import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
 
 const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 const EDITING_NODE_Z_INDEX = 1000;
+const MAX_STAGE_PIXEL_SIZE = getStagePixelSize(MAX_GRID_STAGE);
+const NODE_EXTENT: CoordinateExtent = [
+	[0, 0],
+	[MAX_STAGE_PIXEL_SIZE, MAX_STAGE_PIXEL_SIZE],
+];
 const nodeTypes: NodeTypes = {
 	menu: MenuNode,
 	block: BlockNode,
@@ -55,28 +61,21 @@ export function CanvasCoreInner() {
 	const [initialRuntimeState] = useState<CanvasRuntimeState>(() =>
 		createInitialCanvasRuntimeState(),
 	);
+	const [canvasState, dispatchCanvasState] = useReducer(
+		canvasRuntimeReducer,
+		initialRuntimeState,
+		createCanvasReducerState,
+	);
 	const [nodes, setNodes, onNodesChange] = useNodesState<DiagramNode>(
 		initialRuntimeState.nodes,
 	);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(
 		initialRuntimeState.edges,
 	);
-	const [visibleStage, setVisibleStage] = useState<GridStage>(
-		initialRuntimeState.visibleStage,
-	);
-
-	const [nodeDockingState, setNodeDockingState] =
-		useState<RuntimeNodeDockingState>(initialRuntimeState.nodeDockingState);
-	const [showGuide, setShowGuide] = useState(false);
 	const nodeIdRef = useRef(initialRuntimeState.nodes.length + 1);
 
+	const { visibleStage, nodeDockingState, showGuide } = canvasState;
 	const stagePixelSize = getStagePixelSize(visibleStage);
-	const maxStagePixelSize = getStagePixelSize(MAX_GRID_STAGE);
-	const nodeExtent: CoordinateExtent = [
-		[0, 0],
-		[maxStagePixelSize, maxStagePixelSize],
-	];
-
 	const occupancy = getGridOccupancy(nodes, visibleStage);
 
 	const onConnect = (connection: Connection) => {
@@ -98,24 +97,6 @@ export function CanvasCoreInner() {
 		setEdges((currentEdges) =>
 			currentEdges.filter((currentEdge) => currentEdge.id !== edge.id),
 		);
-	};
-
-	const updateNodeDockingState = (
-		nodeId: string,
-		position: { x: number; y: number },
-		span: NodeSpan,
-		updater: (state: DockedNodeState) => DockedNodeState,
-	) => {
-		setNodeDockingState((currentState) => {
-			const baseState =
-				currentState[nodeId] ??
-				createDockedNodeState(position, visibleStage, span);
-
-			return {
-				...currentState,
-				[nodeId]: updater(baseState),
-			};
-		});
 	};
 
 	const handleBlockDataChange = (nodeId: string, newData: BlockData) => {
@@ -149,17 +130,17 @@ export function CanvasCoreInner() {
 	};
 
 	const handleNodeDragStart = (_: MouseEvent, _node: Node) => {
-		setShowGuide(true);
+		dispatchCanvasState({ type: "dragStarted" });
 	};
 
 	const handleNodeDrag = (_: MouseEvent, node: Node) => {
 		const diagramNode = node as DiagramNode;
 		const span = getNodeSpan(diagramNode.data.blockType);
-		setVisibleStage((currentStage) =>
-			isNodeEscapingStage(diagramNode.position, currentStage, span)
-				? getNextStage(currentStage)
-				: currentStage,
-		);
+		dispatchCanvasState({
+			type: "nodeDragged",
+			position: diagramNode.position,
+			span,
+		});
 	};
 
 	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
@@ -186,10 +167,13 @@ export function CanvasCoreInner() {
 			),
 		);
 
-		updateNodeDockingState(diagramNode.id, resolution.position, span, (state) =>
-			commitDockedNodeState(state, resolution.cell),
-		);
-		setShowGuide(false);
+		dispatchCanvasState({
+			type: "nodeDropCommitted",
+			nodeId: diagramNode.id,
+			position: resolution.position,
+			span,
+			dockedCell: resolution.cell,
+		});
 	};
 
 	const handleMenuTypeSelect = (menuNodeId: string, blockType: BlockType) => {
@@ -245,10 +229,8 @@ export function CanvasCoreInner() {
 	};
 
 	useEffect(() => {
-		setNodeDockingState((currentState) =>
-			syncNodeDockingState(currentState, nodes, visibleStage),
-		);
-	}, [nodes, visibleStage]);
+		dispatchCanvasState({ type: "nodesSynced", nodes });
+	}, [nodes]);
 	return (
 		<div className="h-full w-full overflow-auto rounded-lg border border-gray-300 bg-light-green p-4">
 			<div className="absolute left-56 top-3 z-20 flex gap-2">
@@ -282,7 +264,7 @@ export function CanvasCoreInner() {
 					onNodeDrag={handleNodeDrag}
 					onNodeDragStop={handleNodeDragStop}
 					nodeTypes={nodeTypes}
-					nodeExtent={nodeExtent}
+					nodeExtent={NODE_EXTENT}
 					defaultViewport={LOCKED_VIEWPORT}
 					snapToGrid={false}
 					snapGrid={[CELL_SIZE, CELL_SIZE]}
