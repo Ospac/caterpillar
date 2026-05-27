@@ -3,7 +3,10 @@ import { describe, expect, it } from "@rstest/core";
 import type { BlockData } from "../../../model/blockTypes";
 import type { DiagramNode } from "../../../model/nodeTypes";
 import { isBlockNode } from "../../../model/nodeTypes";
-import { canvasGraphReducer, type CanvasGraphState } from "../canvasGraphReducer";
+import {
+	type CanvasGraphState,
+	canvasGraphReducer,
+} from "../canvasGraphReducer";
 
 describe("canvasGraphReducer", () => {
 	const menuNode: DiagramNode = {

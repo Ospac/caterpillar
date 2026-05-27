@@ -13,7 +13,7 @@
 		"format": "biome format",
 		"lint": "biome lint",
 		"check": "biome check",
-		"check:fix": "biome check --write ./src",
+		"write": "npx biome check --write ./src",
 		"reporter": "biome check --reporter=summary"
 	},
 	"dependencies": {

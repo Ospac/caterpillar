@@ -8,7 +8,12 @@ import type { BlockNodeData } from "../../model/nodeTypes";
 import BlockEditForm from "./BlockEditForm";
 
 const SEARCH_EDIT_SPAN = { cols: 2, rows: 4 } as const;
-const SEARCH_BLOCK_TYPES = new Set<BlockType>(["music", "game", "movie", "book"]);
+const SEARCH_BLOCK_TYPES = new Set<BlockType>([
+	"music",
+	"game",
+	"movie",
+	"book",
+]);
 
 function NodeHandles() {
 	return (
