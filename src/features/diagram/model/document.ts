@@ -1,9 +1,11 @@
 import type { Edge } from "@xyflow/react";
-import { GRID_STAGES } from "../lib/grid";
-import type { GridStage, XYPosition } from "../lib/type";
+import { WIDE_SPAN } from "../lib/blockSpan";
+import type { GridStage, XYPosition } from "../lib/geometry";
+import { CELL_SIZE, clampPositionToStage, GRID_STAGES } from "../lib/grid";
 import { validateBlockData } from "./block";
+import type { BlockData, BlockType } from "./blockTypes";
+import type { DiagramNode, DiagramNodeType } from "./nodeTypes";
 import type { CanvasRuntimeState } from "./runtime";
-import type { DiagramNode, DiagramNodeType } from "./type";
 
 const DIAGRAM_NODE_TYPES: ReadonlySet<string> = new Set<DiagramNodeType>([
 	"menu",
@@ -122,6 +124,19 @@ function parseEdgeItem(value: unknown): EdgeItem | null {
 	};
 }
 
+function serializeNodeData(node: DiagramNode): DiagramNode["data"] {
+	if (node.type === "menu") {
+		return { blockType: "menu" };
+	}
+
+	const validation = validateBlockData(node.data);
+	if (validation.status === "invalid") {
+		throw new Error(validation.reason);
+	}
+
+	return validation.data;
+}
+
 export function serializeCanvasDocument(
 	runtimeState: ParsedCanvasDocument,
 ): CanvasDocument {
@@ -131,7 +146,7 @@ export function serializeCanvasDocument(
 			id: node.id,
 			type: node.type ?? "menu",
 			position: node.position,
-			data: node.data,
+			data: serializeNodeData(node),
 		})),
 		edges: runtimeState.edges.map((edge) => ({
 			id: edge.id,
@@ -176,3 +191,64 @@ export function parseCanvasDocument(
 		edges,
 	};
 }
+
+interface MakeBlockNodeWhenMenuTypeSelectOptions {
+	id: string;
+	blockType: BlockType;
+	menuNodePosition: XYPosition;
+	onDataChange: (id: string, newData: BlockData) => void;
+	onEditStateChange: (id: string, isEditing: boolean) => void;
+}
+export const makeBlockNodeWhenMenuTypeSelect = ({
+	id,
+	blockType,
+	menuNodePosition,
+	onDataChange,
+	onEditStateChange,
+}: MakeBlockNodeWhenMenuTypeSelectOptions): DiagramNode => {
+	return {
+		id,
+		type: "block",
+		position: menuNodePosition,
+		data: {
+			blockType,
+			title: "",
+			secondary: "",
+			onDataChange: (newData: BlockData) => onDataChange(id, newData),
+			onEditStateChange: (isEditing: boolean) =>
+				onEditStateChange(id, isEditing),
+			initialEditing: true,
+		},
+	};
+};
+
+interface AddNodeOptions {
+	id: string;
+	onTypeSelect: (id: string, blockType: BlockType) => void;
+	stagePixelSize: number;
+	visibleStage: GridStage;
+}
+
+export const addNode = ({
+	id,
+	onTypeSelect,
+	stagePixelSize,
+	visibleStage,
+}: AddNodeOptions): DiagramNode => {
+	return {
+		id,
+		type: "menu",
+		position: clampPositionToStage(
+			{
+				x: stagePixelSize / 2 - CELL_SIZE,
+				y: stagePixelSize / 2 - CELL_SIZE,
+			},
+			visibleStage,
+			WIDE_SPAN,
+		),
+		data: {
+			blockType: "menu",
+			onTypeSelect: (blockType) => onTypeSelect(id, blockType),
+		},
+	};
+};

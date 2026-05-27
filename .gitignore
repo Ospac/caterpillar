@@ -6,6 +6,7 @@
 # Dist
 node_modules
 dist/
+.pnpm-store/v10
 
 # IDE
 .idea
@@ -13,3 +14,7 @@ dist/
 
 # Local Netlify folder
 .netlify
+
+# Local Zed folder
+.zed
+.vscode

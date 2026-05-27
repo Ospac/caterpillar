@@ -1,11 +1,19 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import defaultImage from "assets/frankenstein.webp";
-
-import { Fragment, type JSX, useState } from "react";
+import { Fragment, type JSX, useEffect, useState } from "react";
+import defaultImage from "@/assets/frankenstein.webp";
+import { getNodeSpan } from "../../lib/blockSpan";
 import { CELL_SIZE } from "../../lib/grid";
-import { getNodeSpan } from "../../lib/span";
-import type { BlockData, BlockNodeData } from "../../model/type";
+import type { BlockData, BlockType } from "../../model/blockTypes";
+import type { BlockNodeData } from "../../model/nodeTypes";
 import BlockEditForm from "./BlockEditForm";
+
+const SEARCH_EDIT_SPAN = { cols: 2, rows: 4 } as const;
+const SEARCH_BLOCK_TYPES = new Set<BlockType>([
+	"music",
+	"game",
+	"movie",
+	"book",
+]);
 
 function NodeHandles() {
 	return (
@@ -154,24 +162,44 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 
 export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 	const [isEditing, setIsEditing] = useState(data.initialEditing ?? false);
+	const { onEditStateChange } = data;
 	const startEdit = () => {
 		setIsEditing(true);
-		data.onEditStart?.();
 	};
-
 	const endEdit = () => {
 		setIsEditing(false);
-		data.onEditEnd?.();
 	};
+	const nothing = () => {};
 
-	const span = getNodeSpan(data.blockType);
+	const handleClick = !isEditing ? startEdit : nothing;
+
+	const onKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter" && e.shiftKey) {
+			return;
+		}
+		if (e.key === "Enter") {
+			handleClick();
+			return;
+		}
+	};
+	useEffect(() => {
+		onEditStateChange?.(isEditing);
+	}, [isEditing, onEditStateChange]);
+
+	const span =
+		isEditing && SEARCH_BLOCK_TYPES.has(data.blockType)
+			? SEARCH_EDIT_SPAN
+			: getNodeSpan(data.blockType);
+
 	return (
-		// biome-ignore lint/a11y/noStaticElementInteractions: React Flow 노드 — 클릭으로 편집 진입
-		// biome-ignore lint/a11y/useKeyWithClickEvents: React Flow 캔버스는 마우스 인터랙션 기반
+		// biome-ignore lint/a11y/useSemanticElements: <ReactFlow BlockNode>
 		<div
-			className={`${containerClass(data.blockType)}${isEditing ? " nodrag" : ""}`}
+			tabIndex={0}
+			className={`${containerClass(data.blockType)}`}
 			style={{ width: span.cols * CELL_SIZE, height: span.rows * CELL_SIZE }}
-			onClick={!isEditing ? startEdit : undefined}
+			onClick={handleClick}
+			onKeyDown={onKeyDown}
+			role={"button"}
 		>
 			<NodeHandles />
 			{isEditing ? (

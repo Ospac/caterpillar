@@ -19,6 +19,7 @@
         "npm:@rstest/adapter-rsbuild@~0.2.2",
         "npm:@rstest/core@0.9",
         "npm:@tailwindcss/postcss@^4.1.18",
+        "npm:@tanstack/react-query-devtools@^5.96.2",
         "npm:@tanstack/react-query@^5.90.21",
         "npm:@tanstack/react-router-devtools@^1.163.3",
         "npm:@tanstack/react-router@^1.163.3",

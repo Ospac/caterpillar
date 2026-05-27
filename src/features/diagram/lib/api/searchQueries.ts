@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { getSearchData, type SearchType } from "./endpoint";
+import { getSearchData, type SearchType } from "./searchApi";
 
 const STALE_TIME = 1000 * 60 * 5; // 5분
 

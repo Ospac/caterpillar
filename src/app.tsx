@@ -5,7 +5,7 @@ import "@xyflow/react/dist/style.css";
 
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
-import { getQueryClient } from "shared/utils/getQueryClient";
+import { getQueryClient } from "@/shared/utils/getQueryClient";
 
 const queryClient = getQueryClient();
 

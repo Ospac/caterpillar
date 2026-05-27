@@ -1,10 +1,10 @@
+import { useForm } from "react-hook-form";
 import type {
 	BlockData,
 	ImageBlockData,
 	LinkBlockData,
 	TextBlockData,
-} from "features/diagram/model/type";
-import { useForm } from "react-hook-form";
+} from "@/features/diagram/model/blockTypes";
 import Input from "./Input";
 import { SearchBlockForm } from "./SearchBlockForm";
 

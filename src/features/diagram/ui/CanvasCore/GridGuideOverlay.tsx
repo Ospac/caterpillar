@@ -1,6 +1,6 @@
 import { useId } from "react";
+import type { GridStage } from "../../lib/geometry";
 import { CELL_SIZE, getStagePixelSize } from "../../lib/grid";
-import type { GridStage } from "../../lib/type";
 
 const CELL_MARGIN = 2;
 const CELL_STROKE_WIDTH = 1;
@@ -14,7 +14,7 @@ export default function GridGuideOverlay({ stage }: { stage: GridStage }) {
 	const noiseFilterId = useId();
 	return (
 		<svg
-			className="pointer-events-none absolute left-0 top-0 z-10"
+			className="pointer-events-none absolute left-0 top-0"
 			width={size}
 			height={size}
 			viewBox={`0 0 ${size} ${size}`}

@@ -1,6 +1,6 @@
-import type { DiagramNode } from "../model/type";
+import type { DiagramNode } from "@/features/diagram/model/nodeTypes";
+import { getNodeSpan } from "./blockSpan";
 import { createDockedNodeState } from "./docking";
-import { getNodeSpan } from "./span";
 import type {
 	CellCoord,
 	DockedNodeState,
@@ -8,7 +8,7 @@ import type {
 	GridStage,
 	NodeSpan,
 	XYPosition,
-} from "./type";
+} from "./geometry";
 
 export const GRID_STAGES = [8, 14, 20] as const;
 export const MAX_GRID_STAGE: GridStage = GRID_STAGES[GRID_STAGES.length - 1];
@@ -91,18 +91,6 @@ export function clampPositionToStage(
 		x: Math.min(Math.max(position.x, 0), maxX),
 		y: Math.min(Math.max(position.y, 0), maxY),
 	};
-}
-
-export function isCellCoordInsideMaxGrid(
-	cell: CellCoord,
-	maxGridSize = MAX_GRID_STAGE,
-): boolean {
-	return (
-		cell.col >= 0 &&
-		cell.row >= 0 &&
-		cell.col < maxGridSize &&
-		cell.row < maxGridSize
-	);
 }
 
 /**
