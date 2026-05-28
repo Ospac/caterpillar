@@ -1,16 +1,8 @@
-import {
-	commitDockedNodeState,
-	createDockedNodeState,
-} from "../../lib/docking";
-import type {
-	CellCoord,
-	GridStage,
-	NodeSpan,
-	XYPosition,
-} from "../../lib/geometry";
-import { syncNodeDockingState } from "../../lib/grid";
-import type { DiagramNode } from "../../model/nodeTypes";
-import type { CanvasRuntimeState } from "../../model/runtime";
+import type { DiagramNode } from "../model/nodeTypes";
+import type { CanvasRuntimeState } from "../model/runtime";
+import { commitDockedNodeState, createDockedNodeState } from "./docking";
+import type { CellCoord, GridStage, NodeSpan, XYPosition } from "./geometry";
+import { syncNodeDockingState } from "./grid";
 
 export type CanvasReducerState = Pick<
 	CanvasRuntimeState,
@@ -54,7 +46,11 @@ export function canvasRuntimeReducer(
 		case "nodeDropCommitted": {
 			const currentDockingState =
 				state.nodeDockingState[action.nodeId] ??
-				createDockedNodeState(action.position, action.visibleStage, action.span);
+				createDockedNodeState(
+					action.position,
+					action.visibleStage,
+					action.span,
+				);
 
 			return {
 				...state,

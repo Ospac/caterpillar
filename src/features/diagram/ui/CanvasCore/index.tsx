@@ -8,11 +8,16 @@ import {
 	type OnEdgesChange,
 	type OnNodesChange,
 	ReactFlow,
+	ReactFlowProvider,
 	type Viewport,
 } from "@xyflow/react";
 
 import { type MouseEvent, useEffect, useReducer, useState } from "react";
 import { getNodeSpan } from "../../lib/blockSpan";
+import {
+	canvasRuntimeReducer,
+	createCanvasReducerState,
+} from "../../lib/canvasRuntimeReducer";
 import { createDockedNodeState, resolveDropPosition } from "../../lib/docking";
 import {
 	CELL_SIZE,
@@ -28,11 +33,8 @@ import {
 	type CanvasRuntimeState,
 	createInitialCanvasRuntimeState,
 } from "../../model/runtime";
+import Menu from "../Menu";
 import BlockNode from "./BlockNode";
-import {
-	canvasRuntimeReducer,
-	createCanvasReducerState,
-} from "./canvasRuntimeReducer";
 import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
 
@@ -47,7 +49,7 @@ const nodeTypes: NodeTypes = {
 	block: BlockNode,
 };
 
-export function CanvasCoreInner() {
+export function CanvasCore() {
 	// 초기값을 마운트 시점에 한 번만 계산
 	const [initialRuntimeState] = useState<CanvasRuntimeState>(() =>
 		createInitialCanvasRuntimeState(),
@@ -61,9 +63,7 @@ export function CanvasCoreInner() {
 	const nodes = useCanvasStore((state) => state.nodes);
 	const edges = useCanvasStore((state) => state.edges);
 	const visibleStage = useCanvasStore((state) => state.visibleStage);
-	const setMode = useCanvasStore((state) => state.setMode);
 	const setVisibleStage = useCanvasStore((state) => state.setVisibleStage);
-	const addMenuNode = useCanvasStore((state) => state.addMenuNode);
 	const connectEdge = useCanvasStore((state) => state.connectEdge);
 	const removeEdge = useCanvasStore((state) => state.removeEdge);
 	const applyNodesChange = useCanvasStore((state) => state.applyNodesChange);
@@ -142,99 +142,60 @@ export function CanvasCoreInner() {
 		});
 	};
 
-	const handleAddNode = () => {
-		if (!isEditMode) return;
-		addMenuNode({
-			x: 0,
-			y: 0,
-		});
-	};
-
 	useEffect(() => {
 		dispatchCanvasState({ type: "nodesSynced", nodes, visibleStage });
 	}, [nodes, visibleStage]);
 
 	return (
-		<div className="h-full w-full overflow-auto rounded-lg border border-gray-300 bg-light-green p-4">
-			<div className="absolute left-6 top-3 z-20 flex gap-1 rounded border border-gray-300 bg-white p-0.5 text-xs">
-				<button
-					type="button"
-					aria-pressed={mode === "read"}
-					onClick={() => setMode("read")}
-					className={`px-2.5 py-1 ${
-						mode === "read" ? "bg-gray-900 text-white" : "text-gray-800"
-					}`}
-				>
-					Read
-				</button>
-				<button
-					type="button"
-					aria-pressed={mode === "edit"}
-					onClick={() => setMode("edit")}
-					className={`px-2.5 py-1 ${
-						mode === "edit" ? "bg-gray-900 text-white" : "text-gray-800"
-					}`}
-				>
-					Edit
-				</button>
-			</div>
-			<div className="absolute left-56 top-3 z-20 flex gap-2">
-				<button
-					type="button"
-					onClick={handleAddNode}
-					disabled={!isEditMode}
-					className="rounded border border-gray-300 bg-white px-2.5 py-1 text-xs text-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					Add Node
-				</button>
-			</div>
-			<div className="absolute top-3 left-128 z-20 rounded border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
-				Stage: {visibleStage}x{visibleStage} | Occupied:{" "}
-				{occupancy.occupiedCellCount} | Docking:{" "}
-				{Object.keys(nodeDockingState).length}
-			</div>
-			<div
-				className="relative bg-light-green"
-				style={{ width: stagePixelSize, height: stagePixelSize }}
-			>
-				{showGuide ? <GridGuideOverlay stage={visibleStage} /> : null}
-
-				<ReactFlow
-					nodes={nodes}
-					edges={edges}
-					onNodesChange={onNodesChange}
-					onEdgesChange={onEdgesChange}
-					onConnect={onConnect}
-					onEdgeDoubleClick={handleEdgeDoubleClick}
-					onNodeDragStart={handleNodeDragStart}
-					onNodeDrag={handleNodeDrag}
-					onNodeDragStop={handleNodeDragStop}
-					nodeTypes={nodeTypes}
-					nodeExtent={NODE_EXTENT}
-					defaultViewport={LOCKED_VIEWPORT}
-					nodesDraggable={isEditMode}
-					nodesConnectable={isEditMode}
-					elementsSelectable={isEditMode}
-					snapToGrid={false}
-					snapGrid={[CELL_SIZE, CELL_SIZE]}
-					autoPanOnNodeDrag={false}
-					autoPanOnConnect={false}
-					connectionMode={ConnectionMode.Loose}
-					panOnDrag={false}
-					panOnScroll={false}
-					preventScrolling={false}
-					zoomOnDoubleClick={false}
-					zoomOnPinch={false}
-					zoomOnScroll={false}
-					deleteKeyCode={isEditMode ? ["Backspace", "Delete"] : null}
-					proOptions={{
-						hideAttribution: true,
-					}}
-					/* TODO: minZoom, maxZoom값을 GridGuideOverlay, nodeExtent와 통합 (2번째, 3번째 status에서 Zoom 낮추기) */
-					minZoom={1}
-					maxZoom={1}
+		<ReactFlowProvider>
+			<div className="h-full w-full overflow-auto border border-gray-300 bg-purple-50">
+				<Menu
+					visibleStage={visibleStage}
+					occupiedCellCount={occupancy.occupiedCellCount}
+					dockingCount={Object.keys(nodeDockingState).length}
 				/>
+				<div
+					className="relative"
+					style={{ width: stagePixelSize, height: stagePixelSize }}
+				>
+					{showGuide ? <GridGuideOverlay stage={visibleStage} /> : null}
+					<ReactFlow
+						nodes={nodes}
+						edges={edges}
+						onNodesChange={onNodesChange}
+						onEdgesChange={onEdgesChange}
+						onConnect={onConnect}
+						onEdgeDoubleClick={handleEdgeDoubleClick}
+						onNodeDragStart={handleNodeDragStart}
+						onNodeDrag={handleNodeDrag}
+						onNodeDragStop={handleNodeDragStop}
+						nodeTypes={nodeTypes}
+						nodeExtent={NODE_EXTENT}
+						defaultViewport={LOCKED_VIEWPORT}
+						nodesDraggable={isEditMode}
+						nodesConnectable={isEditMode}
+						elementsSelectable={isEditMode}
+						snapToGrid={false}
+						snapGrid={[CELL_SIZE, CELL_SIZE]}
+						autoPanOnNodeDrag={false}
+						autoPanOnConnect={false}
+						connectionMode={ConnectionMode.Loose}
+						panOnDrag={false}
+						panOnScroll={false}
+						preventScrolling={false}
+						zoomOnDoubleClick={false}
+						zoomOnPinch={false}
+						zoomOnScroll={false}
+						deleteKeyCode={isEditMode ? ["Backspace", "Delete"] : null}
+						proOptions={{
+							hideAttribution: true,
+						}}
+						/* TODO: minZoom, maxZoom값을 GridGuideOverlay, nodeExtent와 통합 (2번째, 3번째 status에서 Zoom 낮추기) */
+						minZoom={1}
+						maxZoom={1}
+					/>
+				</div>
 			</div>
-		</div>
+		</ReactFlowProvider>
 	);
 }
