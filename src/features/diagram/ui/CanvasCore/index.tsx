@@ -27,6 +27,10 @@ import {
 } from "../../lib/canvasRuntimeReducer";
 import { createDockedNodeState, resolveDropPosition } from "../../lib/docking";
 import {
+	resolveEdgeDropConnectionHandles,
+	resolveEdgeDropPosition,
+} from "../../lib/edge";
+import {
 	CELL_SIZE,
 	getGridOccupancy,
 	getNextStage,
@@ -34,7 +38,6 @@ import {
 	isNodeEscapingStage,
 	MAX_GRID_STAGE,
 } from "../../lib/grid";
-import { resolveMenuNodeDropPosition } from "../../lib/menuDrop";
 import { useCanvasStore } from "../../model/canvasStore";
 import type { DiagramNode } from "../../model/nodeTypes";
 import {
@@ -118,12 +121,13 @@ function CanvasCoreInner() {
 		if (!isEditMode || connectionState.isValid || !connectionState.fromNode) {
 			return;
 		}
+		dispatchCanvasState({ type: "dragEnded" });
 
 		const clientPosition = getClientPosition(event);
 		if (!clientPosition) return;
 
 		const flowPosition = screenToFlowPosition(clientPosition);
-		const menuNodePosition = resolveMenuNodeDropPosition({
+		const menuNodePosition = resolveEdgeDropPosition({
 			position: flowPosition,
 			stage: visibleStage,
 			occupancy,
@@ -133,12 +137,23 @@ function CanvasCoreInner() {
 		const menuNodeId = addMenuNode(menuNodePosition);
 		if (!menuNodeId) return;
 
-		dispatchCanvasState({ type: "dragEnded" });
+		const sourceNodeId = connectionState.fromNode.id;
+		const sourceNode = nodes.find((node) => node.id === sourceNodeId);
+		const connectionHandles = sourceNode
+			? resolveEdgeDropConnectionHandles(
+					sourceNode,
+					menuNodePosition,
+					connectionState.fromHandle?.id ?? null,
+				)
+			: {
+					sourceHandle: connectionState.fromHandle?.id ?? null,
+					targetHandle: null,
+				};
 		connectEdge({
-			source: connectionState.fromNode.id,
+			source: sourceNodeId,
 			target: menuNodeId,
-			sourceHandle: connectionState.fromHandle?.id ?? null,
-			targetHandle: null,
+			sourceHandle: connectionHandles.sourceHandle,
+			targetHandle: connectionHandles.targetHandle,
 		});
 	};
 

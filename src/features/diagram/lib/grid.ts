@@ -31,6 +31,15 @@ export function toCellKey(cell: CellCoord): string {
 	return `${cell.col},${cell.row}`;
 }
 
+export function getNodeCenterPosition(
+	position: XYPosition,
+	span: ReturnType<typeof getNodeSpan>,
+): XYPosition {
+	return {
+		x: position.x + (span.cols * CELL_SIZE) / 2,
+		y: position.y + (span.rows * CELL_SIZE) / 2,
+	};
+}
 /**
  * 노드의 좌상단이 stage 밖이거나 중심점이 stage 밖으로 나갔는지 판정합니다.
  * 드래그 중 stage 자동 확대 트리거 및 유효 앵커 계산의 gate로 사용됩니다.
@@ -41,9 +50,7 @@ export function isNodeEscapingStage(
 	span: NodeSpan,
 ): boolean {
 	const stageSize = stage * CELL_SIZE;
-	const centerX = position.x + (span.cols * CELL_SIZE) / 2;
-	const centerY = position.y + (span.rows * CELL_SIZE) / 2;
-
+	const { x: centerX, y: centerY } = getNodeCenterPosition(position, span);
 	return (
 		position.x < 0 ||
 		position.y < 0 ||
