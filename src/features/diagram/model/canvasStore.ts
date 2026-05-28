@@ -39,7 +39,7 @@ type CanvasStoreState = {
 type CanvasStoreActions = {
 	setMode: (mode: CanvasMode) => void;
 	setVisibleStage: (stage: GridStage) => void;
-	addMenuNode: (position: XYPosition) => void;
+	addMenuNode: (position: XYPosition) => string | null;
 	selectMenuType: (menuNodeId: string, blockType: BlockType) => void;
 	updateBlockData: (nodeId: string, data: BlockData) => void;
 	connectEdge: (connection: Connection) => void;
@@ -104,10 +104,13 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 				? state
 				: { visibleStage: stage, dirty: true, saveStatus: "idle" },
 		),
-	addMenuNode: (position) =>
+	addMenuNode: (position) => {
+		const currentState = get();
+		if (!isEditMode(currentState)) return null;
+
+		const id = getNextNodeId(currentState);
 		set((state) => {
 			if (!isEditMode(state)) return state;
-			const id = getNextNodeId(state);
 			return {
 				nodes: [
 					...state.nodes,
@@ -121,7 +124,10 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 				dirty: true,
 				saveStatus: "idle",
 			};
-		}),
+		});
+
+		return id;
+	},
 	selectMenuType: (menuNodeId, blockType) =>
 		set((state) => {
 			if (!isEditMode(state)) return state;

@@ -13,8 +13,9 @@ describe("canvasStore", () => {
 	it("read mode에서는 문서 변경 명령을 무시한다", () => {
 		const store = useCanvasStore.getState();
 
-		store.addMenuNode({ x: 0, y: 0 });
+		const nodeId = store.addMenuNode({ x: 0, y: 0 });
 
+		expect(nodeId).toBeNull();
 		expect(useCanvasStore.getState().nodes).toEqual([]);
 		expect(useCanvasStore.getState().dirty).toBe(false);
 	});
@@ -22,8 +23,9 @@ describe("canvasStore", () => {
 	it("edit mode에서 메뉴 노드를 추가하고 타입 선택으로 블록 노드로 교체한다", () => {
 		const store = useCanvasStore.getState();
 		store.setMode("edit");
-		store.addMenuNode({ x: 0, y: 0 });
+		const nodeId = store.addMenuNode({ x: 0, y: 0 });
 
+		expect(nodeId).toBe("node-1");
 		const menuNode = useCanvasStore.getState().nodes[0];
 		expect(menuNode).toMatchObject({
 			id: "node-1",

@@ -13,6 +13,7 @@ export type CanvasReducerState = Pick<
 
 export type CanvasReducerAction =
 	| { type: "dragStarted" }
+	| { type: "dragEnded" }
 	| {
 			type: "nodeDropCommitted";
 			nodeId: string;
@@ -43,6 +44,8 @@ export function canvasRuntimeReducer(
 	switch (action.type) {
 		case "dragStarted":
 			return state.showGuide ? state : { ...state, showGuide: true };
+		case "dragEnded":
+			return !state.showGuide ? state : { ...state, showGuide: false };
 		case "nodeDropCommitted": {
 			const currentDockingState =
 				state.nodeDockingState[action.nodeId] ??

@@ -5,14 +5,21 @@ import {
 	type Edge,
 	type Node,
 	type NodeTypes,
+	type OnConnectEnd,
 	type OnEdgesChange,
 	type OnNodesChange,
 	ReactFlow,
 	ReactFlowProvider,
+	useReactFlow,
 	type Viewport,
 } from "@xyflow/react";
 
-import { type MouseEvent, useEffect, useReducer, useState } from "react";
+import {
+	type MouseEvent as ReactMouseEvent,
+	useEffect,
+	useReducer,
+	useState,
+} from "react";
 import { getNodeSpan } from "../../lib/blockSpan";
 import {
 	canvasRuntimeReducer,
@@ -27,6 +34,7 @@ import {
 	isNodeEscapingStage,
 	MAX_GRID_STAGE,
 } from "../../lib/grid";
+import { resolveMenuNodeDropPosition } from "../../lib/menuDrop";
 import { useCanvasStore } from "../../model/canvasStore";
 import type { DiagramNode } from "../../model/nodeTypes";
 import {
@@ -49,7 +57,25 @@ const nodeTypes: NodeTypes = {
 	block: BlockNode,
 };
 
+function getClientPosition(event: MouseEvent | TouchEvent) {
+	if ("changedTouches" in event) {
+		const touch = event.changedTouches[0];
+		return touch ? { x: touch.clientX, y: touch.clientY } : null;
+	}
+
+	return { x: event.clientX, y: event.clientY };
+}
+
 export function CanvasCore() {
+	return (
+		<ReactFlowProvider>
+			<CanvasCoreInner />
+		</ReactFlowProvider>
+	);
+}
+
+function CanvasCoreInner() {
+	const { screenToFlowPosition } = useReactFlow();
 	// 초기값을 마운트 시점에 한 번만 계산
 	const [initialRuntimeState] = useState<CanvasRuntimeState>(() =>
 		createInitialCanvasRuntimeState(),
@@ -64,6 +90,7 @@ export function CanvasCore() {
 	const edges = useCanvasStore((state) => state.edges);
 	const visibleStage = useCanvasStore((state) => state.visibleStage);
 	const setVisibleStage = useCanvasStore((state) => state.setVisibleStage);
+	const addMenuNode = useCanvasStore((state) => state.addMenuNode);
 	const connectEdge = useCanvasStore((state) => state.connectEdge);
 	const removeEdge = useCanvasStore((state) => state.removeEdge);
 	const applyNodesChange = useCanvasStore((state) => state.applyNodesChange);
@@ -77,9 +104,42 @@ export function CanvasCore() {
 	const stagePixelSize = getStagePixelSize(visibleStage);
 	const occupancy = getGridOccupancy(nodes, visibleStage);
 
+	const onConnectStart = () => {
+		if (!isEditMode) return;
+		dispatchCanvasState({ type: "dragStarted" });
+	};
+
 	const onConnect = (connection: Connection) => {
 		if (!isEditMode) return;
 		connectEdge(connection);
+	};
+
+	const onConnectEnd: OnConnectEnd = (event, connectionState) => {
+		if (!isEditMode || connectionState.isValid || !connectionState.fromNode) {
+			return;
+		}
+
+		const clientPosition = getClientPosition(event);
+		if (!clientPosition) return;
+
+		const flowPosition = screenToFlowPosition(clientPosition);
+		const menuNodePosition = resolveMenuNodeDropPosition({
+			position: flowPosition,
+			stage: visibleStage,
+			occupancy,
+		});
+		if (!menuNodePosition) return;
+
+		const menuNodeId = addMenuNode(menuNodePosition);
+		if (!menuNodeId) return;
+
+		dispatchCanvasState({ type: "dragEnded" });
+		connectEdge({
+			source: connectionState.fromNode.id,
+			target: menuNodeId,
+			sourceHandle: connectionState.fromHandle?.id ?? null,
+			targetHandle: null,
+		});
 	};
 
 	const onNodesChange: OnNodesChange<DiagramNode> = (changes) => {
@@ -92,17 +152,17 @@ export function CanvasCore() {
 		applyEdgesChange(changes);
 	};
 
-	const handleEdgeDoubleClick = (_: MouseEvent, edge: Edge) => {
+	const handleEdgeDoubleClick = (_: ReactMouseEvent, edge: Edge) => {
 		if (!isEditMode) return;
 		removeEdge(edge.id);
 	};
 
-	const handleNodeDragStart = (_: MouseEvent, _node: Node) => {
+	const handleNodeDragStart = (_: ReactMouseEvent, _node: Node) => {
 		if (!isEditMode) return;
 		dispatchCanvasState({ type: "dragStarted" });
 	};
 
-	const handleNodeDrag = (_: MouseEvent, node: Node) => {
+	const handleNodeDrag = (_: ReactMouseEvent, node: Node) => {
 		if (!isEditMode) return;
 
 		const diagramNode = node as DiagramNode;
@@ -112,7 +172,7 @@ export function CanvasCore() {
 		}
 	};
 
-	const handleNodeDragStop = (_: MouseEvent, node: Node) => {
+	const handleNodeDragStop = (_: ReactMouseEvent, node: Node) => {
 		if (!isEditMode) return;
 
 		const diagramNode = node as DiagramNode;
@@ -147,55 +207,55 @@ export function CanvasCore() {
 	}, [nodes, visibleStage]);
 
 	return (
-		<ReactFlowProvider>
-			<div className="h-full w-full overflow-auto border border-gray-300 bg-purple-50">
-				<Menu
-					visibleStage={visibleStage}
-					occupiedCellCount={occupancy.occupiedCellCount}
-					dockingCount={Object.keys(nodeDockingState).length}
+		<div className="h-full w-full overflow-auto border border-gray-300 bg-purple-50">
+			<Menu
+				visibleStage={visibleStage}
+				occupiedCellCount={occupancy.occupiedCellCount}
+				dockingCount={Object.keys(nodeDockingState).length}
+			/>
+			<div
+				className="relative"
+				style={{ width: stagePixelSize, height: stagePixelSize }}
+			>
+				{showGuide ? <GridGuideOverlay stage={visibleStage} /> : null}
+				<ReactFlow
+					nodes={nodes}
+					edges={edges}
+					onNodesChange={onNodesChange}
+					onEdgesChange={onEdgesChange}
+					onConnectStart={onConnectStart}
+					onConnect={onConnect}
+					onConnectEnd={onConnectEnd}
+					onEdgeDoubleClick={handleEdgeDoubleClick}
+					onNodeDragStart={handleNodeDragStart}
+					onNodeDrag={handleNodeDrag}
+					onNodeDragStop={handleNodeDragStop}
+					nodeTypes={nodeTypes}
+					nodeExtent={NODE_EXTENT}
+					defaultViewport={LOCKED_VIEWPORT}
+					nodesDraggable={isEditMode}
+					nodesConnectable={isEditMode}
+					elementsSelectable={isEditMode}
+					snapToGrid={false}
+					snapGrid={[CELL_SIZE, CELL_SIZE]}
+					autoPanOnNodeDrag={false}
+					autoPanOnConnect={false}
+					connectionMode={ConnectionMode.Loose}
+					panOnDrag={false}
+					panOnScroll={false}
+					preventScrolling={false}
+					zoomOnDoubleClick={false}
+					zoomOnPinch={false}
+					zoomOnScroll={false}
+					deleteKeyCode={isEditMode ? ["Backspace", "Delete"] : null}
+					proOptions={{
+						hideAttribution: true,
+					}}
+					/* TODO: minZoom, maxZoom값을 GridGuideOverlay, nodeExtent와 통합 (2번째, 3번째 status에서 Zoom 낮추기) */
+					minZoom={1}
+					maxZoom={1}
 				/>
-				<div
-					className="relative"
-					style={{ width: stagePixelSize, height: stagePixelSize }}
-				>
-					{showGuide ? <GridGuideOverlay stage={visibleStage} /> : null}
-					<ReactFlow
-						nodes={nodes}
-						edges={edges}
-						onNodesChange={onNodesChange}
-						onEdgesChange={onEdgesChange}
-						onConnect={onConnect}
-						onEdgeDoubleClick={handleEdgeDoubleClick}
-						onNodeDragStart={handleNodeDragStart}
-						onNodeDrag={handleNodeDrag}
-						onNodeDragStop={handleNodeDragStop}
-						nodeTypes={nodeTypes}
-						nodeExtent={NODE_EXTENT}
-						defaultViewport={LOCKED_VIEWPORT}
-						nodesDraggable={isEditMode}
-						nodesConnectable={isEditMode}
-						elementsSelectable={isEditMode}
-						snapToGrid={false}
-						snapGrid={[CELL_SIZE, CELL_SIZE]}
-						autoPanOnNodeDrag={false}
-						autoPanOnConnect={false}
-						connectionMode={ConnectionMode.Loose}
-						panOnDrag={false}
-						panOnScroll={false}
-						preventScrolling={false}
-						zoomOnDoubleClick={false}
-						zoomOnPinch={false}
-						zoomOnScroll={false}
-						deleteKeyCode={isEditMode ? ["Backspace", "Delete"] : null}
-						proOptions={{
-							hideAttribution: true,
-						}}
-						/* TODO: minZoom, maxZoom값을 GridGuideOverlay, nodeExtent와 통합 (2번째, 3번째 status에서 Zoom 낮추기) */
-						minZoom={1}
-						maxZoom={1}
-					/>
-				</div>
 			</div>
-		</ReactFlowProvider>
+		</div>
 	);
 }
