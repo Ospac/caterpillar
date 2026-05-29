@@ -7,13 +7,9 @@ import { syncNodeDockingState } from "./grid";
 export type CanvasReducerState = Pick<
 	CanvasRuntimeState,
 	"nodeDockingState"
-> & {
-	showGuide: boolean;
-};
+>;
 
 export type CanvasReducerAction =
-	| { type: "dragStarted" }
-	| { type: "dragEnded" }
 	| {
 			type: "nodeDropCommitted";
 			nodeId: string;
@@ -33,7 +29,6 @@ export function createCanvasReducerState(
 ): CanvasReducerState {
 	return {
 		nodeDockingState: initialRuntimeState.nodeDockingState,
-		showGuide: false,
 	};
 }
 
@@ -42,10 +37,6 @@ export function canvasRuntimeReducer(
 	action: CanvasReducerAction,
 ): CanvasReducerState {
 	switch (action.type) {
-		case "dragStarted":
-			return state.showGuide ? state : { ...state, showGuide: true };
-		case "dragEnded":
-			return !state.showGuide ? state : { ...state, showGuide: false };
 		case "nodeDropCommitted": {
 			const currentDockingState =
 				state.nodeDockingState[action.nodeId] ??
@@ -64,7 +55,6 @@ export function canvasRuntimeReducer(
 						action.dockedCell,
 					),
 				},
-				showGuide: false,
 			};
 		}
 		case "nodesSynced": {

@@ -41,14 +41,24 @@ describe("menuDrop(lib)", () => {
 		).toEqual({ x: 2 * CELL_SIZE, y: CELL_SIZE });
 	});
 
-	it("점유된 위치는 가까운 빈 셀로 fallback한다", () => {
+	it("점유된 위치는 fallback하지 않고 null을 반환한다", () => {
 		expect(
 			resolveEdgeDropPosition({
 				position: { x: 0, y: 0 },
 				stage: 8,
 				occupancy: occupancyOf({ "0,0": "node-a" }),
 			}),
-		).toEqual({ x: CELL_SIZE, y: 0 });
+		).toBeNull();
+	});
+
+	it("2x2 메뉴 span 안의 일부 cell이 점유되어 있으면 null을 반환한다", () => {
+		expect(
+			resolveEdgeDropPosition({
+				position: { x: 2 * CELL_SIZE + 8, y: 2 * CELL_SIZE + 12 },
+				stage: 8,
+				occupancy: occupancyOf({ "3,3": "node-a" }),
+			}),
+		).toBeNull();
 	});
 
 	it("도킹 가능한 셀이 없으면 null을 반환한다", () => {

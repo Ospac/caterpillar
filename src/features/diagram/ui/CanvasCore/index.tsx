@@ -27,6 +27,7 @@ import {
 } from "../../lib/canvasRuntimeReducer";
 import { createDockedNodeState, resolveDropPosition } from "../../lib/docking";
 import {
+	getClientPosition,
 	resolveEdgeDropConnectionHandles,
 	resolveEdgeDropPosition,
 } from "../../lib/edge";
@@ -46,6 +47,7 @@ import {
 } from "../../model/runtime";
 import Menu from "../Menu";
 import BlockNode from "./BlockNode";
+import EdgeDropOverlay from "./EdgeDropOverlay";
 import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
 
@@ -59,15 +61,6 @@ const nodeTypes: NodeTypes = {
 	menu: MenuNode,
 	block: BlockNode,
 };
-
-function getClientPosition(event: MouseEvent | TouchEvent) {
-	if ("changedTouches" in event) {
-		const touch = event.changedTouches[0];
-		return touch ? { x: touch.clientX, y: touch.clientY } : null;
-	}
-
-	return { x: event.clientX, y: event.clientY };
-}
 
 export function CanvasCore() {
 	return (
@@ -88,6 +81,8 @@ function CanvasCoreInner() {
 		initialRuntimeState,
 		createCanvasReducerState,
 	);
+	const { nodeDockingState } = canvasState;
+
 	const mode = useCanvasStore((state) => state.mode);
 	const nodes = useCanvasStore((state) => state.nodes);
 	const edges = useCanvasStore((state) => state.edges);
@@ -101,16 +96,10 @@ function CanvasCoreInner() {
 	const commitNodePosition = useCanvasStore(
 		(state) => state.commitNodePosition,
 	);
-	const { nodeDockingState, showGuide } = canvasState;
 	const isEditMode = mode === "edit";
 
 	const stagePixelSize = getStagePixelSize(visibleStage);
 	const occupancy = getGridOccupancy(nodes, visibleStage);
-
-	const onConnectStart = () => {
-		if (!isEditMode) return;
-		dispatchCanvasState({ type: "dragStarted" });
-	};
 
 	const onConnect = (connection: Connection) => {
 		if (!isEditMode) return;
@@ -121,8 +110,6 @@ function CanvasCoreInner() {
 		if (!isEditMode || connectionState.isValid || !connectionState.fromNode) {
 			return;
 		}
-		dispatchCanvasState({ type: "dragEnded" });
-
 		const clientPosition = getClientPosition(event);
 		if (!clientPosition) return;
 
@@ -170,11 +157,6 @@ function CanvasCoreInner() {
 	const handleEdgeDoubleClick = (_: ReactMouseEvent, edge: Edge) => {
 		if (!isEditMode) return;
 		removeEdge(edge.id);
-	};
-
-	const handleNodeDragStart = (_: ReactMouseEvent, _node: Node) => {
-		if (!isEditMode) return;
-		dispatchCanvasState({ type: "dragStarted" });
 	};
 
 	const handleNodeDrag = (_: ReactMouseEvent, node: Node) => {
@@ -232,17 +214,14 @@ function CanvasCoreInner() {
 				className="relative"
 				style={{ width: stagePixelSize, height: stagePixelSize }}
 			>
-				{showGuide ? <GridGuideOverlay stage={visibleStage} /> : null}
 				<ReactFlow
 					nodes={nodes}
 					edges={edges}
 					onNodesChange={onNodesChange}
 					onEdgesChange={onEdgesChange}
-					onConnectStart={onConnectStart}
 					onConnect={onConnect}
 					onConnectEnd={onConnectEnd}
 					onEdgeDoubleClick={handleEdgeDoubleClick}
-					onNodeDragStart={handleNodeDragStart}
 					onNodeDrag={handleNodeDrag}
 					onNodeDragStop={handleNodeDragStop}
 					nodeTypes={nodeTypes}
@@ -269,7 +248,14 @@ function CanvasCoreInner() {
 					/* TODO: minZoom, maxZoom값을 GridGuideOverlay, nodeExtent와 통합 (2번째, 3번째 status에서 Zoom 낮추기) */
 					minZoom={1}
 					maxZoom={1}
-				/>
+				>
+					<GridGuideOverlay stage={visibleStage} />
+					<EdgeDropOverlay
+						isEditMode={isEditMode}
+						occupancy={occupancy}
+						visibleStage={visibleStage}
+					/>
+				</ReactFlow>
 			</div>
 		</div>
 	);

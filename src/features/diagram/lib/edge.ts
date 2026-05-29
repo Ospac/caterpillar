@@ -1,6 +1,6 @@
 import type { DiagramNode } from "../model/nodeTypes";
 import { getNodeSpan } from "./blockSpan";
-import { resolveDropPosition } from "./docking";
+import { DROP_REASONS, resolveDropPosition } from "./docking";
 import type { GridOccupancy, GridStage, XYPosition } from "./geometry";
 import { getNodeCenterPosition } from "./grid";
 
@@ -11,6 +11,15 @@ type ResolveMenuNodeDropPositionInput = {
 };
 
 export type DirectionalHandleId = "top" | "bottom" | "left" | "right";
+
+export function getClientPosition(event: MouseEvent | TouchEvent) {
+	if ("changedTouches" in event) {
+		const touch = event.changedTouches[0];
+		return touch ? { x: touch.clientX, y: touch.clientY } : null;
+	}
+
+	return { x: event.clientX, y: event.clientY };
+}
 
 export function resolveEdgeDropPosition({
 	position,
@@ -25,7 +34,11 @@ export function resolveEdgeDropPosition({
 		lastValidDock: null,
 	});
 
-	return resolution.cell ? resolution.position : null;
+	if (resolution.reason !== DROP_REASONS.validDock || resolution.usedFallback) {
+		return null;
+	}
+
+	return resolution.position;
 }
 
 export function resolveEdgeDropTargetHandle(
