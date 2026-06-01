@@ -20,7 +20,7 @@ export default function MenuNode({ id }: NodeProps<Node<MenuNodeData>>) {
 
 	return (
 		<div
-			className="border border-gray-700 bg-white text-sm text-gray-900 z-30"
+			className="box-shadow-border bg-white text-sm text-gray-900 z-30"
 			style={{ width: CELL_SIZE * 2, height: CELL_SIZE * 2 }}
 		>
 			<Handle type="source" position={Position.Top} id="top" />

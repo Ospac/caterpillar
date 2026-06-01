@@ -33,7 +33,7 @@ function TextBlockForm({
 				})}
 				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
 				autoFocus
-				className="w-full h-full resize-none bg-transparent text-xs leading-tight outline-none p-4"
+				className="w-full h-full resize-none bg-transparent text-xs leading-tight outline-none p-4 nodrag"
 				placeholder="type"
 			/>
 		</fieldset>

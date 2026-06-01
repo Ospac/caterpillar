@@ -49,19 +49,19 @@ export function SearchBlockForm({
 	}, []);
 
 	return (
-		<fieldset className="h-full flex flex-col ">
+		<fieldset className="h-full flex flex-col min-w-full">
 			<input
 				ref={searchInputRef}
 				id={searchInputId}
 				type="text"
 				value={query}
 				placeholder={placeholder}
-				className=" w-full border-b border-gray-400 bg-transparent px-2 py-1 text-[11px] outline-none"
+				className="w-full border-b border-gray-400 bg-transparent px-2 py-[0.437rem] text-xs outline-none nodrag"
 				onChange={(e) => setQuery(e.target.value)}
 			/>
 			<div className="flex-1 overflow-y-auto">
 				{isError ? (
-					<div className="flex h-full flex-col items-center justify-center gap-1.5 text-[11px] text-red-500">
+					<div className="flex h-full flex-col items-center justify-center gap-1.5 text-xs text-red-500">
 						<span>검색 중 오류가 발생했습니다</span>
 						<button
 							type="button"
@@ -73,7 +73,7 @@ export function SearchBlockForm({
 						</button>
 					</div>
 				) : isLoading ? (
-					<div className="flex h-full items-center justify-center text-[11px] text-gray-400">
+					<div className="flex h-full items-center justify-center text-xs text-gray-400">
 						검색 중...
 					</div>
 				) : items.length > 0 ? (
@@ -81,26 +81,30 @@ export function SearchBlockForm({
 						<button
 							key={r.title + r.secondary + r.year}
 							type="button"
-							className="flex gap-2 w-full text-left px-2 py-1 text-[11px] hover:bg-gray-100"
+							className="flex gap-2 w-full text-left px-2 py-1 text-xs hover:bg-gray-100"
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => {
 								onItemSelect(r);
 								onEditEnd();
 							}}
 						>
-							<img
-								className="w-8 h-8 inline"
-								src={r.image || defaultImage}
-								alt={r.title}
-							/>
+							<div className="min-w-8 min-h-8 flex justify-center items-center">
+								<img
+									className="w-8 h-8 inline"
+									src={r.image || defaultImage}
+									alt={r.title}
+									width={32}
+									height={32}
+								/>
+							</div>
 							<div className="flex flex-col gap-1">
-								<span className="font-medium">{r.title}</span>
+								<span className="font-medium line-clamp-2">{r.title}</span>
 								<span className="text-gray-500"> {r.secondary}</span>
 							</div>
 						</button>
 					))
 				) : (
-					<div className="flex h-full items-center justify-center text-[11px] text-gray-400">
+					<div className="flex h-full items-center justify-center text-xs text-gray-400">
 						{debouncedQuery.length >= 2 ? "결과 없음" : "검색어를 입력하세요"}
 					</div>
 				)}
@@ -111,7 +115,9 @@ export function SearchBlockForm({
 					onClick={onEditEnd}
 					className="flex gap-1 border-t border-gray-300 px-2 py-1 text-[10px] text-gray-600 bg-white/50"
 				>
-					<span className="font-medium">{selectedData.title}</span>
+					<span className="font-medium line-clamp-2 text-left">
+						{selectedData.title}
+					</span>
 					<span className="text-gray-400"> {selectedData.secondary}</span>
 				</button>
 			)}

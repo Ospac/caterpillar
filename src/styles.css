@@ -30,7 +30,7 @@ html {
 	@apply border-gray-200 dark:border-gray-800;
 }
 body {
-	@apply bg-gray-50 text-gray-950 dark:bg-gray-900 dark:text-gray-200;
+	@apply bg-gray-50 text-gray-950;
 }
 ::-webkit-scrollbar {
 	width: 0.5rem;
@@ -43,4 +43,7 @@ body {
 }
 button {
 	cursor: pointer;
+}
+.box-shadow-border {
+	box-shadow: 0 0 0 1px var(--color-gray-700);
 }
