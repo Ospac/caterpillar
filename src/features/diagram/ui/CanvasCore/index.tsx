@@ -20,6 +20,7 @@ import {
 	useReducer,
 	useState,
 } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { getNodeSpan } from "../../lib/blockSpan";
 import {
 	canvasRuntimeReducer,
@@ -50,6 +51,7 @@ import BlockNode from "./BlockNode";
 import EdgeDropOverlay from "./EdgeDropOverlay";
 import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
+import NodeDropOverlay from "./NodeDropOverlay";
 
 const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 const MAX_STAGE_PIXEL_SIZE = getStagePixelSize(MAX_GRID_STAGE);
@@ -83,18 +85,32 @@ function CanvasCoreInner() {
 	);
 	const { nodeDockingState } = canvasState;
 
-	const mode = useCanvasStore((state) => state.mode);
-	const nodes = useCanvasStore((state) => state.nodes);
-	const edges = useCanvasStore((state) => state.edges);
-	const visibleStage = useCanvasStore((state) => state.visibleStage);
-	const setVisibleStage = useCanvasStore((state) => state.setVisibleStage);
-	const addMenuNode = useCanvasStore((state) => state.addMenuNode);
-	const connectEdge = useCanvasStore((state) => state.connectEdge);
-	const removeEdge = useCanvasStore((state) => state.removeEdge);
-	const applyNodesChange = useCanvasStore((state) => state.applyNodesChange);
-	const applyEdgesChange = useCanvasStore((state) => state.applyEdgesChange);
-	const commitNodePosition = useCanvasStore(
-		(state) => state.commitNodePosition,
+	const {
+		mode,
+		nodes,
+		edges,
+		visibleStage,
+		setVisibleStage,
+		addMenuNode,
+		connectEdge,
+		removeEdge,
+		applyNodesChange,
+		applyEdgesChange,
+		commitNodePosition,
+	} = useCanvasStore(
+		useShallow((state) => ({
+			mode: state.mode,
+			nodes: state.nodes,
+			edges: state.edges,
+			visibleStage: state.visibleStage,
+			setVisibleStage: state.setVisibleStage,
+			addMenuNode: state.addMenuNode,
+			connectEdge: state.connectEdge,
+			removeEdge: state.removeEdge,
+			applyNodesChange: state.applyNodesChange,
+			applyEdgesChange: state.applyEdgesChange,
+			commitNodePosition: state.commitNodePosition,
+		})),
 	);
 	const isEditMode = mode === "edit";
 
@@ -252,6 +268,12 @@ function CanvasCoreInner() {
 					<GridGuideOverlay stage={visibleStage} />
 					<EdgeDropOverlay
 						isEditMode={isEditMode}
+						occupancy={occupancy}
+						visibleStage={visibleStage}
+					/>
+					<NodeDropOverlay
+						isEditMode={isEditMode}
+						nodeDockingState={nodeDockingState}
 						occupancy={occupancy}
 						visibleStage={visibleStage}
 					/>

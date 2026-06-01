@@ -1,9 +1,10 @@
-import { useConnection, ViewportPortal } from "@xyflow/react";
+import { useConnection } from "@xyflow/react";
 import { getNodeSpan } from "../../lib/blockSpan";
 import { resolveEdgeDropPosition } from "../../lib/edge";
-import { CELL_SIZE, type getGridOccupancy } from "../../lib/grid";
+import type { getGridOccupancy } from "../../lib/grid";
 import type { DiagramNode } from "../../model/nodeTypes";
 import type { CanvasRuntimeState } from "../../model/runtime";
+import DropPreviewBox from "./DropPreviewBox";
 
 export default function EdgeDropPreview({
 	isEditMode,
@@ -15,6 +16,7 @@ export default function EdgeDropPreview({
 	visibleStage: CanvasRuntimeState["visibleStage"];
 }) {
 	const connection = useConnection<DiagramNode>();
+
 	if (
 		!isEditMode ||
 		!connection.inProgress ||
@@ -31,19 +33,5 @@ export default function EdgeDropPreview({
 	});
 	if (!position) return null;
 
-	const span = getNodeSpan("menu");
-
-	return (
-		<ViewportPortal>
-			<div
-				className="pointer-events-none absolute bg-purple-300/25"
-				style={{
-					width: span.cols * CELL_SIZE,
-					height: span.rows * CELL_SIZE,
-					transform: `translate(${position.x}px, ${position.y}px)`,
-				}}
-				aria-hidden="true"
-			/>
-		</ViewportPortal>
-	);
+	return <DropPreviewBox position={position} span={getNodeSpan("menu")} />;
 }

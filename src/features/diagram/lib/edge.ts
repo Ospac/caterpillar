@@ -1,8 +1,14 @@
 import type { DiagramNode } from "../model/nodeTypes";
 import { getNodeSpan } from "./blockSpan";
-import { DROP_REASONS, resolveDropPosition } from "./docking";
-import type { GridOccupancy, GridStage, XYPosition } from "./geometry";
-import { getNodeCenterPosition } from "./grid";
+import { isDockableForSpan } from "./docking";
+import type {
+	CellCoord,
+	GridOccupancy,
+	GridStage,
+	NodeSpan,
+	XYPosition,
+} from "./geometry";
+import { CELL_SIZE, cellCoordToPosition, getNodeCenterPosition } from "./grid";
 
 type ResolveMenuNodeDropPositionInput = {
 	position: XYPosition;
@@ -21,24 +27,40 @@ export function getClientPosition(event: MouseEvent | TouchEvent) {
 	return { x: event.clientX, y: event.clientY };
 }
 
+function positionToEdgeDropAnchorCell(
+	position: XYPosition,
+	stage: GridStage,
+	span: NodeSpan,
+): CellCoord | null {
+	const cell = {
+		col: Math.floor((position.x - Number.EPSILON) / CELL_SIZE),
+		row: Math.floor((position.y - Number.EPSILON) / CELL_SIZE),
+	};
+
+	if (cell.col < 0 || cell.row < 0) {
+		return null;
+	}
+
+	if (cell.col + span.cols > stage || cell.row + span.rows > stage) {
+		return null;
+	}
+
+	return cell;
+}
+
 export function resolveEdgeDropPosition({
 	position,
 	stage,
 	occupancy,
 }: ResolveMenuNodeDropPositionInput): XYPosition | null {
-	const resolution = resolveDropPosition({
-		position,
-		stage,
-		occupancy,
-		span: getNodeSpan("menu"),
-		lastValidDock: null,
-	});
+	const span = getNodeSpan("menu");
+	const cell = positionToEdgeDropAnchorCell(position, stage, span);
 
-	if (resolution.reason !== DROP_REASONS.validDock || resolution.usedFallback) {
+	if (!cell || !isDockableForSpan(cell, span, occupancy, stage)) {
 		return null;
 	}
 
-	return resolution.position;
+	return cellCoordToPosition(cell);
 }
 
 export function resolveEdgeDropTargetHandle(

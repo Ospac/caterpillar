@@ -41,6 +41,19 @@ describe("menuDrop(lib)", () => {
 		).toEqual({ x: 2 * CELL_SIZE, y: CELL_SIZE });
 	});
 
+	it("edge 드롭은 노드 드래그용 중심점 보정을 적용하지 않는다", () => {
+		expect(
+			resolveEdgeDropPosition({
+				position: {
+					x: 2 * CELL_SIZE + CELL_SIZE / 2 + 1,
+					y: CELL_SIZE + CELL_SIZE / 2 + 1,
+				},
+				stage: 8,
+				occupancy: emptyOccupancy(),
+			}),
+		).toEqual({ x: 2 * CELL_SIZE, y: CELL_SIZE });
+	});
+
 	it("점유된 위치는 fallback하지 않고 null을 반환한다", () => {
 		expect(
 			resolveEdgeDropPosition({

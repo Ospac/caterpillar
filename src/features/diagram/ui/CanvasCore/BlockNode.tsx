@@ -61,9 +61,9 @@ function containerClass(blockType: string): string {
 	switch (blockType) {
 		case "image":
 		case "link":
-			return "border border-gray-700 bg-green-100 text-xs text-gray-900";
+			return "border border-gray-700 bg-green-100 text-xs text-gray-900 z-20";
 		default:
-			return "border border-gray-700 bg-green text-xs text-gray-900";
+			return "border border-gray-700 bg-green text-xs text-gray-900 z-20";
 	}
 }
 
