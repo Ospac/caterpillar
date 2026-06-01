@@ -41,7 +41,7 @@ describe("canvasStore", () => {
 		const blockNode = useCanvasStore.getState().nodes[0];
 		expect(blockNode && isBlockNode(blockNode)).toBe(true);
 		expect(blockNode).toMatchObject({
-			id: "node-2",
+			id: "node-1",
 			type: "block",
 			position: { x: 0, y: 0 },
 			data: {
@@ -50,6 +50,40 @@ describe("canvasStore", () => {
 			},
 		});
 		expect(useCanvasStore.getState().dirty).toBe(true);
+	});
+
+	it("메뉴 노드를 블록 노드로 교체해도 연결된 엣지와 다음 노드 ID를 유지한다", () => {
+		const store = useCanvasStore.getState();
+		store.setMode("edit");
+		const sourceNodeId = store.addMenuNode({ x: 0, y: 0 });
+		const menuNodeId = store.addMenuNode({ x: 216, y: 0 });
+		if (!sourceNodeId || !menuNodeId) {
+			throw new Error("Expected menu nodes");
+		}
+
+		useCanvasStore.getState().connectEdge({
+			source: sourceNodeId,
+			target: menuNodeId,
+			sourceHandle: "right",
+			targetHandle: "left",
+		} satisfies Connection);
+		const edge = useCanvasStore.getState().edges[0];
+		if (!edge) {
+			throw new Error("Expected an edge");
+		}
+
+		useCanvasStore.getState().selectMenuType(menuNodeId, "text");
+
+		expect(useCanvasStore.getState().edges).toEqual([edge]);
+		expect(useCanvasStore.getState().nodes).toContainEqual(
+			expect.objectContaining({
+				id: menuNodeId,
+				type: "block",
+			}),
+		);
+		expect(useCanvasStore.getState().addMenuNode({ x: 432, y: 0 })).toBe(
+			"node-3",
+		);
 	});
 
 	it("블록 데이터와 엣지를 갱신하고 문서 shape로 직렬화한다", () => {
@@ -84,7 +118,7 @@ describe("canvasStore", () => {
 			visibleStage: 8,
 			nodes: [
 				{
-					id: "node-2",
+					id: "node-1",
 					type: "block",
 					position: { x: 0, y: 0 },
 					data: { blockType: "text", text: "Updated" },
@@ -93,7 +127,7 @@ describe("canvasStore", () => {
 			edges: [
 				{
 					id: edge.id,
-					source: "node-2",
+					source: "node-1",
 					target: "target-1",
 					sourceHandle: undefined,
 					targetHandle: undefined,

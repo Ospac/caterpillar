@@ -134,17 +134,15 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 			const menuNode = state.nodes.find((node) => node.id === menuNodeId);
 			if (!menuNode) return state;
 
-			const id = getNextNodeId(state);
 			return {
 				nodes: [
 					...state.nodes.filter((node) => node.id !== menuNodeId),
 					makeBlockNodeWhenMenuTypeSelect({
-						id,
+						id: menuNodeId,
 						blockType,
 						menuNodePosition: menuNode.position,
 					}),
 				],
-				nextNodeIndex: state.nextNodeIndex + 1,
 				dirty: true,
 				saveStatus: "idle",
 			};
