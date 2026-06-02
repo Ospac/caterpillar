@@ -7,7 +7,7 @@ export const Route = createFileRoute("/")({
 
 function HomeComponent() {
 	return (
-		<main>
+		<main className="h-full">
 			<CanvasCore />
 		</main>
 	);

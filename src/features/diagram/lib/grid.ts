@@ -10,9 +10,11 @@ import type {
 	XYPosition,
 } from "./geometry";
 
-export const GRID_STAGES = [8, 14, 20] as const;
+export const GRID_STAGES = [18, 24, 30] as const;
 export const MAX_GRID_STAGE: GridStage = GRID_STAGES[GRID_STAGES.length - 1];
-export const CELL_SIZE = 108;
+export const CELL_SIZE = 106;
+export const MIN_GRID_ZOOM = 0.5;
+export const MAX_GRID_ZOOM = 1;
 
 export function getNextStage(currentStage: GridStage): GridStage {
 	const currentIndex = GRID_STAGES.indexOf(currentStage);
@@ -25,6 +27,38 @@ export function getNextStage(currentStage: GridStage): GridStage {
 
 export function getStagePixelSize(stage: GridStage): number {
 	return stage * CELL_SIZE;
+}
+
+export function isNodeFullyInsideStage(
+	node: DiagramNode,
+	stage: GridStage,
+): boolean {
+	const span = getNodeSpan(node.data.blockType);
+	const stageSize = getStagePixelSize(stage);
+
+	return (
+		node.position.x >= 0 &&
+		node.position.y >= 0 &&
+		node.position.x + span.cols * CELL_SIZE <= stageSize &&
+		node.position.y + span.rows * CELL_SIZE <= stageSize
+	);
+}
+
+export function getNodesOutsideStage(
+	nodes: DiagramNode[],
+	stage: GridStage,
+): DiagramNode[] {
+	return nodes.filter((node) => !isNodeFullyInsideStage(node, stage));
+}
+
+export function getResponsiveGridZoom(
+	containerWidth: number,
+	stage: GridStage,
+): number {
+	if (containerWidth <= 0) return MAX_GRID_ZOOM;
+
+	const zoom = containerWidth / getStagePixelSize(stage);
+	return Math.min(Math.max(zoom, MIN_GRID_ZOOM), MAX_GRID_ZOOM);
 }
 
 export function toCellKey(cell: CellCoord): string {

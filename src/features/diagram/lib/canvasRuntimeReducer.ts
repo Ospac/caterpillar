@@ -4,10 +4,7 @@ import { commitDockedNodeState, createDockedNodeState } from "./docking";
 import type { CellCoord, GridStage, NodeSpan, XYPosition } from "./geometry";
 import { syncNodeDockingState } from "./grid";
 
-export type CanvasReducerState = Pick<
-	CanvasRuntimeState,
-	"nodeDockingState"
->;
+export type CanvasReducerState = Pick<CanvasRuntimeState, "nodeDockingState">;
 
 export type CanvasReducerAction =
 	| {

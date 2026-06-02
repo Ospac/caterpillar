@@ -25,7 +25,7 @@ describe("docking(lib)", () => {
 		conflictedCellKeys: new Set(),
 	});
 
-	const fullOccupancy = (stage = 8): GridOccupancy => {
+	const fullOccupancy = (stage = 12): GridOccupancy => {
 		const entries: Record<string, string> = {};
 		for (let row = 0; row < stage; row += 1) {
 			for (let col = 0; col < stage; col += 1) {
@@ -38,7 +38,7 @@ describe("docking(lib)", () => {
 	it("도킹 상태는 현재 셀과 마지막 유효 셀만 보관한다", () => {
 		const state = createDockedNodeState(
 			{ x: 5 * CELL_SIZE, y: 2 * CELL_SIZE },
-			14,
+			18,
 			WIDE_SPAN,
 		);
 
@@ -58,14 +58,14 @@ describe("docking(lib)", () => {
 
 	it("스팬이 stage 경계를 넘거나 다른 노드 셀을 포함하면 도킹할 수 없다", () => {
 		expect(
-			isDockableForSpan({ col: 3, row: 7 }, TALL_SPAN, emptyOccupancy(), 8),
+			isDockableForSpan({ col: 3, row: 11 }, TALL_SPAN, emptyOccupancy(), 12),
 		).toBe(false);
 		expect(
 			isDockableForSpan(
 				{ col: 0, row: 0 },
 				WIDE_SPAN,
 				occupancyOf({ "1,0": "node-a" }),
-				8,
+				12,
 			),
 		).toBe(false);
 		expect(
@@ -78,7 +78,7 @@ describe("docking(lib)", () => {
 					"0,1": "self",
 					"1,1": "self",
 				}),
-				8,
+				12,
 				"self",
 			),
 		).toBe(true);
@@ -87,7 +87,7 @@ describe("docking(lib)", () => {
 	it("드롭 실패 시 lastValidDock, nearest-empty-cell 순서로 복구한다", () => {
 		const input = (overrides: Partial<FallbackInput> = {}): FallbackInput => ({
 			position: { x: 2 * CELL_SIZE, y: 2 * CELL_SIZE },
-			stage: 8,
+			stage: 12,
 			occupancy: emptyOccupancy(),
 			span: WIDE_SPAN,
 			lastValidDock: { col: 1, row: 0 },
@@ -114,13 +114,13 @@ describe("docking(lib)", () => {
 		);
 		expect(nearest?.strategy).toBe(FALLBACK_STRATEGIES.nearestEmptyCell);
 
-		expect(applyFallback(input({ occupancy: fullOccupancy(8) }))).toBeNull();
+		expect(applyFallback(input({ occupancy: fullOccupancy(12) }))).toBeNull();
 	});
 
 	it("드롭 해석은 유효 도킹, 점유 충돌, stage 밖 fallback을 구분한다", () => {
 		const input = (overrides: Partial<DockingInput> = {}): DockingInput => ({
 			position: { x: CELL_SIZE, y: CELL_SIZE },
-			stage: 8,
+			stage: 12,
 			occupancy: emptyOccupancy(),
 			span: WIDE_SPAN,
 			lastValidDock: { col: 0, row: 0 },
@@ -158,7 +158,7 @@ describe("docking(lib)", () => {
 				input({
 					position: { x: -20, y: CELL_SIZE },
 					lastValidDock: null,
-					occupancy: fullOccupancy(8),
+					occupancy: fullOccupancy(12),
 				}),
 			),
 		).toEqual({

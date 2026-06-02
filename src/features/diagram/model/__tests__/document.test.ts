@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@rstest/core";
+import { CELL_SIZE } from "../../lib/grid";
 import {
 	type CanvasDocument,
 	type ParsedCanvasDocument,
@@ -8,7 +9,7 @@ import {
 
 describe("document(model)", () => {
 	const documentFixture: CanvasDocument = {
-		visibleStage: 8,
+		visibleStage: 18,
 		nodes: [
 			{
 				id: "node-1",
@@ -34,7 +35,7 @@ describe("document(model)", () => {
 	it("필수 필드가 없으면 null을 반환한다", () => {
 		expect(
 			parseCanvasDocument({
-				visibleStage: 8,
+				visibleStage: 18,
 				nodes: [{ id: "node-1" }],
 				edges: [],
 			}),
@@ -44,7 +45,7 @@ describe("document(model)", () => {
 	it("블록 데이터는 validation 결과를 반영해 보정한다", () => {
 		expect(
 			parseCanvasDocument({
-				visibleStage: 8,
+				visibleStage: 18,
 				nodes: [
 					{
 						id: "node-1",
@@ -56,7 +57,7 @@ describe("document(model)", () => {
 				edges: [],
 			}),
 		).toEqual({
-			visibleStage: 8,
+			visibleStage: 18,
 			nodes: [
 				{
 					id: "node-1",
@@ -75,7 +76,7 @@ describe("document(model)", () => {
 	it("node position에 NaN 또는 Infinity가 있으면 null을 반환한다", () => {
 		expect(
 			parseCanvasDocument({
-				visibleStage: 8,
+				visibleStage: 18,
 				nodes: [
 					{
 						id: "node-1",
@@ -90,7 +91,7 @@ describe("document(model)", () => {
 
 		expect(
 			parseCanvasDocument({
-				visibleStage: 8,
+				visibleStage: 18,
 				nodes: [
 					{
 						id: "node-1",
@@ -116,7 +117,7 @@ describe("document(model)", () => {
 	it("직렬화할 때 런타임 콜백은 저장하지 않는다", () => {
 		expect(
 			serializeCanvasDocument({
-				visibleStage: 8,
+				visibleStage: 18,
 				nodes: [
 					{
 						id: "node-1",
@@ -131,7 +132,7 @@ describe("document(model)", () => {
 					{
 						id: "node-2",
 						type: "menu",
-						position: { x: 108, y: 108 },
+						position: { x: CELL_SIZE, y: CELL_SIZE },
 						data: {
 							blockType: "menu",
 						},
@@ -140,7 +141,7 @@ describe("document(model)", () => {
 				edges: [],
 			}),
 		).toEqual({
-			visibleStage: 8,
+			visibleStage: 18,
 			nodes: [
 				{
 					id: "node-1",
@@ -151,7 +152,7 @@ describe("document(model)", () => {
 				{
 					id: "node-2",
 					type: "menu",
-					position: { x: 108, y: 108 },
+					position: { x: CELL_SIZE, y: CELL_SIZE },
 					data: { blockType: "menu" },
 				},
 			],

@@ -10,7 +10,7 @@ import {
 } from "@xyflow/react";
 import { create } from "zustand";
 import type { GridStage, XYPosition } from "../lib/geometry";
-import { GRID_STAGES } from "../lib/grid";
+import { GRID_STAGES, getNodesOutsideStage } from "../lib/grid";
 import type { BlockData, BlockType } from "./blockTypes";
 import {
 	addNode,
@@ -39,6 +39,7 @@ type CanvasStoreState = {
 type CanvasStoreActions = {
 	setMode: (mode: CanvasMode) => void;
 	setVisibleStage: (stage: GridStage) => void;
+	shrinkVisibleStage: (stage: GridStage) => void;
 	addMenuNode: (position: XYPosition) => string | null;
 	selectMenuType: (menuNodeId: string, blockType: BlockType) => void;
 	updateBlockData: (nodeId: string, data: BlockData) => void;
@@ -104,6 +105,25 @@ export const useCanvasStore = create<CanvasStore>((set, get) => ({
 				? state
 				: { visibleStage: stage, dirty: true, saveStatus: "idle" },
 		),
+	shrinkVisibleStage: (stage) =>
+		set((state) => {
+			if (!isEditMode(state) || stage >= state.visibleStage) return state;
+
+			const removedNodes = getNodesOutsideStage(state.nodes, stage);
+			const removedNodeIds = new Set(removedNodes.map((node) => node.id));
+
+			return {
+				nodes: state.nodes.filter((node) => !removedNodeIds.has(node.id)),
+				edges: state.edges.filter(
+					(edge) =>
+						!removedNodeIds.has(edge.source) &&
+						!removedNodeIds.has(edge.target),
+				),
+				visibleStage: stage,
+				dirty: true,
+				saveStatus: "idle",
+			};
+		}),
 	addMenuNode: (position) => {
 		const currentState = get();
 		if (!isEditMode(currentState)) return null;

@@ -18,6 +18,7 @@ import {
 	type MouseEvent as ReactMouseEvent,
 	useEffect,
 	useReducer,
+	useRef,
 	useState,
 } from "react";
 import { useShallow } from "zustand/react/shallow";
@@ -36,6 +37,7 @@ import {
 	CELL_SIZE,
 	getGridOccupancy,
 	getNextStage,
+	getResponsiveGridZoom,
 	getStagePixelSize,
 	isNodeEscapingStage,
 	MAX_GRID_STAGE,
@@ -53,7 +55,6 @@ import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
 import NodeDropOverlay from "./NodeDropOverlay";
 
-const LOCKED_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 const MAX_STAGE_PIXEL_SIZE = getStagePixelSize(MAX_GRID_STAGE);
 const NODE_EXTENT: CoordinateExtent = [
 	[0, 0],
@@ -74,6 +75,8 @@ export function CanvasCore() {
 
 function CanvasCoreInner() {
 	const { screenToFlowPosition } = useReactFlow();
+	const scrollContainerRef = useRef<HTMLDivElement>(null);
+	const [containerWidth, setContainerWidth] = useState(0);
 	// 초기값을 마운트 시점에 한 번만 계산
 	const [initialRuntimeState] = useState<CanvasRuntimeState>(() =>
 		createInitialCanvasRuntimeState(),
@@ -115,7 +118,25 @@ function CanvasCoreInner() {
 	const isEditMode = mode === "edit";
 
 	const stagePixelSize = getStagePixelSize(visibleStage);
+	const gridZoom = getResponsiveGridZoom(containerWidth, visibleStage);
+	const renderedStagePixelSize = stagePixelSize * gridZoom;
+	const viewport: Viewport = { x: 0, y: 0, zoom: gridZoom };
 	const occupancy = getGridOccupancy(nodes, visibleStage);
+
+	useEffect(() => {
+		const scrollContainer = scrollContainerRef.current;
+		if (!scrollContainer) return;
+
+		const updateContainerWidth = () => {
+			setContainerWidth(scrollContainer.clientWidth);
+		};
+		const observer = new ResizeObserver(updateContainerWidth);
+
+		updateContainerWidth();
+		observer.observe(scrollContainer);
+
+		return () => observer.disconnect();
+	}, []);
 
 	const onConnect = (connection: Connection) => {
 		if (!isEditMode) return;
@@ -220,7 +241,10 @@ function CanvasCoreInner() {
 	}, [nodes, visibleStage]);
 
 	return (
-		<div className="h-full w-full overflow-auto border border-gray-300 bg-purple-50">
+		<div
+			ref={scrollContainerRef}
+			className="h-full w-full overflow-auto border border-gray-300 bg-purple-50"
+		>
 			<Menu
 				visibleStage={visibleStage}
 				occupiedCellCount={occupancy.occupiedCellCount}
@@ -228,7 +252,10 @@ function CanvasCoreInner() {
 			/>
 			<div
 				className="relative"
-				style={{ width: stagePixelSize, height: stagePixelSize }}
+				style={{
+					width: renderedStagePixelSize,
+					height: renderedStagePixelSize,
+				}}
 			>
 				<ReactFlow
 					nodes={nodes}
@@ -242,7 +269,7 @@ function CanvasCoreInner() {
 					onNodeDragStop={handleNodeDragStop}
 					nodeTypes={nodeTypes}
 					nodeExtent={NODE_EXTENT}
-					defaultViewport={LOCKED_VIEWPORT}
+					viewport={viewport}
 					nodesDraggable={isEditMode}
 					nodesConnectable={isEditMode}
 					elementsSelectable={isEditMode}
@@ -261,9 +288,8 @@ function CanvasCoreInner() {
 					proOptions={{
 						hideAttribution: true,
 					}}
-					/* TODO: minZoom, maxZoom값을 GridGuideOverlay, nodeExtent와 통합 (2번째, 3번째 status에서 Zoom 낮추기) */
-					minZoom={1}
-					maxZoom={1}
+					minZoom={gridZoom}
+					maxZoom={gridZoom}
 				>
 					<GridGuideOverlay stage={visibleStage} />
 					<EdgeDropOverlay

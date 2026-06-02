@@ -1,12 +1,13 @@
 import { beforeEach, describe, expect, it } from "@rstest/core";
 import type { Connection } from "@xyflow/react";
+import { CELL_SIZE } from "../../lib/grid";
 import { useCanvasStore } from "../canvasStore";
 import { isBlockNode } from "../nodeTypes";
 
 describe("canvasStore", () => {
 	beforeEach(() => {
 		const store = useCanvasStore.getState();
-		store.loadDocument({ visibleStage: 8, nodes: [], edges: [] });
+		store.loadDocument({ visibleStage: 18, nodes: [], edges: [] });
 		store.setMode("read");
 	});
 
@@ -56,7 +57,7 @@ describe("canvasStore", () => {
 		const store = useCanvasStore.getState();
 		store.setMode("edit");
 		const sourceNodeId = store.addMenuNode({ x: 0, y: 0 });
-		const menuNodeId = store.addMenuNode({ x: 216, y: 0 });
+		const menuNodeId = store.addMenuNode({ x: 2 * CELL_SIZE, y: 0 });
 		if (!sourceNodeId || !menuNodeId) {
 			throw new Error("Expected menu nodes");
 		}
@@ -81,9 +82,9 @@ describe("canvasStore", () => {
 				type: "block",
 			}),
 		);
-		expect(useCanvasStore.getState().addMenuNode({ x: 432, y: 0 })).toBe(
-			"node-3",
-		);
+		expect(
+			useCanvasStore.getState().addMenuNode({ x: 4 * CELL_SIZE, y: 0 }),
+		).toBe("node-3");
 	});
 
 	it("블록 데이터와 엣지를 갱신하고 문서 shape로 직렬화한다", () => {
@@ -115,7 +116,7 @@ describe("canvasStore", () => {
 		}
 
 		expect(useCanvasStore.getState().serializeDocument()).toEqual({
-			visibleStage: 8,
+			visibleStage: 18,
 			nodes: [
 				{
 					id: "node-1",
@@ -135,5 +136,59 @@ describe("canvasStore", () => {
 				},
 			],
 		});
+	});
+
+	it("stage 축소 시 경계 밖 노드와 연결된 엣지를 함께 제거한다", () => {
+		const store = useCanvasStore.getState();
+		store.loadDocument({
+			visibleStage: 24,
+			nodes: [
+				{
+					id: "inside",
+					type: "block",
+					position: { x: 0, y: 0 },
+					data: { blockType: "text", text: "inside" },
+				},
+				{
+					id: "outside",
+					type: "block",
+					position: { x: 12 * CELL_SIZE, y: 0 },
+					data: { blockType: "text", text: "outside" },
+				},
+			],
+			edges: [
+				{
+					id: "edge-inside-outside",
+					source: "inside",
+					target: "outside",
+				},
+				{
+					id: "edge-inside",
+					source: "inside",
+					target: "target",
+				},
+			],
+		});
+		store.setMode("edit");
+
+		useCanvasStore.getState().shrinkVisibleStage(18);
+
+		expect(useCanvasStore.getState()).toMatchObject({
+			visibleStage: 12,
+			nodes: [expect.objectContaining({ id: "inside" })],
+			edges: [expect.objectContaining({ id: "edge-inside" })],
+			dirty: true,
+			saveStatus: "idle",
+		});
+	});
+
+	it("read mode에서는 stage 축소를 무시한다", () => {
+		const store = useCanvasStore.getState();
+		store.loadDocument({ visibleStage: 24, nodes: [], edges: [] });
+
+		useCanvasStore.getState().shrinkVisibleStage(18);
+
+		expect(useCanvasStore.getState().visibleStage).toBe(24);
+		expect(useCanvasStore.getState().dirty).toBe(false);
 	});
 });

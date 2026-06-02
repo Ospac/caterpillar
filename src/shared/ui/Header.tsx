@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 
 function Header() {
 	return (
-		<nav className="p-2 flex gap-2 text-lg bg-light-green border-l border-r text-cyan-900">
+		<nav className="h-(--app-header-height) shrink-0 p-2 flex gap-2 text-lg bg-light-green border-l border-r text-cyan-900">
 			<div>🧩</div>
 			<Link
 				to="/"
