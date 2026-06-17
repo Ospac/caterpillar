@@ -3,7 +3,7 @@ import { getNodeSpan } from "./blockSpan";
 import { isDockableForSpan } from "./docking";
 import type {
 	CellCoord,
-	GridCellCount,
+	GridDimensions,
 	GridOccupancy,
 	NodeSpan,
 	XYPosition,
@@ -12,7 +12,7 @@ import { CELL_SIZE, cellCoordToPosition, getNodeCenterPosition } from "./grid";
 
 type ResolveMenuNodeDropPositionInput = {
 	position: XYPosition;
-	cellCount: GridCellCount;
+	gridDimensions: GridDimensions;
 	occupancy: GridOccupancy;
 };
 
@@ -29,7 +29,7 @@ export function getClientPosition(event: MouseEvent | TouchEvent) {
 
 function positionToEdgeDropAnchorCell(
 	position: XYPosition,
-	cellCount: GridCellCount,
+	gridDimensions: GridDimensions,
 	span: NodeSpan,
 ): CellCoord | null {
 	const cell = {
@@ -41,7 +41,10 @@ function positionToEdgeDropAnchorCell(
 		return null;
 	}
 
-	if (cell.col + span.cols > cellCount || cell.row + span.rows > cellCount) {
+	if (
+		cell.col + span.cols > gridDimensions.cols ||
+		cell.row + span.rows > gridDimensions.rows
+	) {
 		return null;
 	}
 
@@ -50,13 +53,13 @@ function positionToEdgeDropAnchorCell(
 
 export function resolveEdgeDropPosition({
 	position,
-	cellCount,
+	gridDimensions,
 	occupancy,
 }: ResolveMenuNodeDropPositionInput): XYPosition | null {
 	const span = getNodeSpan("menu");
-	const cell = positionToEdgeDropAnchorCell(position, cellCount, span);
+	const cell = positionToEdgeDropAnchorCell(position, gridDimensions, span);
 
-	if (!cell || !isDockableForSpan(cell, span, occupancy, cellCount)) {
+	if (!cell || !isDockableForSpan(cell, span, occupancy, gridDimensions)) {
 		return null;
 	}
 

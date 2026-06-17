@@ -1,6 +1,11 @@
 import { useShallow } from "zustand/react/shallow";
 import { Button } from "@/shared/ui/button";
-import { GRID_CELL_COUNT, MAX_GRID_ZOOM, MIN_GRID_ZOOM } from "../../lib/grid";
+import {
+	GRID_COLUMN_COUNT,
+	GRID_ROW_COUNT,
+	MAX_GRID_ZOOM,
+	MIN_GRID_ZOOM,
+} from "../../lib/grid";
 import { useCanvasStore } from "../../model/canvasStore";
 
 interface HeaderProps {
@@ -100,7 +105,7 @@ export default function Menu({
 				</button>
 			</div>
 			<div className="md:block hidden absolute top-3 left-128 z-20 border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
-				Cells: {GRID_CELL_COUNT}x{GRID_CELL_COUNT} | Occupied:{" "}
+				Cells: {GRID_COLUMN_COUNT}x{GRID_ROW_COUNT} | Occupied:{" "}
 				{occupiedCellCount} | Docking: {dockingCount}
 			</div>
 		</div>

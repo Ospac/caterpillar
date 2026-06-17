@@ -2,7 +2,7 @@ import type { DiagramNode } from "../model/nodeTypes";
 import type { CanvasRuntimeState } from "../model/runtime";
 import { commitDockedNodeState, createDockedNodeState } from "./docking";
 import type { CellCoord, NodeSpan, XYPosition } from "./geometry";
-import { GRID_CELL_COUNT, syncNodeDockingState } from "./grid";
+import { DEFAULT_GRID_DIMENSIONS, syncNodeDockingState } from "./grid";
 
 export type CanvasReducerState = Pick<CanvasRuntimeState, "nodeDockingState">;
 
@@ -35,7 +35,11 @@ export function canvasRuntimeReducer(
 		case "nodeDropCommitted": {
 			const currentDockingState =
 				state.nodeDockingState[action.nodeId] ??
-				createDockedNodeState(action.position, action.span, GRID_CELL_COUNT);
+				createDockedNodeState(
+					action.position,
+					action.span,
+					DEFAULT_GRID_DIMENSIONS,
+				);
 
 			return {
 				...state,
@@ -52,7 +56,7 @@ export function canvasRuntimeReducer(
 			const nodeDockingState = syncNodeDockingState(
 				state.nodeDockingState,
 				action.nodes,
-				GRID_CELL_COUNT,
+				DEFAULT_GRID_DIMENSIONS,
 			);
 
 			return nodeDockingState === state.nodeDockingState

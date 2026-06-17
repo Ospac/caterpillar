@@ -15,12 +15,15 @@ export type XYPosition = {
 	y: number;
 };
 
+export type GridDimensions = {
+	cols: number;
+	rows: number;
+};
+
 export type DockedNodeState = {
 	dockedCell: CellCoord | null;
 	lastValidDock: CellCoord | null;
 };
-
-export type GridCellCount = number;
 
 export type GridOccupancy = {
 	occupiedCellCount: number;
@@ -41,7 +44,7 @@ export type FallbackResolution = FallbackResult | null;
 
 export type DockingInput = {
 	position: XYPosition;
-	cellCount: GridCellCount;
+	gridDimensions: GridDimensions;
 	occupancy: GridOccupancy;
 	span: NodeSpan;
 	ignoreNodeId?: string;

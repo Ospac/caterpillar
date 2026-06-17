@@ -13,6 +13,9 @@ import type { DockingInput, FallbackInput, GridOccupancy } from "../geometry";
 import { CELL_SIZE, cellCoordToPosition } from "../grid";
 
 describe("docking(lib)", () => {
+	const testGrid = { cols: 18, rows: 18 };
+	const wideGrid = { cols: 30, rows: 15 };
+
 	const emptyOccupancy = (): GridOccupancy => ({
 		occupiedCellCount: 0,
 		cellToNodeId: new Map(),
@@ -39,7 +42,7 @@ describe("docking(lib)", () => {
 		const state = createDockedNodeState(
 			{ x: 5 * CELL_SIZE, y: 2 * CELL_SIZE },
 			WIDE_SPAN,
-			18,
+			testGrid,
 		);
 
 		expect(state).toEqual({
@@ -58,14 +61,19 @@ describe("docking(lib)", () => {
 
 	it("스팬이 stage 경계를 넘거나 다른 노드 셀을 포함하면 도킹할 수 없다", () => {
 		expect(
-			isDockableForSpan({ col: 3, row: 17 }, TALL_SPAN, emptyOccupancy(), 18),
+			isDockableForSpan(
+				{ col: 3, row: 17 },
+				TALL_SPAN,
+				emptyOccupancy(),
+				testGrid,
+			),
 		).toBe(false);
 		expect(
 			isDockableForSpan(
 				{ col: 0, row: 0 },
 				WIDE_SPAN,
 				occupancyOf({ "1,0": "node-a" }),
-				18,
+				testGrid,
 			),
 		).toBe(false);
 		expect(
@@ -78,16 +86,32 @@ describe("docking(lib)", () => {
 					"0,1": "self",
 					"1,1": "self",
 				}),
-				18,
+				testGrid,
 				"self",
 			),
 		).toBe(true);
+		expect(
+			isDockableForSpan(
+				{ col: 29, row: 13 },
+				TALL_SPAN,
+				emptyOccupancy(),
+				wideGrid,
+			),
+		).toBe(true);
+		expect(
+			isDockableForSpan(
+				{ col: 29, row: 14 },
+				TALL_SPAN,
+				emptyOccupancy(),
+				wideGrid,
+			),
+		).toBe(false);
 	});
 
 	it("드롭 실패 시 lastValidDock, nearest-empty-cell 순서로 복구한다", () => {
 		const input = (overrides: Partial<FallbackInput> = {}): FallbackInput => ({
 			position: { x: 2 * CELL_SIZE, y: 2 * CELL_SIZE },
-			cellCount: 18,
+			gridDimensions: testGrid,
 			occupancy: emptyOccupancy(),
 			span: WIDE_SPAN,
 			lastValidDock: { col: 1, row: 0 },
@@ -120,7 +144,7 @@ describe("docking(lib)", () => {
 	it("드롭 해석은 유효 도킹, 점유 충돌, stage 밖 fallback을 구분한다", () => {
 		const input = (overrides: Partial<DockingInput> = {}): DockingInput => ({
 			position: { x: CELL_SIZE, y: CELL_SIZE },
-			cellCount: 18,
+			gridDimensions: testGrid,
 			occupancy: emptyOccupancy(),
 			span: WIDE_SPAN,
 			lastValidDock: { col: 0, row: 0 },

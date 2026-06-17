@@ -1,7 +1,7 @@
 import { useStore } from "@xyflow/react";
 import { getNodeSpan } from "../../lib/blockSpan";
 import { resolveDropPosition } from "../../lib/docking";
-import { GRID_CELL_COUNT, type getGridOccupancy } from "../../lib/grid";
+import { DEFAULT_GRID_DIMENSIONS, type getGridOccupancy } from "../../lib/grid";
 import type { DiagramNode } from "../../model/nodeTypes";
 import type { RuntimeNodeDockingState } from "../../model/runtime";
 import DropPreviewBox from "./DropPreviewBox";
@@ -31,7 +31,7 @@ export default function NodeDropOverlay({
 	const span = getNodeSpan(draggingNode.data.blockType);
 	const resolution = resolveDropPosition({
 		position: draggingNode.position,
-		cellCount: GRID_CELL_COUNT,
+		gridDimensions: DEFAULT_GRID_DIMENSIONS,
 		occupancy,
 		span,
 		ignoreNodeId: draggingNode.id,

@@ -3,6 +3,8 @@ import type { DiagramNode } from "../../model/nodeTypes";
 import { getNodeSpan, TALL_SPAN, WIDE_SPAN } from "../blockSpan";
 import {
 	CELL_SIZE,
+	GRID_COLUMN_COUNT,
+	GRID_ROW_COUNT,
 	GRID_ZOOM_BUTTON_CELL_STEP,
 	GRID_ZOOM_WHEEL_CELL_STEP,
 	getAnchoredScrollOffset,
@@ -106,7 +108,7 @@ describe("grid(lib)", () => {
 		]);
 	});
 
-	it("노드 span 전체가 30칸 grid 안에 있어야 유지한다", () => {
+	it("노드 span 전체가 30x15 grid 안에 있어야 유지한다", () => {
 		const node = (
 			x: number,
 			y: number,
@@ -118,10 +120,10 @@ describe("grid(lib)", () => {
 				position: { x, y },
 				data: { blockType },
 			}) as DiagramNode;
-		const insideWideNode = node(28 * CELL_SIZE, 28 * CELL_SIZE);
-		const outsideWideNode = node(29 * CELL_SIZE, 28 * CELL_SIZE);
-		const insideTallNode = node(29 * CELL_SIZE, 28 * CELL_SIZE, "movie");
-		const outsideTallNode = node(29 * CELL_SIZE, 29 * CELL_SIZE, "movie");
+		const insideWideNode = node(28 * CELL_SIZE, 13 * CELL_SIZE);
+		const outsideWideNode = node(29 * CELL_SIZE, 13 * CELL_SIZE);
+		const insideTallNode = node(29 * CELL_SIZE, 13 * CELL_SIZE, "movie");
+		const outsideTallNode = node(29 * CELL_SIZE, 14 * CELL_SIZE, "movie");
 
 		expect(isNodeFullyInsideGrid(insideWideNode)).toBe(true);
 		expect(isNodeFullyInsideGrid(outsideWideNode)).toBe(false);
@@ -151,16 +153,27 @@ describe("grid(lib)", () => {
 		expect(isNodeEscapingGrid({ x: -1, y: 0 }, WIDE_SPAN)).toBe(true);
 		expect(
 			isNodeEscapingGrid(
-				{ x: 29 * CELL_SIZE + 1, y: 29 * CELL_SIZE },
+				{ x: 29 * CELL_SIZE + 1, y: 13 * CELL_SIZE },
 				WIDE_SPAN,
 			),
 		).toBe(true);
 		expect(
 			positionToAnchorCell(
-				{ x: 29 * CELL_SIZE + 1, y: 29 * CELL_SIZE },
+				{ x: 29 * CELL_SIZE + 1, y: 13 * CELL_SIZE },
 				WIDE_SPAN,
 			),
 		).toBeNull();
+	});
+
+	it("기본 grid 치수는 가로 30칸, 세로 15칸이다", () => {
+		expect(GRID_COLUMN_COUNT).toBe(30);
+		expect(GRID_ROW_COUNT).toBe(15);
+		expect(
+			isNodeEscapingGrid({ x: 0, y: 14 * CELL_SIZE + 1 }, TALL_SPAN),
+		).toBe(true);
+		expect(
+			positionToAnchorCell({ x: 0, y: 13 * CELL_SIZE }, TALL_SPAN),
+		).toEqual({ col: 0, row: 13 });
 	});
 
 	it("점유 현황은 스팬 단위 충돌을 sub-cell 기준으로 계산한다", () => {

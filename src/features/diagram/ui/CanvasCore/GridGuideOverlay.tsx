@@ -26,9 +26,9 @@ export default function GridGuideOverlay({ visible }: GridGuideOverlayProps) {
 			<svg
 				data-testid="grid-guide-overlay"
 				className="pointer-events-none absolute left-0 top-0"
-				width={size}
-				height={size}
-				viewBox={`0 0 ${size} ${size}`}
+				width={size.width}
+				height={size.height}
+				viewBox={`0 0 ${size.width} ${size.height}`}
 				aria-hidden="true"
 			>
 				<defs>
@@ -91,8 +91,8 @@ export default function GridGuideOverlay({ visible }: GridGuideOverlayProps) {
 				<rect
 					x="0"
 					y="0"
-					width={size}
-					height={size}
+					width={size.width}
+					height={size.height}
 					fill={`url(#${patternId})`}
 				/>
 			</svg>

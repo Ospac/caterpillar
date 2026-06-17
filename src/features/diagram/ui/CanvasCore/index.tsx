@@ -39,7 +39,9 @@ import {
 } from "../../lib/edge";
 import {
 	CELL_SIZE,
-	GRID_CELL_COUNT,
+	DEFAULT_GRID_DIMENSIONS,
+	GRID_COLUMN_COUNT,
+	GRID_ROW_COUNT,
 	GRID_ZOOM_BUTTON_CELL_STEP,
 	getCellAlignedAnchoredScrollOffset,
 	getClampedVisibleCellCount,
@@ -67,7 +69,7 @@ import NodeDropOverlay from "./NodeDropOverlay";
 const GRID_PIXEL_SIZE = getGridPixelSize();
 const NODE_EXTENT: CoordinateExtent = [
 	[0, 0],
-	[GRID_PIXEL_SIZE, GRID_PIXEL_SIZE],
+	[GRID_PIXEL_SIZE.width, GRID_PIXEL_SIZE.height],
 ];
 const ZOOM_GUIDE_VISIBLE_MS = 600;
 const nodeTypes: NodeTypes = {
@@ -148,7 +150,8 @@ function CanvasCoreInner() {
 		containerWidth,
 		gridVisibleCellCount,
 	);
-	const renderedGridPixelSize = GRID_PIXEL_SIZE * gridZoom;
+	const renderedGridPixelWidth = GRID_PIXEL_SIZE.width * gridZoom;
+	const renderedGridPixelHeight = GRID_PIXEL_SIZE.height * gridZoom;
 	const viewport: Viewport = { x: 0, y: 0, zoom: gridZoom };
 	const occupancy = getGridOccupancy(nodes);
 	const shouldShowGridGuide = isNodeDragging || isEdgeDragging || isZooming;
@@ -308,12 +311,14 @@ function CanvasCoreInner() {
 			anchor.anchorX,
 			gridZoom,
 			scrollContainer.clientWidth,
+			GRID_COLUMN_COUNT,
 		);
 		scrollContainer.scrollTop = getCellAlignedAnchoredScrollOffset(
 			anchor.flowY,
 			anchor.anchorY,
 			gridZoom,
 			scrollContainer.clientHeight,
+			GRID_ROW_COUNT,
 		);
 		pendingScrollAnchorRef.current = null;
 	}, [gridZoom]);
@@ -333,7 +338,7 @@ function CanvasCoreInner() {
 		const flowPosition = screenToFlowPosition(clientPosition);
 		const menuNodePosition = resolveEdgeDropPosition({
 			position: flowPosition,
-			cellCount: GRID_CELL_COUNT,
+			gridDimensions: DEFAULT_GRID_DIMENSIONS,
 			occupancy,
 		});
 		if (!menuNodePosition) return;
@@ -383,11 +388,15 @@ function CanvasCoreInner() {
 		const span = getNodeSpan(diagramNode.data.blockType);
 		const currentDockingState =
 			nodeDockingState[diagramNode.id] ??
-			createDockedNodeState(diagramNode.position, span, GRID_CELL_COUNT);
+			createDockedNodeState(
+				diagramNode.position,
+				span,
+				DEFAULT_GRID_DIMENSIONS,
+			);
 
 		const resolution = resolveDropPosition({
 			position: diagramNode.position,
-			cellCount: GRID_CELL_COUNT,
+			gridDimensions: DEFAULT_GRID_DIMENSIONS,
 			occupancy,
 			span,
 			ignoreNodeId: diagramNode.id,
@@ -425,8 +434,8 @@ function CanvasCoreInner() {
 			<div
 				className="relative mx-auto my-0"
 				style={{
-					width: renderedGridPixelSize,
-					height: renderedGridPixelSize,
+					width: renderedGridPixelWidth,
+					height: renderedGridPixelHeight,
 				}}
 			>
 				<ReactFlow

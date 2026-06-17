@@ -1,7 +1,7 @@
 import { useConnection } from "@xyflow/react";
 import { getNodeSpan } from "../../lib/blockSpan";
 import { resolveEdgeDropPosition } from "../../lib/edge";
-import { GRID_CELL_COUNT, type getGridOccupancy } from "../../lib/grid";
+import { DEFAULT_GRID_DIMENSIONS, type getGridOccupancy } from "../../lib/grid";
 import type { DiagramNode } from "../../model/nodeTypes";
 import DropPreviewBox from "./DropPreviewBox";
 
@@ -25,7 +25,7 @@ export default function EdgeDropPreview({
 
 	const position = resolveEdgeDropPosition({
 		position: connection.to,
-		cellCount: GRID_CELL_COUNT,
+		gridDimensions: DEFAULT_GRID_DIMENSIONS,
 		occupancy,
 	});
 	if (!position) return null;

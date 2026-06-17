@@ -2,7 +2,7 @@ import type { Edge } from "@xyflow/react";
 import { getNodeSpan } from "../lib/blockSpan";
 import { createDockedNodeState } from "../lib/docking";
 import type { DockedNodeState } from "../lib/geometry";
-import { GRID_CELL_COUNT } from "../lib/grid";
+import { DEFAULT_GRID_DIMENSIONS } from "../lib/grid";
 import type { DiagramNode } from "./nodeTypes";
 
 export type RuntimeNodeDockingState = Record<string, DockedNodeState>;
@@ -22,7 +22,7 @@ export function createRuntimeNodeDockingState(
 			createDockedNodeState(
 				node.position,
 				getNodeSpan(node.data.blockType),
-				GRID_CELL_COUNT,
+				DEFAULT_GRID_DIMENSIONS,
 			),
 		]),
 	);

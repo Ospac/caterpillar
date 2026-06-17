@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "@rstest/core";
 import type { Connection } from "@xyflow/react";
-import { CELL_SIZE, GRID_CELL_COUNT } from "../../lib/grid";
+import { CELL_SIZE, GRID_COLUMN_COUNT, GRID_ROW_COUNT } from "../../lib/grid";
 import { useCanvasStore } from "../canvasStore";
 import { isBlockNode } from "../nodeTypes";
 
@@ -137,19 +137,19 @@ describe("canvasStore", () => {
 		});
 	});
 
-	it("메뉴 노드 추가 위치는 30칸 canvas 경계 안으로 제한한다", () => {
+	it("메뉴 노드 추가 위치는 30x15 canvas 경계 안으로 제한한다", () => {
 		const store = useCanvasStore.getState();
 		store.setMode("edit");
 
 		useCanvasStore.getState().addMenuNode({
-			x: GRID_CELL_COUNT * CELL_SIZE,
-			y: GRID_CELL_COUNT * CELL_SIZE,
+			x: GRID_COLUMN_COUNT * CELL_SIZE,
+			y: GRID_ROW_COUNT * CELL_SIZE,
 		});
 
 		expect(useCanvasStore.getState().nodes[0]).toMatchObject({
 			position: {
-				x: (GRID_CELL_COUNT - 2) * CELL_SIZE,
-				y: (GRID_CELL_COUNT - 2) * CELL_SIZE,
+				x: (GRID_COLUMN_COUNT - 2) * CELL_SIZE,
+				y: (GRID_ROW_COUNT - 2) * CELL_SIZE,
 			},
 		});
 	});

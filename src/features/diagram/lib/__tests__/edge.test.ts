@@ -9,6 +9,9 @@ import type { GridOccupancy } from "../geometry";
 import { CELL_SIZE } from "../grid";
 
 describe("menuDrop(lib)", () => {
+	const testGrid = { cols: 18, rows: 18 };
+	const wideGrid = { cols: 30, rows: 15 };
+
 	const emptyOccupancy = (): GridOccupancy => ({
 		occupiedCellCount: 0,
 		cellToNodeId: new Map(),
@@ -35,7 +38,7 @@ describe("menuDrop(lib)", () => {
 		expect(
 			resolveEdgeDropPosition({
 				position: { x: 2 * CELL_SIZE + 8, y: CELL_SIZE + 12 },
-				cellCount: 18,
+				gridDimensions: testGrid,
 				occupancy: emptyOccupancy(),
 			}),
 		).toEqual({ x: 2 * CELL_SIZE, y: CELL_SIZE });
@@ -48,7 +51,7 @@ describe("menuDrop(lib)", () => {
 					x: 2 * CELL_SIZE + CELL_SIZE / 2 + 1,
 					y: CELL_SIZE + CELL_SIZE / 2 + 1,
 				},
-				cellCount: 18,
+				gridDimensions: testGrid,
 				occupancy: emptyOccupancy(),
 			}),
 		).toEqual({ x: 2 * CELL_SIZE, y: CELL_SIZE });
@@ -58,7 +61,7 @@ describe("menuDrop(lib)", () => {
 		expect(
 			resolveEdgeDropPosition({
 				position: { x: 0, y: 0 },
-				cellCount: 18,
+				gridDimensions: testGrid,
 				occupancy: occupancyOf({ "0,0": "node-a" }),
 			}),
 		).toBeNull();
@@ -68,7 +71,7 @@ describe("menuDrop(lib)", () => {
 		expect(
 			resolveEdgeDropPosition({
 				position: { x: 2 * CELL_SIZE + 8, y: 2 * CELL_SIZE + 12 },
-				cellCount: 18,
+				gridDimensions: testGrid,
 				occupancy: occupancyOf({ "3,3": "node-a" }),
 			}),
 		).toBeNull();
@@ -78,8 +81,25 @@ describe("menuDrop(lib)", () => {
 		expect(
 			resolveEdgeDropPosition({
 				position: { x: -20, y: 0 },
-				cellCount: 18,
+				gridDimensions: testGrid,
 				occupancy: fullOccupancy(18),
+			}),
+		).toBeNull();
+	});
+
+	it("직사각형 grid의 세로 경계를 넘으면 null을 반환한다", () => {
+		expect(
+			resolveEdgeDropPosition({
+				position: { x: 28 * CELL_SIZE, y: 13 * CELL_SIZE },
+				gridDimensions: wideGrid,
+				occupancy: emptyOccupancy(),
+			}),
+		).toEqual({ x: 28 * CELL_SIZE, y: 13 * CELL_SIZE });
+		expect(
+			resolveEdgeDropPosition({
+				position: { x: 28 * CELL_SIZE, y: 14 * CELL_SIZE },
+				gridDimensions: wideGrid,
+				occupancy: emptyOccupancy(),
 			}),
 		).toBeNull();
 	});
