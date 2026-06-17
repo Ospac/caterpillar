@@ -84,7 +84,7 @@ function hasPersistentEdgeChange(changes: EdgeChange<Edge>[]): boolean {
 }
 
 export const useCanvasStore = create<CanvasStore>((set, get) => ({
-	mode: "read",
+	mode: "edit",
 	nodes: [],
 	edges: [],
 	dirty: false,

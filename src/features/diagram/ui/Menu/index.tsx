@@ -1,26 +1,38 @@
 import { useShallow } from "zustand/react/shallow";
 import { Button } from "@/shared/ui/button";
-import {
-	GRID_COLUMN_COUNT,
-	GRID_ROW_COUNT,
-	MAX_GRID_ZOOM,
-	MIN_GRID_ZOOM,
-} from "../../lib/grid";
+import { GRID_COLUMN_COUNT, GRID_ROW_COUNT } from "../../lib/grid";
 import { useCanvasStore } from "../../model/canvasStore";
 
 interface HeaderProps {
 	occupiedCellCount: number;
 	dockingCount: number;
 	zoom: number;
+	zoomDisplayMin: number;
+	zoomDisplayMax: number;
 	onZoomIn: () => void;
 	onZoomOut: () => void;
 	onZoomReset: () => void;
+}
+
+function getDisplayZoomPercent(
+	zoom: number,
+	minZoom: number,
+	maxZoom: number,
+): number {
+	const zoomRange = maxZoom - minZoom;
+	if (zoomRange <= 0) return 100;
+
+	const normalizedZoom = (zoom - minZoom) / zoomRange;
+	const clampedZoom = Math.min(Math.max(normalizedZoom, 0), 1);
+	return Math.round(clampedZoom * 100);
 }
 
 export default function Menu({
 	occupiedCellCount,
 	dockingCount,
 	zoom,
+	zoomDisplayMin,
+	zoomDisplayMax,
 	onZoomIn,
 	onZoomOut,
 	onZoomReset,
@@ -33,6 +45,11 @@ export default function Menu({
 		})),
 	);
 	const isEditMode = mode === "edit";
+	const displayZoomPercent = getDisplayZoomPercent(
+		zoom,
+		zoomDisplayMin,
+		zoomDisplayMax,
+	);
 
 	const handleAddNode = () => {
 		if (!isEditMode) return;
@@ -72,20 +89,20 @@ export default function Menu({
 					variant="ghost"
 					size="icon-xs"
 					onClick={onZoomOut}
-					disabled={zoom <= MIN_GRID_ZOOM}
+					disabled={zoom <= zoomDisplayMin}
 					aria-label="Zoom out"
 				>
 					-
 				</Button>
 				<span className="min-w-10 text-center tabular-nums">
-					{Math.round(zoom * 100)}%
+					{displayZoomPercent}%
 				</span>
 				<Button
 					type="button"
 					variant="ghost"
 					size="icon-xs"
 					onClick={onZoomIn}
-					disabled={zoom >= MAX_GRID_ZOOM}
+					disabled={zoom >= zoomDisplayMax}
 					aria-label="Zoom in"
 				>
 					+

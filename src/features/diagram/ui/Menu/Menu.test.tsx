@@ -9,6 +9,8 @@ function TestMenu() {
 			occupiedCellCount={0}
 			dockingCount={0}
 			zoom={0.5}
+			zoomDisplayMin={0.2}
+			zoomDisplayMax={1}
 			onZoomIn={() => {}}
 			onZoomOut={() => {}}
 			onZoomReset={() => {}}
@@ -54,7 +56,9 @@ describe("Menu", () => {
 			<Menu
 				occupiedCellCount={0}
 				dockingCount={0}
-				zoom={0.5}
+				zoom={0.8}
+				zoomDisplayMin={0.6}
+				zoomDisplayMax={1}
 				onZoomIn={() => zoomInCount++}
 				onZoomOut={() => zoomOutCount++}
 				onZoomReset={() => zoomResetCount++}
@@ -76,7 +80,9 @@ describe("Menu", () => {
 			<Menu
 				occupiedCellCount={0}
 				dockingCount={0}
-				zoom={0.2}
+				zoom={0.6}
+				zoomDisplayMin={0.6}
+				zoomDisplayMax={1}
 				onZoomIn={() => {}}
 				onZoomOut={() => {}}
 				onZoomReset={() => {}}
@@ -92,6 +98,8 @@ describe("Menu", () => {
 				occupiedCellCount={0}
 				dockingCount={0}
 				zoom={1}
+				zoomDisplayMin={0.6}
+				zoomDisplayMax={1}
 				onZoomIn={() => {}}
 				onZoomOut={() => {}}
 				onZoomReset={() => {}}
@@ -101,5 +109,37 @@ describe("Menu", () => {
 		expect(
 			(screen.getByLabelText("Zoom in") as HTMLButtonElement).disabled,
 		).toBe(true);
+	});
+
+	it("zoom 표시값은 실질 조작 가능 범위를 0-100%로 정규화한다", () => {
+		const { rerender } = render(
+			<Menu
+				occupiedCellCount={0}
+				dockingCount={0}
+				zoom={0.6}
+				zoomDisplayMin={0.6}
+				zoomDisplayMax={1}
+				onZoomIn={() => {}}
+				onZoomOut={() => {}}
+				onZoomReset={() => {}}
+			/>,
+		);
+
+		expect(screen.getByText("0%")).toBeTruthy();
+
+		rerender(
+			<Menu
+				occupiedCellCount={0}
+				dockingCount={0}
+				zoom={1}
+				zoomDisplayMin={0.6}
+				zoomDisplayMax={1}
+				onZoomIn={() => {}}
+				onZoomOut={() => {}}
+				onZoomReset={() => {}}
+			/>,
+		);
+
+		expect(screen.getByText("100%")).toBeTruthy();
 	});
 });

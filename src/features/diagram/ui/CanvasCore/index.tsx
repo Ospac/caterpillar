@@ -50,6 +50,7 @@ import {
 	getGridZoomForVisibleCells,
 	getNextGridVisibleCellCount,
 	getResponsiveGridVisibleCellCount,
+	getVisibleCellCountBounds,
 	getWheelGridVisibleCellCount,
 	isGridZoomWheelEvent,
 } from "../../lib/grid";
@@ -144,11 +145,20 @@ function CanvasCoreInner() {
 
 	const responsiveGridVisibleCellCount =
 		getResponsiveGridVisibleCellCount(containerWidth);
+	const gridVisibleCellCountBounds = getVisibleCellCountBounds(containerWidth);
 	const gridVisibleCellCount =
 		manualVisibleCellCount ?? responsiveGridVisibleCellCount;
 	const gridZoom = getGridZoomForVisibleCells(
 		containerWidth,
 		gridVisibleCellCount,
+	);
+	const minGridZoom = getGridZoomForVisibleCells(
+		containerWidth,
+		responsiveGridVisibleCellCount,
+	);
+	const maxGridZoom = getGridZoomForVisibleCells(
+		containerWidth,
+		gridVisibleCellCountBounds.min,
 	);
 	const renderedGridPixelWidth = GRID_PIXEL_SIZE.width * gridZoom;
 	const renderedGridPixelHeight = GRID_PIXEL_SIZE.height * gridZoom;
@@ -427,6 +437,8 @@ function CanvasCoreInner() {
 				occupiedCellCount={occupancy.occupiedCellCount}
 				dockingCount={Object.keys(nodeDockingState).length}
 				zoom={gridZoom}
+				zoomDisplayMin={minGridZoom}
+				zoomDisplayMax={maxGridZoom}
 				onZoomIn={handleZoomIn}
 				onZoomOut={handleZoomOut}
 				onZoomReset={handleZoomReset}
