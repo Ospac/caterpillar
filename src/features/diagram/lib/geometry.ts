@@ -1,5 +1,4 @@
 import type { DROP_REASONS, FALLBACK_STRATEGIES } from "./docking";
-import type { GRID_STAGES } from "./grid";
 
 // Node 자유 이동은 XYPosition을 사용하고, drop시 grid snap을 위해 CellCoord 좌표계를 사용한다.
 export type CellCoord = {
@@ -21,7 +20,7 @@ export type DockedNodeState = {
 	lastValidDock: CellCoord | null;
 };
 
-export type GridStage = (typeof GRID_STAGES)[number];
+export type GridCellCount = number;
 
 export type GridOccupancy = {
 	occupiedCellCount: number;
@@ -42,7 +41,7 @@ export type FallbackResolution = FallbackResult | null;
 
 export type DockingInput = {
 	position: XYPosition;
-	stage: GridStage;
+	cellCount: GridCellCount;
 	occupancy: GridOccupancy;
 	span: NodeSpan;
 	ignoreNodeId?: string;

@@ -3,27 +3,83 @@ import type { DiagramNode } from "../../model/nodeTypes";
 import { getNodeSpan, TALL_SPAN, WIDE_SPAN } from "../blockSpan";
 import {
 	CELL_SIZE,
+	GRID_ZOOM_BUTTON_CELL_STEP,
+	GRID_ZOOM_WHEEL_CELL_STEP,
+	getCellAlignedCenteredScrollOffset,
+	getCenteredScrollOffset,
+	getClampedVisibleCellCount,
 	getGridOccupancy,
-	getNextStage,
+	getGridZoomForVisibleCells,
+	getNextGridVisibleCellCount,
+	getNextGridZoom,
 	getNodeCells,
-	getNodesOutsideStage,
+	getNodesOutsideGrid,
+	getResponsiveGridVisibleCellCount,
 	getResponsiveGridZoom,
-	isNodeEscapingStage,
-	isNodeFullyInsideStage,
+	getVisibleCellCount,
+	getVisibleCellCountBounds,
+	getWheelGridVisibleCellCount,
+	getWheelGridZoom,
+	isGridZoomWheelEvent,
+	isNodeEscapingGrid,
+	isNodeFullyInsideGrid,
 	positionToAnchorCell,
 } from "../grid";
 
 describe("grid(lib)", () => {
-	it("stage는 마지막 단계까지만 확장된다", () => {
-		expect(getNextStage(12)).toBe(18);
-		expect(getNextStage(18)).toBe(24);
-		expect(getNextStage(24)).toBe(24);
+	it("grid가 화면보다 클 때만 최소 배율까지 축소한다", () => {
+		expect(getResponsiveGridZoom(4000)).toBe(1);
+		expect(getResponsiveGridZoom(954)).toBeCloseTo(954 / (CELL_SIZE * 30));
+		expect(getResponsiveGridZoom(100)).toBeCloseTo(100 / (CELL_SIZE * 4));
 	});
 
-	it("stage가 화면보다 클 때만 최소 배율까지 축소한다", () => {
-		expect(getResponsiveGridZoom(2000, 12)).toBe(1);
-		expect(getResponsiveGridZoom(954, 18)).toBe(0.5);
-		expect(getResponsiveGridZoom(100, 24)).toBe(0.5);
+	it("zoom은 viewport에 보이는 CELL 개수 기준으로 정렬한다", () => {
+		expect(getVisibleCellCountBounds(954)).toEqual({
+			min: 9,
+			max: 30,
+		});
+		expect(getResponsiveGridVisibleCellCount(954)).toBe(30);
+		expect(getResponsiveGridVisibleCellCount(100)).toBe(4);
+		expect(getGridZoomForVisibleCells(954, 18)).toBeCloseTo(
+			954 / (CELL_SIZE * 18),
+		);
+		expect(getVisibleCellCount(954, 0.5)).toBe(18);
+		expect(getClampedVisibleCellCount(954, 4)).toBe(9);
+		expect(getClampedVisibleCellCount(954, 40)).toBe(30);
+	});
+
+	it("수동 zoom은 보이는 CELL 개수를 이산 변경하고 20%에서 100% 사이로 제한한다", () => {
+		expect(
+			getNextGridVisibleCellCount(18, 954, -GRID_ZOOM_BUTTON_CELL_STEP),
+		).toBe(16);
+		expect(
+			getNextGridVisibleCellCount(18, 954, GRID_ZOOM_BUTTON_CELL_STEP),
+		).toBe(20);
+		expect(getNextGridZoom(0.5, 954, -2)).toBeCloseTo(954 / (CELL_SIZE * 16));
+		expect(getNextGridZoom(0.5, 954, 2)).toBeCloseTo(954 / (CELL_SIZE * 20));
+		expect(getNextGridZoom(1, 954, -2)).toBe(1);
+		expect(getNextGridZoom(0.2, 954, 2)).toBeCloseTo(954 / (CELL_SIZE * 30));
+		expect(getWheelGridVisibleCellCount(18, -25, 954)).toBe(
+			18 - GRID_ZOOM_WHEEL_CELL_STEP,
+		);
+		expect(getWheelGridVisibleCellCount(18, 25, 954)).toBe(
+			18 + GRID_ZOOM_WHEEL_CELL_STEP,
+		);
+		expect(getWheelGridZoom(0.5, -25, 954)).toBeCloseTo(954 / (CELL_SIZE * 17));
+		expect(getWheelGridZoom(0.5, 25, 954)).toBeCloseTo(954 / (CELL_SIZE * 19));
+		expect(getWheelGridZoom(0.5, 0, 954)).toBe(0.5);
+	});
+
+	it("modifier wheel만 zoom으로 처리하고 중앙 scroll offset을 계산한다", () => {
+		expect(isGridZoomWheelEvent({ metaKey: true, ctrlKey: false })).toBe(true);
+		expect(isGridZoomWheelEvent({ metaKey: false, ctrlKey: true })).toBe(true);
+		expect(isGridZoomWheelEvent({ metaKey: false, ctrlKey: false })).toBe(
+			false,
+		);
+		expect(getCenteredScrollOffset(1000, 0.5, 800)).toBe(100);
+		expect(
+			getCellAlignedCenteredScrollOffset(1300, 0.5, 954) / (CELL_SIZE * 0.5),
+		).toBeCloseTo(3);
 	});
 
 	it("스팬별 점유 셀을 앵커 기준으로 전개한다", () => {
@@ -39,7 +95,7 @@ describe("grid(lib)", () => {
 		]);
 	});
 
-	it("노드 span 전체가 stage 안에 있어야 유지한다", () => {
+	it("노드 span 전체가 30칸 grid 안에 있어야 유지한다", () => {
 		const node = (
 			x: number,
 			y: number,
@@ -51,20 +107,22 @@ describe("grid(lib)", () => {
 				position: { x, y },
 				data: { blockType },
 			}) as DiagramNode;
-		const insideWideNode = node(10 * CELL_SIZE, 10 * CELL_SIZE);
-		const outsideWideNode = node(11 * CELL_SIZE, 10 * CELL_SIZE);
-		const insideTallNode = node(11 * CELL_SIZE, 10 * CELL_SIZE, "movie");
-		const outsideTallNode = node(11 * CELL_SIZE, 11 * CELL_SIZE, "movie");
+		const insideWideNode = node(28 * CELL_SIZE, 28 * CELL_SIZE);
+		const outsideWideNode = node(29 * CELL_SIZE, 28 * CELL_SIZE);
+		const insideTallNode = node(29 * CELL_SIZE, 28 * CELL_SIZE, "movie");
+		const outsideTallNode = node(29 * CELL_SIZE, 29 * CELL_SIZE, "movie");
 
-		expect(isNodeFullyInsideStage(insideWideNode, 12)).toBe(true);
-		expect(isNodeFullyInsideStage(outsideWideNode, 12)).toBe(false);
-		expect(isNodeFullyInsideStage(insideTallNode, 12)).toBe(true);
-		expect(isNodeFullyInsideStage(outsideTallNode, 12)).toBe(false);
+		expect(isNodeFullyInsideGrid(insideWideNode)).toBe(true);
+		expect(isNodeFullyInsideGrid(outsideWideNode)).toBe(false);
+		expect(isNodeFullyInsideGrid(insideTallNode)).toBe(true);
+		expect(isNodeFullyInsideGrid(outsideTallNode)).toBe(false);
 		expect(
-			getNodesOutsideStage(
-				[insideWideNode, outsideWideNode, insideTallNode, outsideTallNode],
-				12,
-			),
+			getNodesOutsideGrid([
+				insideWideNode,
+				outsideWideNode,
+				insideTallNode,
+				outsideTallNode,
+			]),
 		).toEqual([outsideWideNode, outsideTallNode]);
 	});
 
@@ -77,20 +135,18 @@ describe("grid(lib)", () => {
 		expect(getNodeSpan("book")).toBe(TALL_SPAN);
 	});
 
-	it("노드 중심이 stage를 벗어나면 앵커 셀을 만들지 않는다", () => {
-		expect(isNodeEscapingStage({ x: 0, y: 0 }, 12, WIDE_SPAN)).toBe(false);
-		expect(isNodeEscapingStage({ x: -1, y: 0 }, 12, WIDE_SPAN)).toBe(true);
+	it("노드 중심이 grid를 벗어나면 앵커 셀을 만들지 않는다", () => {
+		expect(isNodeEscapingGrid({ x: 0, y: 0 }, WIDE_SPAN)).toBe(false);
+		expect(isNodeEscapingGrid({ x: -1, y: 0 }, WIDE_SPAN)).toBe(true);
 		expect(
-			isNodeEscapingStage(
-				{ x: 11 * CELL_SIZE + 1, y: 11 * CELL_SIZE },
-				12,
+			isNodeEscapingGrid(
+				{ x: 29 * CELL_SIZE + 1, y: 29 * CELL_SIZE },
 				WIDE_SPAN,
 			),
 		).toBe(true);
 		expect(
 			positionToAnchorCell(
-				{ x: 11 * CELL_SIZE + 1, y: 11 * CELL_SIZE },
-				12,
+				{ x: 29 * CELL_SIZE + 1, y: 29 * CELL_SIZE },
 				WIDE_SPAN,
 			),
 		).toBeNull();
@@ -110,14 +166,11 @@ describe("grid(lib)", () => {
 				data: { blockType },
 			}) as DiagramNode;
 
-		const occupancy = getGridOccupancy(
-			[
-				node("node-a", 0, 0),
-				node("node-b", CELL_SIZE, 0),
-				node("node-c", 4 * CELL_SIZE, 0, "movie"),
-			],
-			12,
-		);
+		const occupancy = getGridOccupancy([
+			node("node-a", 0, 0),
+			node("node-b", CELL_SIZE, 0),
+			node("node-c", 4 * CELL_SIZE, 0, "movie"),
+		]);
 
 		expect(Array.from(occupancy.conflictedCellKeys).sort()).toEqual([
 			"1,0",

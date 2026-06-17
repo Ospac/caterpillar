@@ -1,8 +1,8 @@
 import type { DiagramNode } from "../model/nodeTypes";
 import type { CanvasRuntimeState } from "../model/runtime";
 import { commitDockedNodeState, createDockedNodeState } from "./docking";
-import type { CellCoord, GridStage, NodeSpan, XYPosition } from "./geometry";
-import { syncNodeDockingState } from "./grid";
+import type { CellCoord, NodeSpan, XYPosition } from "./geometry";
+import { GRID_CELL_COUNT, syncNodeDockingState } from "./grid";
 
 export type CanvasReducerState = Pick<CanvasRuntimeState, "nodeDockingState">;
 
@@ -12,13 +12,11 @@ export type CanvasReducerAction =
 			nodeId: string;
 			position: XYPosition;
 			span: NodeSpan;
-			visibleStage: GridStage;
 			dockedCell: CellCoord | null;
 	  }
 	| {
 			type: "nodesSynced";
 			nodes: DiagramNode[];
-			visibleStage: GridStage;
 	  };
 
 export function createCanvasReducerState(
@@ -37,11 +35,7 @@ export function canvasRuntimeReducer(
 		case "nodeDropCommitted": {
 			const currentDockingState =
 				state.nodeDockingState[action.nodeId] ??
-				createDockedNodeState(
-					action.position,
-					action.visibleStage,
-					action.span,
-				);
+				createDockedNodeState(action.position, action.span, GRID_CELL_COUNT);
 
 			return {
 				...state,
@@ -58,7 +52,7 @@ export function canvasRuntimeReducer(
 			const nodeDockingState = syncNodeDockingState(
 				state.nodeDockingState,
 				action.nodes,
-				action.visibleStage,
+				GRID_CELL_COUNT,
 			);
 
 			return nodeDockingState === state.nodeDockingState

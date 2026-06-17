@@ -1,53 +1,33 @@
-import { useState } from "react";
 import { useShallow } from "zustand/react/shallow";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/shared/ui/alert-dialog";
-import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
-import type { GridStage } from "../../lib/geometry";
-import { GRID_STAGES, getNodesOutsideStage } from "../../lib/grid";
+import { Button } from "@/shared/ui/button";
+import { GRID_CELL_COUNT, MAX_GRID_ZOOM, MIN_GRID_ZOOM } from "../../lib/grid";
 import { useCanvasStore } from "../../model/canvasStore";
 
 interface HeaderProps {
-	visibleStage: GridStage;
 	occupiedCellCount: number;
 	dockingCount: number;
+	zoom: number;
+	onZoomIn: () => void;
+	onZoomOut: () => void;
+	onZoomReset: () => void;
 }
 
 export default function Menu({
-	visibleStage,
 	occupiedCellCount,
 	dockingCount,
+	zoom,
+	onZoomIn,
+	onZoomOut,
+	onZoomReset,
 }: HeaderProps) {
-	const {
-		mode,
-		nodes,
-		setMode,
-		setVisibleStage,
-		shrinkVisibleStage,
-		addMenuNode,
-	} = useCanvasStore(
+	const { mode, setMode, addMenuNode } = useCanvasStore(
 		useShallow((state) => ({
 			mode: state.mode,
-			nodes: state.nodes,
 			setMode: state.setMode,
-			setVisibleStage: state.setVisibleStage,
-			shrinkVisibleStage: state.shrinkVisibleStage,
 			addMenuNode: state.addMenuNode,
 		})),
 	);
-	const [pendingStage, setPendingStage] = useState<GridStage | null>(null);
 	const isEditMode = mode === "edit";
-	const pendingRemovedNodeCount = pendingStage
-		? getNodesOutsideStage(nodes, pendingStage).length
-		: 0;
 
 	const handleAddNode = () => {
 		if (!isEditMode) return;
@@ -57,30 +37,8 @@ export default function Menu({
 		});
 	};
 
-	const handleStageChange = (value: string) => {
-		if (!isEditMode || value === "") return;
-
-		const stage = Number(value) as GridStage;
-		if (stage === visibleStage) return;
-
-		const removedNodeCount = getNodesOutsideStage(nodes, stage).length;
-		if (stage < visibleStage && removedNodeCount > 0) {
-			setPendingStage(stage);
-			return;
-		}
-
-		setVisibleStage(stage);
-	};
-
-	const handleConfirmStageShrink = () => {
-		if (!pendingStage) return;
-
-		shrinkVisibleStage(pendingStage);
-		setPendingStage(null);
-	};
-
 	return (
-		<>
+		<div>
 			<div className="absolute right-6 top-3 z-20 flex gap-1 border border-gray-300 bg-white p-0.5 text-xs">
 				<button
 					type="button"
@@ -103,6 +61,34 @@ export default function Menu({
 					Edit
 				</button>
 			</div>
+			<div className="absolute right-6 top-14 z-20 flex items-center gap-1 rounded-md border border-gray-300 bg-white p-0.5 text-xs">
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon-xs"
+					onClick={onZoomOut}
+					disabled={zoom <= MIN_GRID_ZOOM}
+					aria-label="Zoom out"
+				>
+					-
+				</Button>
+				<span className="min-w-10 text-center tabular-nums">
+					{Math.round(zoom * 100)}%
+				</span>
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon-xs"
+					onClick={onZoomIn}
+					disabled={zoom >= MAX_GRID_ZOOM}
+					aria-label="Zoom in"
+				>
+					+
+				</Button>
+				<Button type="button" variant="ghost" size="xs" onClick={onZoomReset}>
+					Reset
+				</Button>
+			</div>
 			<div className="absolute left-56 top-3 z-20 flex gap-2">
 				<button
 					type="button"
@@ -112,55 +98,11 @@ export default function Menu({
 				>
 					Add Node
 				</button>
-				<ToggleGroup
-					type="single"
-					variant="outline"
-					size="sm"
-					value={String(visibleStage)}
-					onValueChange={handleStageChange}
-					disabled={!isEditMode}
-					aria-label="Stage size"
-				>
-					{GRID_STAGES.map((stage) => (
-						<ToggleGroupItem
-							key={stage}
-							value={String(stage)}
-							aria-label={`${stage} by ${stage} stage`}
-						>
-							{stage}x{stage}
-						</ToggleGroupItem>
-					))}
-				</ToggleGroup>
 			</div>
 			<div className="md:block hidden absolute top-3 left-128 z-20 border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
-				Stage: {visibleStage}x{visibleStage} | Occupied: {occupiedCellCount} |
-				Docking: {dockingCount}
+				Cells: {GRID_CELL_COUNT}x{GRID_CELL_COUNT} | Occupied:{" "}
+				{occupiedCellCount} | Docking: {dockingCount}
 			</div>
-			<AlertDialog
-				open={pendingStage !== null}
-				onOpenChange={(open) => {
-					if (!open) setPendingStage(null);
-				}}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>스테이지를 축소할까요?</AlertDialogTitle>
-						<AlertDialogDescription>
-							{pendingRemovedNodeCount}개의 노드가 삭제됩니다. 삭제된 노드에
-							연결된 엣지도 함께 제거됩니다.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>취소</AlertDialogCancel>
-						<AlertDialogAction
-							variant="destructive"
-							onClick={handleConfirmStageShrink}
-						>
-							삭제 후 축소
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</>
+		</div>
 	);
 }

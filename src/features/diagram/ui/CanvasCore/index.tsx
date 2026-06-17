@@ -10,13 +10,17 @@ import {
 	type OnNodesChange,
 	ReactFlow,
 	ReactFlowProvider,
+	useConnection,
 	useReactFlow,
+	useStore,
 	type Viewport,
 } from "@xyflow/react";
 
 import {
 	type MouseEvent as ReactMouseEvent,
+	useCallback,
 	useEffect,
+	useLayoutEffect,
 	useReducer,
 	useRef,
 	useState,
@@ -35,12 +39,17 @@ import {
 } from "../../lib/edge";
 import {
 	CELL_SIZE,
+	GRID_CELL_COUNT,
+	GRID_ZOOM_BUTTON_CELL_STEP,
+	getCellAlignedCenteredScrollOffset,
+	getClampedVisibleCellCount,
 	getGridOccupancy,
-	getNextStage,
-	getResponsiveGridZoom,
-	getStagePixelSize,
-	isNodeEscapingStage,
-	MAX_GRID_STAGE,
+	getGridPixelSize,
+	getGridZoomForVisibleCells,
+	getNextGridVisibleCellCount,
+	getResponsiveGridVisibleCellCount,
+	getWheelGridVisibleCellCount,
+	isGridZoomWheelEvent,
 } from "../../lib/grid";
 import { useCanvasStore } from "../../model/canvasStore";
 import type { DiagramNode } from "../../model/nodeTypes";
@@ -55,11 +64,12 @@ import GridGuideOverlay from "./GridGuideOverlay";
 import MenuNode from "./MenuNode";
 import NodeDropOverlay from "./NodeDropOverlay";
 
-const MAX_STAGE_PIXEL_SIZE = getStagePixelSize(MAX_GRID_STAGE);
+const GRID_PIXEL_SIZE = getGridPixelSize();
 const NODE_EXTENT: CoordinateExtent = [
 	[0, 0],
-	[MAX_STAGE_PIXEL_SIZE, MAX_STAGE_PIXEL_SIZE],
+	[GRID_PIXEL_SIZE, GRID_PIXEL_SIZE],
 ];
+const ZOOM_GUIDE_VISIBLE_MS = 600;
 const nodeTypes: NodeTypes = {
 	menu: MenuNode,
 	block: BlockNode,
@@ -75,8 +85,20 @@ export function CanvasCore() {
 
 function CanvasCoreInner() {
 	const { screenToFlowPosition } = useReactFlow();
+	const { inProgress: isEdgeDragging } = useConnection<DiagramNode>();
+	const isNodeDragging = useStore((state) =>
+		Array.from(state.nodeLookup.values()).some((node) => node.dragging),
+	);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
+	const pendingScrollCenterRef = useRef<{ x: number; y: number } | null>(null);
+	const zoomGuideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null,
+	);
 	const [containerWidth, setContainerWidth] = useState(0);
+	const [manualVisibleCellCount, setManualVisibleCellCount] = useState<
+		number | null
+	>(null);
+	const [isZooming, setIsZooming] = useState(false);
 	// 초기값을 마운트 시점에 한 번만 계산
 	const [initialRuntimeState] = useState<CanvasRuntimeState>(() =>
 		createInitialCanvasRuntimeState(),
@@ -92,8 +114,6 @@ function CanvasCoreInner() {
 		mode,
 		nodes,
 		edges,
-		visibleStage,
-		setVisibleStage,
 		addMenuNode,
 		connectEdge,
 		removeEdge,
@@ -105,8 +125,6 @@ function CanvasCoreInner() {
 			mode: state.mode,
 			nodes: state.nodes,
 			edges: state.edges,
-			visibleStage: state.visibleStage,
-			setVisibleStage: state.setVisibleStage,
 			addMenuNode: state.addMenuNode,
 			connectEdge: state.connectEdge,
 			removeEdge: state.removeEdge,
@@ -117,11 +135,92 @@ function CanvasCoreInner() {
 	);
 	const isEditMode = mode === "edit";
 
-	const stagePixelSize = getStagePixelSize(visibleStage);
-	const gridZoom = getResponsiveGridZoom(containerWidth, visibleStage);
-	const renderedStagePixelSize = stagePixelSize * gridZoom;
+	const responsiveGridVisibleCellCount =
+		getResponsiveGridVisibleCellCount(containerWidth);
+	const gridVisibleCellCount =
+		manualVisibleCellCount ?? responsiveGridVisibleCellCount;
+	const gridZoom = getGridZoomForVisibleCells(
+		containerWidth,
+		gridVisibleCellCount,
+	);
+	const renderedGridPixelSize = GRID_PIXEL_SIZE * gridZoom;
 	const viewport: Viewport = { x: 0, y: 0, zoom: gridZoom };
-	const occupancy = getGridOccupancy(nodes, visibleStage);
+	const occupancy = getGridOccupancy(nodes);
+	const shouldShowGridGuide = isNodeDragging || isEdgeDragging || isZooming;
+
+	const captureScrollCenter = useCallback(() => {
+		const scrollContainer = scrollContainerRef.current;
+		if (!scrollContainer) return;
+
+		pendingScrollCenterRef.current = {
+			x:
+				(scrollContainer.scrollLeft + scrollContainer.clientWidth / 2) /
+				gridZoom,
+			y:
+				(scrollContainer.scrollTop + scrollContainer.clientHeight / 2) /
+				gridZoom,
+		};
+	}, [gridZoom]);
+
+	const showZoomGuide = useCallback(() => {
+		if (zoomGuideTimeoutRef.current) {
+			clearTimeout(zoomGuideTimeoutRef.current);
+		}
+
+		setIsZooming(true);
+		zoomGuideTimeoutRef.current = setTimeout(() => {
+			setIsZooming(false);
+			zoomGuideTimeoutRef.current = null;
+		}, ZOOM_GUIDE_VISIBLE_MS);
+	}, []);
+
+	const updateManualVisibleCellCount = useCallback(
+		(nextVisibleCellCount: number) => {
+			const clampedVisibleCellCount = getClampedVisibleCellCount(
+				containerWidth,
+				nextVisibleCellCount,
+			);
+			if (clampedVisibleCellCount === gridVisibleCellCount) return;
+
+			captureScrollCenter();
+			showZoomGuide();
+			setManualVisibleCellCount(clampedVisibleCellCount);
+		},
+		[captureScrollCenter, containerWidth, gridVisibleCellCount, showZoomGuide],
+	);
+
+	const handleZoomIn = () => {
+		updateManualVisibleCellCount(
+			getNextGridVisibleCellCount(
+				gridVisibleCellCount,
+				containerWidth,
+				-GRID_ZOOM_BUTTON_CELL_STEP,
+			),
+		);
+	};
+
+	const handleZoomOut = () => {
+		updateManualVisibleCellCount(
+			getNextGridVisibleCellCount(
+				gridVisibleCellCount,
+				containerWidth,
+				GRID_ZOOM_BUTTON_CELL_STEP,
+			),
+		);
+	};
+
+	const handleZoomReset = () => {
+		if (manualVisibleCellCount === null) return;
+
+		if (responsiveGridVisibleCellCount === gridVisibleCellCount) {
+			setManualVisibleCellCount(null);
+			return;
+		}
+
+		captureScrollCenter();
+		showZoomGuide();
+		setManualVisibleCellCount(null);
+	};
 
 	useEffect(() => {
 		const scrollContainer = scrollContainerRef.current;
@@ -138,6 +237,53 @@ function CanvasCoreInner() {
 		return () => observer.disconnect();
 	}, []);
 
+	useEffect(() => {
+		const scrollContainer = scrollContainerRef.current;
+		if (!scrollContainer) return;
+
+		const handleWheel = (event: WheelEvent) => {
+			if (!isGridZoomWheelEvent(event)) return;
+
+			event.preventDefault();
+			updateManualVisibleCellCount(
+				getWheelGridVisibleCellCount(
+					gridVisibleCellCount,
+					event.deltaY,
+					containerWidth,
+				),
+			);
+		};
+
+		scrollContainer.addEventListener("wheel", handleWheel, { passive: false });
+		return () => scrollContainer.removeEventListener("wheel", handleWheel);
+	}, [containerWidth, gridVisibleCellCount, updateManualVisibleCellCount]);
+
+	useEffect(() => {
+		return () => {
+			if (zoomGuideTimeoutRef.current) {
+				clearTimeout(zoomGuideTimeoutRef.current);
+			}
+		};
+	}, []);
+
+	useLayoutEffect(() => {
+		const scrollContainer = scrollContainerRef.current;
+		const center = pendingScrollCenterRef.current;
+		if (!scrollContainer || !center) return;
+
+		scrollContainer.scrollLeft = getCellAlignedCenteredScrollOffset(
+			center.x,
+			gridZoom,
+			scrollContainer.clientWidth,
+		);
+		scrollContainer.scrollTop = getCellAlignedCenteredScrollOffset(
+			center.y,
+			gridZoom,
+			scrollContainer.clientHeight,
+		);
+		pendingScrollCenterRef.current = null;
+	}, [gridZoom]);
+
 	const onConnect = (connection: Connection) => {
 		if (!isEditMode) return;
 		connectEdge(connection);
@@ -153,7 +299,7 @@ function CanvasCoreInner() {
 		const flowPosition = screenToFlowPosition(clientPosition);
 		const menuNodePosition = resolveEdgeDropPosition({
 			position: flowPosition,
-			stage: visibleStage,
+			cellCount: GRID_CELL_COUNT,
 			occupancy,
 		});
 		if (!menuNodePosition) return;
@@ -196,16 +342,6 @@ function CanvasCoreInner() {
 		removeEdge(edge.id);
 	};
 
-	const handleNodeDrag = (_: ReactMouseEvent, node: Node) => {
-		if (!isEditMode) return;
-
-		const diagramNode = node as DiagramNode;
-		const span = getNodeSpan(diagramNode.data.blockType);
-		if (isNodeEscapingStage(diagramNode.position, visibleStage, span)) {
-			setVisibleStage(getNextStage(visibleStage));
-		}
-	};
-
 	const handleNodeDragStop = (_: ReactMouseEvent, node: Node) => {
 		if (!isEditMode) return;
 
@@ -213,11 +349,11 @@ function CanvasCoreInner() {
 		const span = getNodeSpan(diagramNode.data.blockType);
 		const currentDockingState =
 			nodeDockingState[diagramNode.id] ??
-			createDockedNodeState(diagramNode.position, visibleStage, span);
+			createDockedNodeState(diagramNode.position, span, GRID_CELL_COUNT);
 
 		const resolution = resolveDropPosition({
 			position: diagramNode.position,
-			stage: visibleStage,
+			cellCount: GRID_CELL_COUNT,
 			occupancy,
 			span,
 			ignoreNodeId: diagramNode.id,
@@ -231,14 +367,13 @@ function CanvasCoreInner() {
 			nodeId: diagramNode.id,
 			position: resolution.position,
 			span,
-			visibleStage,
 			dockedCell: resolution.cell,
 		});
 	};
 
 	useEffect(() => {
-		dispatchCanvasState({ type: "nodesSynced", nodes, visibleStage });
-	}, [nodes, visibleStage]);
+		dispatchCanvasState({ type: "nodesSynced", nodes });
+	}, [nodes]);
 
 	return (
 		<div
@@ -246,15 +381,18 @@ function CanvasCoreInner() {
 			className="h-full w-full overflow-auto border border-gray-300 bg-purple-50"
 		>
 			<Menu
-				visibleStage={visibleStage}
 				occupiedCellCount={occupancy.occupiedCellCount}
 				dockingCount={Object.keys(nodeDockingState).length}
+				zoom={gridZoom}
+				onZoomIn={handleZoomIn}
+				onZoomOut={handleZoomOut}
+				onZoomReset={handleZoomReset}
 			/>
 			<div
-				className="relative"
+				className="relative mx-auto my-0"
 				style={{
-					width: renderedStagePixelSize,
-					height: renderedStagePixelSize,
+					width: renderedGridPixelSize,
+					height: renderedGridPixelSize,
 				}}
 			>
 				<ReactFlow
@@ -265,7 +403,6 @@ function CanvasCoreInner() {
 					onConnect={onConnect}
 					onConnectEnd={onConnectEnd}
 					onEdgeDoubleClick={handleEdgeDoubleClick}
-					onNodeDrag={handleNodeDrag}
 					onNodeDragStop={handleNodeDragStop}
 					nodeTypes={nodeTypes}
 					nodeExtent={NODE_EXTENT}
@@ -291,17 +428,12 @@ function CanvasCoreInner() {
 					minZoom={gridZoom}
 					maxZoom={gridZoom}
 				>
-					<GridGuideOverlay stage={visibleStage} />
-					<EdgeDropOverlay
-						isEditMode={isEditMode}
-						occupancy={occupancy}
-						visibleStage={visibleStage}
-					/>
+					<GridGuideOverlay visible={shouldShowGridGuide} />
+					<EdgeDropOverlay isEditMode={isEditMode} occupancy={occupancy} />
 					<NodeDropOverlay
 						isEditMode={isEditMode}
 						nodeDockingState={nodeDockingState}
 						occupancy={occupancy}
-						visibleStage={visibleStage}
 					/>
 				</ReactFlow>
 			</div>

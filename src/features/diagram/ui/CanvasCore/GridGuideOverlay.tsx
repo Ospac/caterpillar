@@ -1,8 +1,6 @@
-import { useConnection, useStore, ViewportPortal } from "@xyflow/react";
+import { ViewportPortal } from "@xyflow/react";
 import { useId } from "react";
-import type { GridStage } from "../../lib/geometry";
-import { CELL_SIZE, getStagePixelSize } from "../../lib/grid";
-import type { DiagramNode } from "../../model/nodeTypes";
+import { CELL_SIZE, getGridPixelSize } from "../../lib/grid";
 
 const CELL_MARGIN = 2;
 const CELL_STROKE_WIDTH = 1;
@@ -10,22 +8,23 @@ const CELL_STROKE_COLOR = "rgba(188, 0, 235, 0.5)";
 const CELL_FILL = "rgba(0, 0, 0, 0)";
 const NOISE_FILTER_SCALE = 2;
 
-export default function GridGuideOverlay({ stage }: { stage: GridStage }) {
-	const { inProgress: isEdgeDragging } = useConnection<DiagramNode>();
-	const isNodeDragging = useStore((state) =>
-		Array.from(state.nodeLookup.values()).some((node) => node.dragging),
-	);
+type GridGuideOverlayProps = {
+	visible: boolean;
+};
+
+export default function GridGuideOverlay({ visible }: GridGuideOverlayProps) {
 	const patternId = useId();
 	const noiseFilterId = useId();
 
-	if (!isNodeDragging && !isEdgeDragging) {
+	if (!visible) {
 		return null;
 	}
 
-	const size = getStagePixelSize(stage);
+	const size = getGridPixelSize();
 	return (
 		<ViewportPortal>
 			<svg
+				data-testid="grid-guide-overlay"
 				className="pointer-events-none absolute left-0 top-0"
 				width={size}
 				height={size}

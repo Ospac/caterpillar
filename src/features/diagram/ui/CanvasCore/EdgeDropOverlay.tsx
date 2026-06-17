@@ -1,19 +1,16 @@
 import { useConnection } from "@xyflow/react";
 import { getNodeSpan } from "../../lib/blockSpan";
 import { resolveEdgeDropPosition } from "../../lib/edge";
-import type { getGridOccupancy } from "../../lib/grid";
+import { GRID_CELL_COUNT, type getGridOccupancy } from "../../lib/grid";
 import type { DiagramNode } from "../../model/nodeTypes";
-import type { CanvasRuntimeState } from "../../model/runtime";
 import DropPreviewBox from "./DropPreviewBox";
 
 export default function EdgeDropPreview({
 	isEditMode,
 	occupancy,
-	visibleStage,
 }: {
 	isEditMode: boolean;
 	occupancy: ReturnType<typeof getGridOccupancy>;
-	visibleStage: CanvasRuntimeState["visibleStage"];
 }) {
 	const connection = useConnection<DiagramNode>();
 
@@ -28,7 +25,7 @@ export default function EdgeDropPreview({
 
 	const position = resolveEdgeDropPosition({
 		position: connection.to,
-		stage: visibleStage,
+		cellCount: GRID_CELL_COUNT,
 		occupancy,
 	});
 	if (!position) return null;

@@ -21,7 +21,7 @@ describe("menuDrop(lib)", () => {
 		conflictedCellKeys: new Set(),
 	});
 
-	const fullOccupancy = (stage = 12): GridOccupancy => {
+	const fullOccupancy = (stage = 18): GridOccupancy => {
 		const entries: Record<string, string> = {};
 		for (let row = 0; row < stage; row += 1) {
 			for (let col = 0; col < stage; col += 1) {
@@ -35,7 +35,7 @@ describe("menuDrop(lib)", () => {
 		expect(
 			resolveEdgeDropPosition({
 				position: { x: 2 * CELL_SIZE + 8, y: CELL_SIZE + 12 },
-				stage: 12,
+				cellCount: 18,
 				occupancy: emptyOccupancy(),
 			}),
 		).toEqual({ x: 2 * CELL_SIZE, y: CELL_SIZE });
@@ -48,7 +48,7 @@ describe("menuDrop(lib)", () => {
 					x: 2 * CELL_SIZE + CELL_SIZE / 2 + 1,
 					y: CELL_SIZE + CELL_SIZE / 2 + 1,
 				},
-				stage: 12,
+				cellCount: 18,
 				occupancy: emptyOccupancy(),
 			}),
 		).toEqual({ x: 2 * CELL_SIZE, y: CELL_SIZE });
@@ -58,7 +58,7 @@ describe("menuDrop(lib)", () => {
 		expect(
 			resolveEdgeDropPosition({
 				position: { x: 0, y: 0 },
-				stage: 12,
+				cellCount: 18,
 				occupancy: occupancyOf({ "0,0": "node-a" }),
 			}),
 		).toBeNull();
@@ -68,7 +68,7 @@ describe("menuDrop(lib)", () => {
 		expect(
 			resolveEdgeDropPosition({
 				position: { x: 2 * CELL_SIZE + 8, y: 2 * CELL_SIZE + 12 },
-				stage: 12,
+				cellCount: 18,
 				occupancy: occupancyOf({ "3,3": "node-a" }),
 			}),
 		).toBeNull();
@@ -78,8 +78,8 @@ describe("menuDrop(lib)", () => {
 		expect(
 			resolveEdgeDropPosition({
 				position: { x: -20, y: 0 },
-				stage: 12,
-				occupancy: fullOccupancy(12),
+				cellCount: 18,
+				occupancy: fullOccupancy(18),
 			}),
 		).toBeNull();
 	});

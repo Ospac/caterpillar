@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from "@rstest/core";
 import type { Connection } from "@xyflow/react";
-import { CELL_SIZE } from "../../lib/grid";
+import { CELL_SIZE, GRID_CELL_COUNT } from "../../lib/grid";
 import { useCanvasStore } from "../canvasStore";
 import { isBlockNode } from "../nodeTypes";
 
 describe("canvasStore", () => {
 	beforeEach(() => {
 		const store = useCanvasStore.getState();
-		store.loadDocument({ visibleStage: 18, nodes: [], edges: [] });
+		store.loadDocument({ nodes: [], edges: [] });
 		store.setMode("read");
 	});
 
@@ -116,7 +116,6 @@ describe("canvasStore", () => {
 		}
 
 		expect(useCanvasStore.getState().serializeDocument()).toEqual({
-			visibleStage: 18,
 			nodes: [
 				{
 					id: "node-1",
@@ -138,57 +137,20 @@ describe("canvasStore", () => {
 		});
 	});
 
-	it("stage 축소 시 경계 밖 노드와 연결된 엣지를 함께 제거한다", () => {
+	it("메뉴 노드 추가 위치는 30칸 canvas 경계 안으로 제한한다", () => {
 		const store = useCanvasStore.getState();
-		store.loadDocument({
-			visibleStage: 24,
-			nodes: [
-				{
-					id: "inside",
-					type: "block",
-					position: { x: 0, y: 0 },
-					data: { blockType: "text", text: "inside" },
-				},
-				{
-					id: "outside",
-					type: "block",
-					position: { x: 12 * CELL_SIZE, y: 0 },
-					data: { blockType: "text", text: "outside" },
-				},
-			],
-			edges: [
-				{
-					id: "edge-inside-outside",
-					source: "inside",
-					target: "outside",
-				},
-				{
-					id: "edge-inside",
-					source: "inside",
-					target: "target",
-				},
-			],
-		});
 		store.setMode("edit");
 
-		useCanvasStore.getState().shrinkVisibleStage(18);
-
-		expect(useCanvasStore.getState()).toMatchObject({
-			visibleStage: 12,
-			nodes: [expect.objectContaining({ id: "inside" })],
-			edges: [expect.objectContaining({ id: "edge-inside" })],
-			dirty: true,
-			saveStatus: "idle",
+		useCanvasStore.getState().addMenuNode({
+			x: GRID_CELL_COUNT * CELL_SIZE,
+			y: GRID_CELL_COUNT * CELL_SIZE,
 		});
-	});
 
-	it("read mode에서는 stage 축소를 무시한다", () => {
-		const store = useCanvasStore.getState();
-		store.loadDocument({ visibleStage: 24, nodes: [], edges: [] });
-
-		useCanvasStore.getState().shrinkVisibleStage(18);
-
-		expect(useCanvasStore.getState().visibleStage).toBe(24);
-		expect(useCanvasStore.getState().dirty).toBe(false);
+		expect(useCanvasStore.getState().nodes[0]).toMatchObject({
+			position: {
+				x: (GRID_CELL_COUNT - 2) * CELL_SIZE,
+				y: (GRID_CELL_COUNT - 2) * CELL_SIZE,
+			},
+		});
 	});
 });

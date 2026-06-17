@@ -1,7 +1,7 @@
 import type { Edge } from "@xyflow/react";
 import { WIDE_SPAN } from "../lib/blockSpan";
-import type { GridStage, XYPosition } from "../lib/geometry";
-import { clampPositionToStage, GRID_STAGES } from "../lib/grid";
+import type { XYPosition } from "../lib/geometry";
+import { clampPositionToGrid } from "../lib/grid";
 import { validateBlockData } from "./block";
 import type { BlockType } from "./blockTypes";
 import type { DiagramNode, DiagramNodeType } from "./nodeTypes";
@@ -33,22 +33,14 @@ export type EdgeItem = {
 };
 
 export type CanvasDocument = {
-	visibleStage: GridStage;
 	nodes: NodeItem[];
 	edges: EdgeItem[];
 };
 
-export type ParsedCanvasDocument = Pick<
-	CanvasRuntimeState,
-	"nodes" | "edges" | "visibleStage"
->;
+export type ParsedCanvasDocument = Pick<CanvasRuntimeState, "nodes" | "edges">;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null;
-}
-
-function isGridStage(value: unknown): value is GridStage {
-	return typeof value === "number" && GRID_STAGES.includes(value as GridStage);
 }
 
 function isXYPosition(value: unknown): value is XYPosition {
@@ -141,7 +133,6 @@ export function serializeCanvasDocument(
 	runtimeState: ParsedCanvasDocument,
 ): CanvasDocument {
 	return {
-		visibleStage: runtimeState.visibleStage,
 		nodes: runtimeState.nodes.map((node) => ({
 			id: node.id,
 			type: node.type ?? "menu",
@@ -163,7 +154,7 @@ export function serializeCanvasDocument(
 export function parseCanvasDocument(
 	input: unknown,
 ): ParsedCanvasDocument | null {
-	if (!isRecord(input) || !isGridStage(input.visibleStage)) {
+	if (!isRecord(input)) {
 		return null;
 	}
 
@@ -186,7 +177,6 @@ export function parseCanvasDocument(
 	}
 
 	return {
-		visibleStage: input.visibleStage,
 		nodes,
 		edges,
 	};
@@ -218,18 +208,13 @@ export const makeBlockNodeWhenMenuTypeSelect = ({
 interface AddNodeOptions {
 	id: string;
 	position: XYPosition;
-	visibleStage: GridStage;
 }
 
-export const addNode = ({
-	id,
-	position,
-	visibleStage,
-}: AddNodeOptions): DiagramNode => {
+export const addNode = ({ id, position }: AddNodeOptions): DiagramNode => {
 	return {
 		id,
 		type: "menu",
-		position: clampPositionToStage(position, visibleStage, WIDE_SPAN),
+		position: clampPositionToGrid(position, WIDE_SPAN),
 		data: {
 			blockType: "menu",
 		},

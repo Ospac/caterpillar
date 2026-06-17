@@ -4,61 +4,234 @@ import { createDockedNodeState } from "./docking";
 import type {
 	CellCoord,
 	DockedNodeState,
+	GridCellCount,
 	GridOccupancy,
-	GridStage,
 	NodeSpan,
 	XYPosition,
 } from "./geometry";
 
-export const GRID_STAGES = [18, 24, 30] as const;
-export const MAX_GRID_STAGE: GridStage = GRID_STAGES[GRID_STAGES.length - 1];
+export const GRID_CELL_COUNT = 30;
 export const CELL_SIZE = 106;
-export const MIN_GRID_ZOOM = 0.5;
+export const MIN_GRID_ZOOM = 0.2;
 export const MAX_GRID_ZOOM = 1;
+export const GRID_ZOOM_BUTTON_CELL_STEP = 2;
+export const GRID_ZOOM_WHEEL_CELL_STEP = 1;
 
-export function getNextStage(currentStage: GridStage): GridStage {
-	const currentIndex = GRID_STAGES.indexOf(currentStage);
-	if (currentIndex === -1 || currentIndex === GRID_STAGES.length - 1) {
-		return currentStage;
-	}
-
-	return GRID_STAGES[currentIndex + 1];
+export function getGridPixelSize(
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	return cellCount * CELL_SIZE;
 }
 
-export function getStagePixelSize(stage: GridStage): number {
-	return stage * CELL_SIZE;
-}
-
-export function isNodeFullyInsideStage(
+export function isNodeFullyInsideGrid(
 	node: DiagramNode,
-	stage: GridStage,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
 ): boolean {
 	const span = getNodeSpan(node.data.blockType);
-	const stageSize = getStagePixelSize(stage);
+	const gridSize = getGridPixelSize(cellCount);
 
 	return (
 		node.position.x >= 0 &&
 		node.position.y >= 0 &&
-		node.position.x + span.cols * CELL_SIZE <= stageSize &&
-		node.position.y + span.rows * CELL_SIZE <= stageSize
+		node.position.x + span.cols * CELL_SIZE <= gridSize &&
+		node.position.y + span.rows * CELL_SIZE <= gridSize
 	);
 }
 
-export function getNodesOutsideStage(
+export function getNodesOutsideGrid(
 	nodes: DiagramNode[],
-	stage: GridStage,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
 ): DiagramNode[] {
-	return nodes.filter((node) => !isNodeFullyInsideStage(node, stage));
+	return nodes.filter((node) => !isNodeFullyInsideGrid(node, cellCount));
 }
 
-export function getResponsiveGridZoom(
+export function getResponsiveGridZoom(containerWidth: number): number {
+	return getGridZoomForVisibleCells(
+		containerWidth,
+		getResponsiveGridVisibleCellCount(containerWidth),
+	);
+}
+
+export function clampGridZoom(zoom: number): number {
+	return Math.min(Math.max(zoom, MIN_GRID_ZOOM), MAX_GRID_ZOOM);
+}
+
+export function getVisibleCellCountBounds(
 	containerWidth: number,
-	stage: GridStage,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): { min: number; max: number } {
+	if (containerWidth <= 0) {
+		return { min: cellCount, max: cellCount };
+	}
+
+	const minVisibleCellCount = Math.min(
+		cellCount,
+		Math.max(1, Math.ceil(containerWidth / (CELL_SIZE * MAX_GRID_ZOOM))),
+	);
+	const maxVisibleCellCount = Math.min(
+		cellCount,
+		Math.max(
+			minVisibleCellCount,
+			Math.floor(containerWidth / (CELL_SIZE * MIN_GRID_ZOOM)),
+		),
+	);
+
+	return {
+		min: minVisibleCellCount,
+		max: maxVisibleCellCount,
+	};
+}
+
+export function getClampedVisibleCellCount(
+	containerWidth: number,
+	visibleCellCount: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	const bounds = getVisibleCellCountBounds(containerWidth, cellCount);
+	const roundedVisibleCellCount = Math.round(visibleCellCount);
+
+	return Math.min(Math.max(roundedVisibleCellCount, bounds.min), bounds.max);
+}
+
+export function getResponsiveGridVisibleCellCount(
+	containerWidth: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	return getVisibleCellCountBounds(containerWidth, cellCount).max;
+}
+
+export function getVisibleCellCount(
+	containerWidth: number,
+	zoom: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	if (containerWidth <= 0) return cellCount;
+
+	return getClampedVisibleCellCount(
+		containerWidth,
+		containerWidth / (CELL_SIZE * clampGridZoom(zoom)),
+		cellCount,
+	);
+}
+
+export function getGridZoomForVisibleCells(
+	containerWidth: number,
+	visibleCellCount: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
 ): number {
 	if (containerWidth <= 0) return MAX_GRID_ZOOM;
 
-	const zoom = containerWidth / getStagePixelSize(stage);
-	return Math.min(Math.max(zoom, MIN_GRID_ZOOM), MAX_GRID_ZOOM);
+	const clampedVisibleCellCount = getClampedVisibleCellCount(
+		containerWidth,
+		visibleCellCount,
+		cellCount,
+	);
+
+	return clampGridZoom(containerWidth / (CELL_SIZE * clampedVisibleCellCount));
+}
+
+export function getNextGridZoom(
+	currentZoom: number,
+	containerWidth: number,
+	visibleCellDelta: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	const currentVisibleCellCount = getVisibleCellCount(
+		containerWidth,
+		currentZoom,
+		cellCount,
+	);
+	return getGridZoomForVisibleCells(
+		containerWidth,
+		currentVisibleCellCount + visibleCellDelta,
+		cellCount,
+	);
+}
+
+export function getNextGridVisibleCellCount(
+	currentVisibleCellCount: number,
+	containerWidth: number,
+	visibleCellDelta: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	return getClampedVisibleCellCount(
+		containerWidth,
+		currentVisibleCellCount + visibleCellDelta,
+		cellCount,
+	);
+}
+
+export function getWheelGridZoom(
+	currentZoom: number,
+	deltaY: number,
+	containerWidth: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	if (deltaY === 0) return currentZoom;
+
+	const visibleCellDelta = deltaY < 0 ? -1 : 1;
+	return getNextGridZoom(
+		currentZoom,
+		containerWidth,
+		visibleCellDelta * GRID_ZOOM_WHEEL_CELL_STEP,
+		cellCount,
+	);
+}
+
+export function getWheelGridVisibleCellCount(
+	currentVisibleCellCount: number,
+	deltaY: number,
+	containerWidth: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	if (deltaY === 0) return currentVisibleCellCount;
+
+	const visibleCellDelta = deltaY < 0 ? -1 : 1;
+	return getNextGridVisibleCellCount(
+		currentVisibleCellCount,
+		containerWidth,
+		visibleCellDelta * GRID_ZOOM_WHEEL_CELL_STEP,
+		cellCount,
+	);
+}
+
+export function isGridZoomWheelEvent(event: {
+	metaKey: boolean;
+	ctrlKey: boolean;
+}): boolean {
+	return event.metaKey || event.ctrlKey;
+}
+
+export function getCenteredScrollOffset(
+	center: number,
+	zoom: number,
+	viewportSize: number,
+): number {
+	return center * zoom - viewportSize / 2;
+}
+
+export function getCellAlignedCenteredScrollOffset(
+	center: number,
+	zoom: number,
+	viewportSize: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	const rawScrollOffset = getCenteredScrollOffset(center, zoom, viewportSize);
+	const maxScrollOffset = Math.max(
+		0,
+		getGridPixelSize(cellCount) * zoom - viewportSize,
+	);
+	const clampedScrollOffset = Math.min(
+		Math.max(rawScrollOffset, 0),
+		maxScrollOffset,
+	);
+	const renderedCellSize = CELL_SIZE * zoom;
+
+	if (renderedCellSize <= 0) return clampedScrollOffset;
+
+	const snappedScrollOffset =
+		Math.round(clampedScrollOffset / renderedCellSize) * renderedCellSize;
+	return Math.min(Math.max(snappedScrollOffset, 0), maxScrollOffset);
 }
 
 export function toCellKey(cell: CellCoord): string {
@@ -75,21 +248,17 @@ export function getNodeCenterPosition(
 	};
 }
 /**
- * 노드의 좌상단이 stage 밖이거나 중심점이 stage 밖으로 나갔는지 판정합니다.
- * 드래그 중 stage 자동 확대 트리거 및 유효 앵커 계산의 gate로 사용됩니다.
+ * 노드의 좌상단이 grid 밖이거나 중심점이 grid 밖으로 나갔는지 판정합니다.
  */
-export function isNodeEscapingStage(
+export function isNodeEscapingGrid(
 	position: { x: number; y: number },
-	stage: GridStage,
 	span: NodeSpan,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
 ): boolean {
-	const stageSize = stage * CELL_SIZE;
+	const gridSize = cellCount * CELL_SIZE;
 	const { x: centerX, y: centerY } = getNodeCenterPosition(position, span);
 	return (
-		position.x < 0 ||
-		position.y < 0 ||
-		centerX > stageSize ||
-		centerY > stageSize
+		position.x < 0 || position.y < 0 || centerX > gridSize || centerY > gridSize
 	);
 }
 
@@ -97,15 +266,15 @@ export function isNodeEscapingStage(
  * 노드의 좌상단 좌표를 가장 가까운 그리드 앵커 셀로 변환합니다.
  * 노드 중심점에 가깝게 보정한 뒤 `Number.EPSILON`을 빼서 정확히 셀 경계에 놓인 경우
  * 다음 셀로 밀리는 현상을 방지합니다.
- * 노드가 stage 밖이면 null을 반환합니다.
- * @param span 경계 검사(`isNodeEscapingStage`)에 사용되며, 앵커 계산 자체는 좌상단 기준으로 span 무관
+ * 노드가 grid 밖이면 null을 반환합니다.
+ * @param span 경계 검사(`isNodeEscapingGrid`)에 사용되며, 앵커 계산 자체는 좌상단 기준으로 span 무관
  */
 export function positionToAnchorCell(
 	position: XYPosition,
-	stage: GridStage,
 	span: NodeSpan,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
 ): CellCoord | null {
-	if (isNodeEscapingStage(position, stage, span)) return null;
+	if (isNodeEscapingGrid(position, span, cellCount)) return null;
 
 	const biasedX = position.x + CELL_SIZE / 2 - Number.EPSILON;
 	const biasedY = position.y + CELL_SIZE / 2 - Number.EPSILON;
@@ -120,13 +289,13 @@ export function cellCoordToPosition(cell: CellCoord): XYPosition {
 	return { x: cell.col * CELL_SIZE, y: cell.row * CELL_SIZE };
 }
 
-export function clampPositionToStage(
+export function clampPositionToGrid(
 	position: { x: number; y: number },
-	stage: GridStage,
 	span: NodeSpan,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
 ): { x: number; y: number } {
-	const maxX = (stage - span.cols) * CELL_SIZE;
-	const maxY = (stage - span.rows) * CELL_SIZE;
+	const maxX = (cellCount - span.cols) * CELL_SIZE;
+	const maxY = (cellCount - span.rows) * CELL_SIZE;
 
 	return {
 		x: Math.min(Math.max(position.x, 0), maxX),
@@ -155,14 +324,14 @@ export function getNodeCells(anchor: CellCoord, span: NodeSpan): CellCoord[] {
  */
 export function getGridOccupancy(
 	nodes: DiagramNode[],
-	stage: GridStage,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
 ): GridOccupancy {
 	const cellToNodeId = new Map<string, string>();
 	const conflictedCellKeys = new Set<string>();
 
 	for (const node of nodes) {
 		const span = getNodeSpan(node.data.blockType);
-		const anchor = positionToAnchorCell(node.position, stage, span);
+		const anchor = positionToAnchorCell(node.position, span, cellCount);
 		if (!anchor) continue;
 
 		for (const cell of getNodeCells(anchor, span)) {
@@ -188,7 +357,7 @@ export function getGridOccupancy(
 export function syncNodeDockingState(
 	currentState: Record<string, DockedNodeState>,
 	nodes: DiagramNode[],
-	stage: GridStage,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
 ): Record<string, DockedNodeState> {
 	const nextNodeIds = new Set(nodes.map((node) => node.id));
 	let changed = false;
@@ -202,7 +371,7 @@ export function syncNodeDockingState(
 		}
 
 		const span = getNodeSpan(node.data.blockType);
-		nextState[node.id] = createDockedNodeState(node.position, stage, span);
+		nextState[node.id] = createDockedNodeState(node.position, span, cellCount);
 		changed = true;
 	}
 
