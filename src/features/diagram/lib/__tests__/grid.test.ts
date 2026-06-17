@@ -5,6 +5,8 @@ import {
 	CELL_SIZE,
 	GRID_ZOOM_BUTTON_CELL_STEP,
 	GRID_ZOOM_WHEEL_CELL_STEP,
+	getAnchoredScrollOffset,
+	getCellAlignedAnchoredScrollOffset,
 	getCellAlignedCenteredScrollOffset,
 	getCenteredScrollOffset,
 	getClampedVisibleCellCount,
@@ -80,6 +82,15 @@ describe("grid(lib)", () => {
 		expect(
 			getCellAlignedCenteredScrollOffset(1300, 0.5, 954) / (CELL_SIZE * 0.5),
 		).toBeCloseTo(3);
+	});
+
+	it("마우스 위치 기준 scroll offset을 계산한다", () => {
+		expect(getAnchoredScrollOffset(1000, 300, 0.5)).toBe(200);
+		expect(
+			getCellAlignedAnchoredScrollOffset(1300, 300, 0.5, 954) /
+				(CELL_SIZE * 0.5),
+		).toBeCloseTo(7);
+		expect(getCellAlignedAnchoredScrollOffset(100, 300, 0.5, 954)).toBe(0);
 	});
 
 	it("스팬별 점유 셀을 앵커 기준으로 전개한다", () => {

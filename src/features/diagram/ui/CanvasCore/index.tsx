@@ -41,7 +41,7 @@ import {
 	CELL_SIZE,
 	GRID_CELL_COUNT,
 	GRID_ZOOM_BUTTON_CELL_STEP,
-	getCellAlignedCenteredScrollOffset,
+	getCellAlignedAnchoredScrollOffset,
 	getClampedVisibleCellCount,
 	getGridOccupancy,
 	getGridPixelSize,
@@ -90,7 +90,12 @@ function CanvasCoreInner() {
 		Array.from(state.nodeLookup.values()).some((node) => node.dragging),
 	);
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
-	const pendingScrollCenterRef = useRef<{ x: number; y: number } | null>(null);
+	const pendingScrollAnchorRef = useRef<{
+		flowX: number;
+		flowY: number;
+		anchorX: number;
+		anchorY: number;
+	} | null>(null);
 	const zoomGuideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
 		null,
 	);
@@ -152,15 +157,33 @@ function CanvasCoreInner() {
 		const scrollContainer = scrollContainerRef.current;
 		if (!scrollContainer) return;
 
-		pendingScrollCenterRef.current = {
-			x:
-				(scrollContainer.scrollLeft + scrollContainer.clientWidth / 2) /
-				gridZoom,
-			y:
-				(scrollContainer.scrollTop + scrollContainer.clientHeight / 2) /
-				gridZoom,
+		const anchorX = scrollContainer.clientWidth / 2;
+		const anchorY = scrollContainer.clientHeight / 2;
+		pendingScrollAnchorRef.current = {
+			flowX: (scrollContainer.scrollLeft + anchorX) / gridZoom,
+			flowY: (scrollContainer.scrollTop + anchorY) / gridZoom,
+			anchorX,
+			anchorY,
 		};
 	}, [gridZoom]);
+
+	const capturePointerScrollAnchor = useCallback(
+		(event: WheelEvent) => {
+			const scrollContainer = scrollContainerRef.current;
+			if (!scrollContainer) return;
+
+			const rect = scrollContainer.getBoundingClientRect();
+			const anchorX = event.clientX - rect.left;
+			const anchorY = event.clientY - rect.top;
+			pendingScrollAnchorRef.current = {
+				flowX: (scrollContainer.scrollLeft + anchorX) / gridZoom,
+				flowY: (scrollContainer.scrollTop + anchorY) / gridZoom,
+				anchorX,
+				anchorY,
+			};
+		},
+		[gridZoom],
+	);
 
 	const showZoomGuide = useCallback(() => {
 		if (zoomGuideTimeoutRef.current) {
@@ -175,14 +198,17 @@ function CanvasCoreInner() {
 	}, []);
 
 	const updateManualVisibleCellCount = useCallback(
-		(nextVisibleCellCount: number) => {
+		(
+			nextVisibleCellCount: number,
+			captureScrollAnchor = captureScrollCenter,
+		) => {
 			const clampedVisibleCellCount = getClampedVisibleCellCount(
 				containerWidth,
 				nextVisibleCellCount,
 			);
 			if (clampedVisibleCellCount === gridVisibleCellCount) return;
 
-			captureScrollCenter();
+			captureScrollAnchor();
 			showZoomGuide();
 			setManualVisibleCellCount(clampedVisibleCellCount);
 		},
@@ -251,12 +277,18 @@ function CanvasCoreInner() {
 					event.deltaY,
 					containerWidth,
 				),
+				() => capturePointerScrollAnchor(event),
 			);
 		};
 
 		scrollContainer.addEventListener("wheel", handleWheel, { passive: false });
 		return () => scrollContainer.removeEventListener("wheel", handleWheel);
-	}, [containerWidth, gridVisibleCellCount, updateManualVisibleCellCount]);
+	}, [
+		capturePointerScrollAnchor,
+		containerWidth,
+		gridVisibleCellCount,
+		updateManualVisibleCellCount,
+	]);
 
 	useEffect(() => {
 		return () => {
@@ -268,20 +300,22 @@ function CanvasCoreInner() {
 
 	useLayoutEffect(() => {
 		const scrollContainer = scrollContainerRef.current;
-		const center = pendingScrollCenterRef.current;
-		if (!scrollContainer || !center) return;
+		const anchor = pendingScrollAnchorRef.current;
+		if (!scrollContainer || !anchor) return;
 
-		scrollContainer.scrollLeft = getCellAlignedCenteredScrollOffset(
-			center.x,
+		scrollContainer.scrollLeft = getCellAlignedAnchoredScrollOffset(
+			anchor.flowX,
+			anchor.anchorX,
 			gridZoom,
 			scrollContainer.clientWidth,
 		);
-		scrollContainer.scrollTop = getCellAlignedCenteredScrollOffset(
-			center.y,
+		scrollContainer.scrollTop = getCellAlignedAnchoredScrollOffset(
+			anchor.flowY,
+			anchor.anchorY,
 			gridZoom,
 			scrollContainer.clientHeight,
 		);
-		pendingScrollCenterRef.current = null;
+		pendingScrollAnchorRef.current = null;
 	}, [gridZoom]);
 
 	const onConnect = (connection: Connection) => {

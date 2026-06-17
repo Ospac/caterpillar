@@ -210,6 +210,36 @@ export function getCenteredScrollOffset(
 	return center * zoom - viewportSize / 2;
 }
 
+export function getAnchoredScrollOffset(
+	flowPosition: number,
+	anchorPosition: number,
+	zoom: number,
+): number {
+	return flowPosition * zoom - anchorPosition;
+}
+
+function clampScrollOffset(
+	scrollOffset: number,
+	zoom: number,
+	viewportSize: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	const maxScrollOffset = Math.max(
+		0,
+		getGridPixelSize(cellCount) * zoom - viewportSize,
+	);
+
+	return Math.min(Math.max(scrollOffset, 0), maxScrollOffset);
+}
+
+function snapScrollOffsetToCell(scrollOffset: number, zoom: number): number {
+	const renderedCellSize = CELL_SIZE * zoom;
+
+	if (renderedCellSize <= 0) return scrollOffset;
+
+	return Math.round(scrollOffset / renderedCellSize) * renderedCellSize;
+}
+
 export function getCellAlignedCenteredScrollOffset(
 	center: number,
 	zoom: number,
@@ -217,21 +247,36 @@ export function getCellAlignedCenteredScrollOffset(
 	cellCount: GridCellCount = GRID_CELL_COUNT,
 ): number {
 	const rawScrollOffset = getCenteredScrollOffset(center, zoom, viewportSize);
-	const maxScrollOffset = Math.max(
-		0,
-		getGridPixelSize(cellCount) * zoom - viewportSize,
+	const clampedScrollOffset = clampScrollOffset(
+		rawScrollOffset,
+		zoom,
+		viewportSize,
+		cellCount,
 	);
-	const clampedScrollOffset = Math.min(
-		Math.max(rawScrollOffset, 0),
-		maxScrollOffset,
+	const snappedScrollOffset = snapScrollOffsetToCell(clampedScrollOffset, zoom);
+	return clampScrollOffset(snappedScrollOffset, zoom, viewportSize, cellCount);
+}
+
+export function getCellAlignedAnchoredScrollOffset(
+	flowPosition: number,
+	anchorPosition: number,
+	zoom: number,
+	viewportSize: number,
+	cellCount: GridCellCount = GRID_CELL_COUNT,
+): number {
+	const rawScrollOffset = getAnchoredScrollOffset(
+		flowPosition,
+		anchorPosition,
+		zoom,
 	);
-	const renderedCellSize = CELL_SIZE * zoom;
-
-	if (renderedCellSize <= 0) return clampedScrollOffset;
-
-	const snappedScrollOffset =
-		Math.round(clampedScrollOffset / renderedCellSize) * renderedCellSize;
-	return Math.min(Math.max(snappedScrollOffset, 0), maxScrollOffset);
+	const clampedScrollOffset = clampScrollOffset(
+		rawScrollOffset,
+		zoom,
+		viewportSize,
+		cellCount,
+	);
+	const snappedScrollOffset = snapScrollOffsetToCell(clampedScrollOffset, zoom);
+	return clampScrollOffset(snappedScrollOffset, zoom, viewportSize, cellCount);
 }
 
 export function toCellKey(cell: CellCoord): string {
