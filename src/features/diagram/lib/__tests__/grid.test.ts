@@ -5,96 +5,15 @@ import {
 	CELL_SIZE,
 	GRID_COLUMN_COUNT,
 	GRID_ROW_COUNT,
-	GRID_ZOOM_BUTTON_CELL_STEP,
-	GRID_ZOOM_WHEEL_CELL_STEP,
-	getAnchoredScrollOffset,
-	getCellAlignedAnchoredScrollOffset,
-	getCellAlignedCenteredScrollOffset,
-	getCenteredScrollOffset,
-	getClampedVisibleCellCount,
 	getGridOccupancy,
-	getGridZoomForVisibleCells,
-	getNextGridVisibleCellCount,
-	getNextGridZoom,
 	getNodeCells,
 	getNodesOutsideGrid,
-	getResponsiveGridVisibleCellCount,
-	getResponsiveGridZoom,
-	getVisibleCellCount,
-	getVisibleCellCountBounds,
-	getWheelGridVisibleCellCount,
-	getWheelGridZoom,
-	isGridZoomWheelEvent,
 	isNodeEscapingGrid,
 	isNodeFullyInsideGrid,
 	positionToAnchorCell,
 } from "../grid";
 
 describe("grid(lib)", () => {
-	it("grid가 화면보다 클 때만 최소 배율까지 축소한다", () => {
-		expect(getResponsiveGridZoom(4000)).toBe(1);
-		expect(getResponsiveGridZoom(954)).toBeCloseTo(954 / (CELL_SIZE * 30));
-		expect(getResponsiveGridZoom(100)).toBeCloseTo(100 / (CELL_SIZE * 4));
-	});
-
-	it("zoom은 viewport에 보이는 CELL 개수 기준으로 정렬한다", () => {
-		expect(getVisibleCellCountBounds(954)).toEqual({
-			min: 9,
-			max: 30,
-		});
-		expect(getResponsiveGridVisibleCellCount(954)).toBe(30);
-		expect(getResponsiveGridVisibleCellCount(100)).toBe(4);
-		expect(getGridZoomForVisibleCells(954, 18)).toBeCloseTo(
-			954 / (CELL_SIZE * 18),
-		);
-		expect(getVisibleCellCount(954, 0.5)).toBe(18);
-		expect(getClampedVisibleCellCount(954, 4)).toBe(9);
-		expect(getClampedVisibleCellCount(954, 40)).toBe(30);
-	});
-
-	it("수동 zoom은 보이는 CELL 개수를 이산 변경하고 20%에서 100% 사이로 제한한다", () => {
-		expect(
-			getNextGridVisibleCellCount(18, 954, -GRID_ZOOM_BUTTON_CELL_STEP),
-		).toBe(16);
-		expect(
-			getNextGridVisibleCellCount(18, 954, GRID_ZOOM_BUTTON_CELL_STEP),
-		).toBe(20);
-		expect(getNextGridZoom(0.5, 954, -2)).toBeCloseTo(954 / (CELL_SIZE * 16));
-		expect(getNextGridZoom(0.5, 954, 2)).toBeCloseTo(954 / (CELL_SIZE * 20));
-		expect(getNextGridZoom(1, 954, -2)).toBe(1);
-		expect(getNextGridZoom(0.2, 954, 2)).toBeCloseTo(954 / (CELL_SIZE * 30));
-		expect(getWheelGridVisibleCellCount(18, -25, 954)).toBe(
-			18 - GRID_ZOOM_WHEEL_CELL_STEP,
-		);
-		expect(getWheelGridVisibleCellCount(18, 25, 954)).toBe(
-			18 + GRID_ZOOM_WHEEL_CELL_STEP,
-		);
-		expect(getWheelGridZoom(0.5, -25, 954)).toBeCloseTo(954 / (CELL_SIZE * 17));
-		expect(getWheelGridZoom(0.5, 25, 954)).toBeCloseTo(954 / (CELL_SIZE * 19));
-		expect(getWheelGridZoom(0.5, 0, 954)).toBe(0.5);
-	});
-
-	it("modifier wheel만 zoom으로 처리하고 중앙 scroll offset을 계산한다", () => {
-		expect(isGridZoomWheelEvent({ metaKey: true, ctrlKey: false })).toBe(true);
-		expect(isGridZoomWheelEvent({ metaKey: false, ctrlKey: true })).toBe(true);
-		expect(isGridZoomWheelEvent({ metaKey: false, ctrlKey: false })).toBe(
-			false,
-		);
-		expect(getCenteredScrollOffset(1000, 0.5, 800)).toBe(100);
-		expect(
-			getCellAlignedCenteredScrollOffset(1300, 0.5, 954) / (CELL_SIZE * 0.5),
-		).toBeCloseTo(3);
-	});
-
-	it("마우스 위치 기준 scroll offset을 계산한다", () => {
-		expect(getAnchoredScrollOffset(1000, 300, 0.5)).toBe(200);
-		expect(
-			getCellAlignedAnchoredScrollOffset(1300, 300, 0.5, 954) /
-				(CELL_SIZE * 0.5),
-		).toBeCloseTo(7);
-		expect(getCellAlignedAnchoredScrollOffset(100, 300, 0.5, 954)).toBe(0);
-	});
-
 	it("스팬별 점유 셀을 앵커 기준으로 전개한다", () => {
 		expect(getNodeCells({ col: 2, row: 3 }, WIDE_SPAN)).toEqual([
 			{ col: 2, row: 3 },

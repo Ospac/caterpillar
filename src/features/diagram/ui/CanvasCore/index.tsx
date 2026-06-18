@@ -18,11 +18,8 @@ import {
 
 import {
 	type MouseEvent as ReactMouseEvent,
-	useCallback,
 	useEffect,
-	useLayoutEffect,
 	useReducer,
-	useRef,
 	useState,
 } from "react";
 import { useShallow } from "zustand/react/shallow";
@@ -40,20 +37,10 @@ import {
 import {
 	CELL_SIZE,
 	DEFAULT_GRID_DIMENSIONS,
-	GRID_COLUMN_COUNT,
-	GRID_ROW_COUNT,
-	GRID_ZOOM_BUTTON_CELL_STEP,
-	getCellAlignedAnchoredScrollOffset,
-	getClampedVisibleCellCount,
 	getGridOccupancy,
 	getGridPixelSize,
-	getGridZoomForVisibleCells,
-	getNextGridVisibleCellCount,
-	getResponsiveGridVisibleCellCount,
-	getVisibleCellCountBounds,
-	getWheelGridVisibleCellCount,
-	isGridZoomWheelEvent,
 } from "../../lib/grid";
+import { useCanvasZoom } from "../../lib/hooks/useCanvasZoom";
 import { useCanvasStore } from "../../model/canvasStore";
 import type { DiagramNode } from "../../model/nodeTypes";
 import {
@@ -72,7 +59,6 @@ const NODE_EXTENT: CoordinateExtent = [
 	[0, 0],
 	[GRID_PIXEL_SIZE.width, GRID_PIXEL_SIZE.height],
 ];
-const ZOOM_GUIDE_VISIBLE_MS = 600;
 const nodeTypes: NodeTypes = {
 	menu: MenuNode,
 	block: BlockNode,
@@ -92,21 +78,6 @@ function CanvasCoreInner() {
 	const isNodeDragging = useStore((state) =>
 		Array.from(state.nodeLookup.values()).some((node) => node.dragging),
 	);
-	const scrollContainerRef = useRef<HTMLDivElement>(null);
-	const pendingScrollAnchorRef = useRef<{
-		flowX: number;
-		flowY: number;
-		anchorX: number;
-		anchorY: number;
-	} | null>(null);
-	const zoomGuideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-		null,
-	);
-	const [containerWidth, setContainerWidth] = useState(0);
-	const [manualVisibleCellCount, setManualVisibleCellCount] = useState<
-		number | null
-	>(null);
-	const [isZooming, setIsZooming] = useState(false);
 	// 초기값을 마운트 시점에 한 번만 계산
 	const [initialRuntimeState] = useState<CanvasRuntimeState>(() =>
 		createInitialCanvasRuntimeState(),
@@ -143,195 +114,20 @@ function CanvasCoreInner() {
 	);
 	const isEditMode = mode === "edit";
 
-	const responsiveGridVisibleCellCount =
-		getResponsiveGridVisibleCellCount(containerWidth);
-	const gridVisibleCellCountBounds = getVisibleCellCountBounds(containerWidth);
-	const gridVisibleCellCount =
-		manualVisibleCellCount ?? responsiveGridVisibleCellCount;
-	const gridZoom = getGridZoomForVisibleCells(
-		containerWidth,
-		gridVisibleCellCount,
-	);
-	const minGridZoom = getGridZoomForVisibleCells(
-		containerWidth,
-		responsiveGridVisibleCellCount,
-	);
-	const maxGridZoom = getGridZoomForVisibleCells(
-		containerWidth,
-		gridVisibleCellCountBounds.min,
-	);
-	const renderedGridPixelWidth = GRID_PIXEL_SIZE.width * gridZoom;
-	const renderedGridPixelHeight = GRID_PIXEL_SIZE.height * gridZoom;
+	const {
+		scrollContainerRef,
+		gridZoom,
+		minGridZoom,
+		maxGridZoom,
+		renderedGridSize,
+		isZooming,
+		zoomIn,
+		zoomOut,
+		resetZoom,
+	} = useCanvasZoom();
 	const viewport: Viewport = { x: 0, y: 0, zoom: gridZoom };
 	const occupancy = getGridOccupancy(nodes);
 	const shouldShowGridGuide = isNodeDragging || isEdgeDragging || isZooming;
-
-	const captureScrollCenter = useCallback(() => {
-		const scrollContainer = scrollContainerRef.current;
-		if (!scrollContainer) return;
-
-		const anchorX = scrollContainer.clientWidth / 2;
-		const anchorY = scrollContainer.clientHeight / 2;
-		pendingScrollAnchorRef.current = {
-			flowX: (scrollContainer.scrollLeft + anchorX) / gridZoom,
-			flowY: (scrollContainer.scrollTop + anchorY) / gridZoom,
-			anchorX,
-			anchorY,
-		};
-	}, [gridZoom]);
-
-	const capturePointerScrollAnchor = useCallback(
-		(event: WheelEvent) => {
-			const scrollContainer = scrollContainerRef.current;
-			if (!scrollContainer) return;
-
-			const rect = scrollContainer.getBoundingClientRect();
-			const anchorX = event.clientX - rect.left;
-			const anchorY = event.clientY - rect.top;
-			pendingScrollAnchorRef.current = {
-				flowX: (scrollContainer.scrollLeft + anchorX) / gridZoom,
-				flowY: (scrollContainer.scrollTop + anchorY) / gridZoom,
-				anchorX,
-				anchorY,
-			};
-		},
-		[gridZoom],
-	);
-
-	const showZoomGuide = useCallback(() => {
-		if (zoomGuideTimeoutRef.current) {
-			clearTimeout(zoomGuideTimeoutRef.current);
-		}
-
-		setIsZooming(true);
-		zoomGuideTimeoutRef.current = setTimeout(() => {
-			setIsZooming(false);
-			zoomGuideTimeoutRef.current = null;
-		}, ZOOM_GUIDE_VISIBLE_MS);
-	}, []);
-
-	const updateManualVisibleCellCount = useCallback(
-		(
-			nextVisibleCellCount: number,
-			captureScrollAnchor = captureScrollCenter,
-		) => {
-			const clampedVisibleCellCount = getClampedVisibleCellCount(
-				containerWidth,
-				nextVisibleCellCount,
-			);
-			if (clampedVisibleCellCount === gridVisibleCellCount) return;
-
-			captureScrollAnchor();
-			showZoomGuide();
-			setManualVisibleCellCount(clampedVisibleCellCount);
-		},
-		[captureScrollCenter, containerWidth, gridVisibleCellCount, showZoomGuide],
-	);
-
-	const handleZoomIn = () => {
-		updateManualVisibleCellCount(
-			getNextGridVisibleCellCount(
-				gridVisibleCellCount,
-				containerWidth,
-				-GRID_ZOOM_BUTTON_CELL_STEP,
-			),
-		);
-	};
-
-	const handleZoomOut = () => {
-		updateManualVisibleCellCount(
-			getNextGridVisibleCellCount(
-				gridVisibleCellCount,
-				containerWidth,
-				GRID_ZOOM_BUTTON_CELL_STEP,
-			),
-		);
-	};
-
-	const handleZoomReset = () => {
-		if (manualVisibleCellCount === null) return;
-
-		if (responsiveGridVisibleCellCount === gridVisibleCellCount) {
-			setManualVisibleCellCount(null);
-			return;
-		}
-
-		captureScrollCenter();
-		showZoomGuide();
-		setManualVisibleCellCount(null);
-	};
-
-	useEffect(() => {
-		const scrollContainer = scrollContainerRef.current;
-		if (!scrollContainer) return;
-
-		const updateContainerWidth = () => {
-			setContainerWidth(scrollContainer.clientWidth);
-		};
-		const observer = new ResizeObserver(updateContainerWidth);
-
-		updateContainerWidth();
-		observer.observe(scrollContainer);
-
-		return () => observer.disconnect();
-	}, []);
-
-	useEffect(() => {
-		const scrollContainer = scrollContainerRef.current;
-		if (!scrollContainer) return;
-
-		const handleWheel = (event: WheelEvent) => {
-			if (!isGridZoomWheelEvent(event)) return;
-
-			event.preventDefault();
-			updateManualVisibleCellCount(
-				getWheelGridVisibleCellCount(
-					gridVisibleCellCount,
-					event.deltaY,
-					containerWidth,
-				),
-				() => capturePointerScrollAnchor(event),
-			);
-		};
-
-		scrollContainer.addEventListener("wheel", handleWheel, { passive: false });
-		return () => scrollContainer.removeEventListener("wheel", handleWheel);
-	}, [
-		capturePointerScrollAnchor,
-		containerWidth,
-		gridVisibleCellCount,
-		updateManualVisibleCellCount,
-	]);
-
-	useEffect(() => {
-		return () => {
-			if (zoomGuideTimeoutRef.current) {
-				clearTimeout(zoomGuideTimeoutRef.current);
-			}
-		};
-	}, []);
-
-	useLayoutEffect(() => {
-		const scrollContainer = scrollContainerRef.current;
-		const anchor = pendingScrollAnchorRef.current;
-		if (!scrollContainer || !anchor) return;
-
-		scrollContainer.scrollLeft = getCellAlignedAnchoredScrollOffset(
-			anchor.flowX,
-			anchor.anchorX,
-			gridZoom,
-			scrollContainer.clientWidth,
-			GRID_COLUMN_COUNT,
-		);
-		scrollContainer.scrollTop = getCellAlignedAnchoredScrollOffset(
-			anchor.flowY,
-			anchor.anchorY,
-			gridZoom,
-			scrollContainer.clientHeight,
-			GRID_ROW_COUNT,
-		);
-		pendingScrollAnchorRef.current = null;
-	}, [gridZoom]);
 
 	const onConnect = (connection: Connection) => {
 		if (!isEditMode) return;
@@ -439,15 +235,15 @@ function CanvasCoreInner() {
 				zoom={gridZoom}
 				zoomDisplayMin={minGridZoom}
 				zoomDisplayMax={maxGridZoom}
-				onZoomIn={handleZoomIn}
-				onZoomOut={handleZoomOut}
-				onZoomReset={handleZoomReset}
+				onZoomIn={zoomIn}
+				onZoomOut={zoomOut}
+				onZoomReset={resetZoom}
 			/>
 			<div
 				className="relative mx-auto my-0"
 				style={{
-					width: renderedGridPixelWidth,
-					height: renderedGridPixelHeight,
+					width: renderedGridSize.width,
+					height: renderedGridSize.height,
 				}}
 			>
 				<ReactFlow
