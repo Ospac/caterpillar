@@ -87,9 +87,9 @@ describe("grid(lib)", () => {
 	it("기본 grid 치수는 가로 30칸, 세로 15칸이다", () => {
 		expect(GRID_COLUMN_COUNT).toBe(30);
 		expect(GRID_ROW_COUNT).toBe(15);
-		expect(
-			isNodeEscapingGrid({ x: 0, y: 14 * CELL_SIZE + 1 }, TALL_SPAN),
-		).toBe(true);
+		expect(isNodeEscapingGrid({ x: 0, y: 14 * CELL_SIZE + 1 }, TALL_SPAN)).toBe(
+			true,
+		);
 		expect(
 			positionToAnchorCell({ x: 0, y: 13 * CELL_SIZE }, TALL_SPAN),
 		).toEqual({ col: 0, row: 13 });

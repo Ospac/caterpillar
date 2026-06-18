@@ -1,8 +1,4 @@
-import {
-	type OnNodeDrag,
-	type OnNodesChange,
-	useStore,
-} from "@xyflow/react";
+import { type OnNodeDrag, type OnNodesChange, useStore } from "@xyflow/react";
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useCanvasStore } from "../../model/canvasStore";
@@ -72,11 +68,7 @@ export function useCanvasNodes({
 			const span = getNodeSpan(node.data.blockType);
 			const currentDockingState =
 				nodeDockingState[node.id] ??
-				createDockedNodeState(
-					node.position,
-					span,
-					DEFAULT_GRID_DIMENSIONS,
-				);
+				createDockedNodeState(node.position, span, DEFAULT_GRID_DIMENSIONS);
 			const resolution = resolveDropPosition({
 				position: node.position,
 				gridDimensions: DEFAULT_GRID_DIMENSIONS,
@@ -95,12 +87,7 @@ export function useCanvasNodes({
 				dockedCell: resolution.cell,
 			});
 		},
-		[
-			commitNodePosition,
-			isEditMode,
-			nodeDockingState,
-			occupancy,
-		],
+		[commitNodePosition, isEditMode, nodeDockingState, occupancy],
 	);
 
 	useEffect(() => {

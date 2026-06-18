@@ -6,11 +6,7 @@ import {
 	useRef,
 	useState,
 } from "react";
-import {
-	GRID_COLUMN_COUNT,
-	GRID_ROW_COUNT,
-	getGridPixelSize,
-} from "../grid";
+import { GRID_COLUMN_COUNT, GRID_ROW_COUNT, getGridPixelSize } from "../grid";
 import {
 	GRID_ZOOM_BUTTON_CELL_STEP,
 	getCellAlignedAnchoredScrollOffset,
