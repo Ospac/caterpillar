@@ -6,48 +6,54 @@ describe("block(model)", () => {
 		expect(
 			validateBlockData({
 				blockType: "text",
-				text: "Node 1",
+				title: "Node 1",
+				secondary: "",
 			}),
 		).toEqual({
 			status: "ok",
 			data: {
 				blockType: "text",
-				text: "Node 1",
+				title: "Node 1",
+				secondary: "",
 			},
 		});
 	});
 
-	it("link: url이 있으면 ok를 반환한다", () => {
+	it("link: title이 있으면 ok를 반환한다", () => {
 		expect(
 			validateBlockData({
 				blockType: "link",
-				url: "https://example.com",
+				title: "https://example.com",
+				secondary: "Example",
 			}),
 		).toEqual({
 			status: "ok",
 			data: {
 				blockType: "link",
-				url: "https://example.com",
+				title: "https://example.com",
+				secondary: "Example",
 			},
 		});
 	});
 
-	it("link: url이 빈 문자열이면 fallback으로 보정한다", () => {
+	it("link: title이 빈 문자열이면 fallback으로 보정한다", () => {
 		expect(
 			validateBlockData({
 				blockType: "link",
-				url: "",
+				title: "",
+				secondary: "",
 			}),
 		).toEqual({
 			status: "fallback",
 			data: {
 				blockType: "link",
-				url: "",
+				title: "link",
+				secondary: "",
 			},
 		});
 	});
 
-	it("link: url이 없으면 invalid를 반환한다", () => {
+	it("link: title/secondary가 없으면 invalid를 반환한다", () => {
 		expect(
 			validateBlockData({
 				blockType: "link",

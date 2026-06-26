@@ -103,7 +103,11 @@ describe("canvasStore", () => {
 
 		useCanvasStore
 			.getState()
-			.updateBlockData(blockNode.id, { blockType: "text", text: "Updated" });
+			.updateBlockData(blockNode.id, {
+				blockType: "text",
+				title: "Updated",
+				secondary: "",
+			});
 		useCanvasStore.getState().connectEdge({
 			source: blockNode.id,
 			target: "target-1",
@@ -121,7 +125,7 @@ describe("canvasStore", () => {
 					id: "node-1",
 					type: "block",
 					position: { x: 0, y: 0 },
-					data: { blockType: "text", text: "Updated" },
+					data: { blockType: "text", title: "Updated", secondary: "" },
 				},
 			],
 			edges: [

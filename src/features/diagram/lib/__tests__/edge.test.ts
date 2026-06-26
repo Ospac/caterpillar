@@ -109,7 +109,7 @@ describe("menuDrop(lib)", () => {
 			id: "source",
 			type: "block",
 			position,
-			data: { blockType: "text", text: "source" },
+			data: { blockType: "text", title: "source", secondary: "" },
 		});
 
 		it("target이 source 오른쪽/왼쪽에 있으면 target의 반대편 handle을 고른다", () => {

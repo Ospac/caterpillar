@@ -74,7 +74,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 		case "text":
 			return (
 				<div className="flex h-full text-center leading-tight p-4 overflow-y-auto break-all ">
-					{data.text}
+					{data.title}
 				</div>
 			);
 		case "image":
@@ -84,10 +84,10 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 						<img
 							className="border border-gray-700"
 							src={data.image || defaultImage}
-							alt={data.caption}
+							alt={data.title}
 						/>
 						<figcaption className="text-center mt-1.5 text-xs">
-							{data.caption}
+							{data.title}
 						</figcaption>
 					</figure>
 				</div>
@@ -104,11 +104,13 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 					/>
 					<div className="flex flex-row items-center gap-1.5 bg-green py-0.5 px-3 border-t border-t-gray-700 shrink-0">
 						<div className="bg-red w-2.5 h-2.5" />
-						<div className="min-w-0 truncate text-2xs">{data.url || "URL"}</div>
+						<div className="min-w-0 truncate text-2xs">
+							{data.title || "URL"}
+						</div>
 					</div>
 					<div className="flex-1 min-h-0 bg-blue border-t border-t-gray-700 py-1 px-2">
 						<p className="line-clamp-2 text-2xs leading-tight wrap-break-word">
-							{data.description || data.title}
+							{data.secondary || data.title}
 						</p>
 					</div>
 				</div>

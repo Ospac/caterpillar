@@ -10,43 +10,21 @@ export const BLOCK_TYPES = [
 
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
-type BlockBase = {
-	blockType: BlockType;
-	title?: string;
-};
-type SearchBlockBase = BlockBase & {
+type ContentBlockData<T extends BlockType> = {
+	blockType: T;
+	title: string;
 	secondary: string;
 	image?: string;
 	year?: string;
 };
-export type TextBlockData = BlockBase & {
-	blockType: "text";
-	text?: string;
-};
 
-export type ImageBlockData = BlockBase & {
-	blockType: "image";
-	image?: string;
-	caption?: string;
-};
-
-export type LinkBlockData = BlockBase & {
-	blockType: "link";
-	url?: string;
-	description?: string;
-};
-export type MusicBlockData = SearchBlockBase & {
-	blockType: "music";
-};
-export type GameBlockData = SearchBlockBase & {
-	blockType: "game";
-};
-export type MovieBlockData = SearchBlockBase & {
-	blockType: "movie";
-};
-export type BookBlockData = SearchBlockBase & {
-	blockType: "book";
-};
+export type TextBlockData = ContentBlockData<"text">;
+export type ImageBlockData = ContentBlockData<"image">;
+export type LinkBlockData = ContentBlockData<"link">;
+export type MusicBlockData = ContentBlockData<"music">;
+export type GameBlockData = ContentBlockData<"game">;
+export type MovieBlockData = ContentBlockData<"movie">;
+export type BookBlockData = ContentBlockData<"book">;
 export type BlockData =
 	| TextBlockData
 	| ImageBlockData
