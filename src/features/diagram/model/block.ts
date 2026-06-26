@@ -64,6 +64,11 @@ function buildSearchResult<T extends "music" | "game" | "movie" | "book">(
 }
 
 export function validateBlockData(input: unknown): BlockValidationResult {
+	console.log(
+		typeof input,
+		input,
+		typeof (input as Record<string, unknown>).blockType,
+	);
 	if (
 		typeof input !== "object" ||
 		input === null ||

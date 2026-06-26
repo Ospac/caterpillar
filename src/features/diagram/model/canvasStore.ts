@@ -9,13 +9,16 @@ import {
 	type NodeChange,
 } from "@xyflow/react";
 import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { XYPosition } from "../lib/geometry";
 import type { BlockData, BlockType } from "./blockTypes";
+
 import {
 	addNode,
 	type CanvasDocument,
 	makeBlockNodeWhenMenuTypeSelect,
 	type ParsedCanvasDocument,
+	parseCanvasDocument,
 	serializeCanvasDocument,
 } from "./document";
 import type { DiagramNode } from "./nodeTypes";
@@ -83,148 +86,175 @@ function hasPersistentEdgeChange(changes: EdgeChange<Edge>[]): boolean {
 	return changes.some((change) => change.type !== "select");
 }
 
-export const useCanvasStore = create<CanvasStore>((set, get) => ({
-	mode: "edit",
-	nodes: [],
-	edges: [],
-	dirty: false,
-	lastSavedAt: null,
-	saveStatus: "idle",
-	nextNodeIndex: 1,
-	setMode: (mode) => set({ mode }),
-	addMenuNode: (position) => {
-		const currentState = get();
-		if (!isEditMode(currentState)) return null;
+export const useCanvasStore = create<CanvasStore>()(
+	persist(
+		(set, get) => ({
+			mode: "edit",
+			nodes: [],
+			edges: [],
+			dirty: false,
+			lastSavedAt: null,
+			saveStatus: "idle",
+			nextNodeIndex: 1,
+			setMode: (mode) => set({ mode }),
+			addMenuNode: (position) => {
+				const currentState = get();
+				if (!isEditMode(currentState)) return null;
 
-		const id = getNextNodeId(currentState);
-		set((state) => {
-			if (!isEditMode(state)) return state;
-			return {
-				nodes: [
-					...state.nodes,
-					addNode({
-						id,
-						position,
-					}),
-				],
-				nextNodeIndex: state.nextNodeIndex + 1,
-				dirty: true,
-				saveStatus: "idle",
-			};
-		});
-
-		return id;
-	},
-	selectMenuType: (menuNodeId, blockType) =>
-		set((state) => {
-			if (!isEditMode(state)) return state;
-			const menuNode = state.nodes.find((node) => node.id === menuNodeId);
-			if (!menuNode) return state;
-
-			return {
-				nodes: [
-					...state.nodes.filter((node) => node.id !== menuNodeId),
-					makeBlockNodeWhenMenuTypeSelect({
-						id: menuNodeId,
-						blockType,
-						menuNodePosition: menuNode.position,
-					}),
-				],
-				dirty: true,
-				saveStatus: "idle",
-			};
-		}),
-	updateBlockData: (nodeId, data) =>
-		set((state) => {
-			if (!isEditMode(state)) return state;
-			return {
-				nodes: state.nodes.map((node) => {
-					if (node.id !== nodeId || !isBlockNode(node)) return node;
+				const id = getNextNodeId(currentState);
+				set((state) => {
+					if (!isEditMode(state)) return state;
 					return {
-						...node,
-						data: {
-							...data,
-							initialEditing: node.data.initialEditing,
-						},
+						nodes: [
+							...state.nodes,
+							addNode({
+								id,
+								position,
+							}),
+						],
+						nextNodeIndex: state.nextNodeIndex + 1,
+						dirty: true,
+						saveStatus: "idle",
+					};
+				});
+
+				return id;
+			},
+			selectMenuType: (menuNodeId, blockType) =>
+				set((state) => {
+					if (!isEditMode(state)) return state;
+					const menuNode = state.nodes.find((node) => node.id === menuNodeId);
+					if (!menuNode) return state;
+
+					return {
+						nodes: [
+							...state.nodes.filter((node) => node.id !== menuNodeId),
+							makeBlockNodeWhenMenuTypeSelect({
+								id: menuNodeId,
+								blockType,
+								menuNodePosition: menuNode.position,
+							}),
+						],
+						dirty: true,
+						saveStatus: "idle",
 					};
 				}),
-				dirty: true,
-				saveStatus: "idle",
-			};
+			updateBlockData: (nodeId, data) =>
+				set((state) => {
+					if (!isEditMode(state)) return state;
+					return {
+						nodes: state.nodes.map((node) => {
+							if (node.id !== nodeId || !isBlockNode(node)) return node;
+							return {
+								...node,
+								data: {
+									...data,
+									initialEditing: node.data.initialEditing,
+								},
+							};
+						}),
+						dirty: true,
+						saveStatus: "idle",
+					};
+				}),
+			connectEdge: (connection) =>
+				set((state) => {
+					if (!isEditMode(state)) return state;
+					return {
+						edges: addEdge(
+							{
+								...connection,
+								type: "smoothstep",
+								markerEnd: {
+									type: MarkerType.ArrowClosed,
+								},
+							},
+							state.edges,
+						),
+						dirty: true,
+						saveStatus: "idle",
+					};
+				}),
+			removeEdge: (edgeId) =>
+				set((state) => {
+					if (!isEditMode(state)) return state;
+					return {
+						edges: state.edges.filter((edge) => edge.id !== edgeId),
+						dirty: true,
+						saveStatus: "idle",
+					};
+				}),
+			applyNodesChange: (changes) =>
+				set((state) => {
+					if (!isEditMode(state)) return state;
+					const dirty = state.dirty || hasPersistentNodeChange(changes);
+					return {
+						nodes: applyNodeChanges(changes, state.nodes),
+						dirty,
+						saveStatus: dirty ? "idle" : state.saveStatus,
+					};
+				}),
+			applyEdgesChange: (changes) =>
+				set((state) => {
+					if (!isEditMode(state)) return state;
+					const dirty = state.dirty || hasPersistentEdgeChange(changes);
+					return {
+						edges: applyEdgeChanges(changes, state.edges),
+						dirty,
+						saveStatus: dirty ? "idle" : state.saveStatus,
+					};
+				}),
+			commitNodePosition: (nodeId, position) =>
+				set((state) => {
+					if (!isEditMode(state)) return state;
+					return {
+						nodes: state.nodes.map((node) =>
+							node.id === nodeId ? { ...node, position } : node,
+						),
+						dirty: true,
+						saveStatus: "idle",
+					};
+				}),
+			serializeDocument: () =>
+				serializeCanvasDocument({
+					nodes: get().nodes,
+					edges: get().edges,
+				}),
+			loadDocument: (document) =>
+				set({
+					nodes: document.nodes,
+					edges: document.edges,
+					nextNodeIndex: getNextNodeIndex(document.nodes),
+					dirty: false,
+					saveStatus: "idle",
+				}),
+			markSaving: () => set({ saveStatus: "saving" }),
+			markSaved: (savedAt) =>
+				set({ dirty: false, lastSavedAt: savedAt, saveStatus: "saved" }),
+			markSaveError: () => set({ saveStatus: "error" }),
 		}),
-	connectEdge: (connection) =>
-		set((state) => {
-			if (!isEditMode(state)) return state;
-			return {
-				edges: addEdge(
-					{
-						...connection,
-						type: "smoothstep",
-						markerEnd: {
-							type: MarkerType.ArrowClosed,
-						},
-					},
-					state.edges,
-				),
-				dirty: true,
-				saveStatus: "idle",
-			};
-		}),
-	removeEdge: (edgeId) =>
-		set((state) => {
-			if (!isEditMode(state)) return state;
-			return {
-				edges: state.edges.filter((edge) => edge.id !== edgeId),
-				dirty: true,
-				saveStatus: "idle",
-			};
-		}),
-	applyNodesChange: (changes) =>
-		set((state) => {
-			if (!isEditMode(state)) return state;
-			const dirty = state.dirty || hasPersistentNodeChange(changes);
-			return {
-				nodes: applyNodeChanges(changes, state.nodes),
-				dirty,
-				saveStatus: dirty ? "idle" : state.saveStatus,
-			};
-		}),
-	applyEdgesChange: (changes) =>
-		set((state) => {
-			if (!isEditMode(state)) return state;
-			const dirty = state.dirty || hasPersistentEdgeChange(changes);
-			return {
-				edges: applyEdgeChanges(changes, state.edges),
-				dirty,
-				saveStatus: dirty ? "idle" : state.saveStatus,
-			};
-		}),
-	commitNodePosition: (nodeId, position) =>
-		set((state) => {
-			if (!isEditMode(state)) return state;
-			return {
-				nodes: state.nodes.map((node) =>
-					node.id === nodeId ? { ...node, position } : node,
-				),
-				dirty: true,
-				saveStatus: "idle",
-			};
-		}),
-	serializeDocument: () =>
-		serializeCanvasDocument({
-			nodes: get().nodes,
-			edges: get().edges,
-		}),
-	loadDocument: (document) =>
-		set({
-			nodes: document.nodes,
-			edges: document.edges,
-			nextNodeIndex: getNextNodeIndex(document.nodes),
-			dirty: false,
-			saveStatus: "idle",
-		}),
-	markSaving: () => set({ saveStatus: "saving" }),
-	markSaved: (savedAt) =>
-		set({ dirty: false, lastSavedAt: savedAt, saveStatus: "saved" }),
-	markSaveError: () => set({ saveStatus: "error" }),
-}));
+		{
+			partialize: (state) => ({
+				nodes: serializeCanvasDocument(state).nodes,
+				edges: serializeCanvasDocument(state).edges,
+			}),
+			merge: (persistedState, currentState) => {
+				const document = parseCanvasDocument(persistedState);
+
+				if (!document) {
+					return currentState;
+				}
+
+				return {
+					...currentState,
+					nodes: document.nodes,
+					edges: document.edges,
+					nextNodeIndex: getNextNodeIndex(document.nodes),
+				};
+			},
+			version: 0,
+			name: "canvas-store",
+			storage: createJSONStorage(() => localStorage),
+		},
+	),
+);
