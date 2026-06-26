@@ -28,12 +28,12 @@ function TextBlockForm({
 			onBlur={(e) => handleOutsideClick(e, onEditEnd)}
 		>
 			<textarea
-				{...register("text", {
-					onChange: (e) => onDataChange({ ...data, text: e.target.value }),
+				{...register("title", {
+					onChange: (e) => onDataChange({ ...data, title: e.target.value }),
 				})}
 				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
 				autoFocus
-				className="w-full h-full resize-none bg-transparent text-xs leading-tight outline-none p-4"
+				className="w-full h-full resize-none bg-transparent text-xs leading-tight outline-none p-4 nodrag"
 				placeholder="type"
 			/>
 		</fieldset>
@@ -65,8 +65,8 @@ function ImageBlockForm({
 				autoFocus={true}
 			/>
 			<Input
-				{...register("caption", {
-					onChange: (e) => onDataChange({ ...data, caption: e.target.value }),
+				{...register("title", {
+					onChange: (e) => onDataChange({ ...data, title: e.target.value }),
 				})}
 				type="text"
 				placeholder="caption text"
@@ -83,7 +83,7 @@ function LinkBlockForm({
 	onDataChange,
 	onEditEnd,
 }: FormProps<LinkBlockData>) {
-	const { register, setValue } = useForm<LinkBlockData>({
+	const { register } = useForm<LinkBlockData>({
 		defaultValues: data,
 	});
 	return (
@@ -92,27 +92,16 @@ function LinkBlockForm({
 			onBlur={(e) => handleOutsideClick(e, onEditEnd)}
 		>
 			<Input
-				{...register("url", {
-					onChange: (e) => onDataChange({ ...data, url: e.target.value }),
-					onBlur: (e) => {
-						// OpenGraph stub: URL hostname을 title로 자동 채움 (M5에서 실제 fetch로 교체)
-						try {
-							const hostname = new URL(e.target.value).hostname;
-							setValue("title", hostname);
-							onDataChange({ ...data, url: e.target.value, title: hostname });
-						} catch {
-							// invalid URL, skip
-						}
-					},
+				{...register("title", {
+					onChange: (e) => onDataChange({ ...data, title: e.target.value }),
 				})}
 				type="url"
 				placeholder="URL"
 				autoFocus
 			/>
 			<Input
-				{...register("description", {
-					onChange: (e) =>
-						onDataChange({ ...data, description: e.target.value }),
+				{...register("secondary", {
+					onChange: (e) => onDataChange({ ...data, secondary: e.target.value }),
 				})}
 				type="text"
 				placeholder="description"

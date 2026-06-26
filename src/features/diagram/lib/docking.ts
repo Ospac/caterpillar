@@ -4,8 +4,8 @@ import type {
 	DockingInput,
 	FallbackInput,
 	FallbackResolution,
+	GridDimensions,
 	GridOccupancy,
-	GridStage,
 	NodeSpan,
 	ResolveDropResult,
 	XYPosition,
@@ -14,7 +14,7 @@ import {
 	CELL_SIZE,
 	cellCoordToPosition,
 	getNodeCells,
-	isNodeEscapingStage,
+	isNodeEscapingGrid,
 	positionToAnchorCell,
 } from "./grid";
 
@@ -32,10 +32,10 @@ export const FALLBACK_STRATEGIES = {
 
 export function createDockedNodeState(
 	position: XYPosition,
-	stage: GridStage,
 	span: NodeSpan,
+	gridDimensions: GridDimensions,
 ): DockedNodeState {
-	const dockedCell = positionToAnchorCell(position, stage, span);
+	const dockedCell = positionToAnchorCell(position, span, gridDimensions);
 
 	return {
 		dockedCell,
@@ -54,15 +54,20 @@ export function commitDockedNodeState(
 }
 
 /**
- * 주어진 grid cell이 현재 stage 안에서 도킹 가능한지 판정한다.
+ * 주어진 grid cell이 현재 canvas 안에서 도킹 가능한지 판정한다.
  */
 export function isDockableCell(
 	cell: CellCoord,
 	occupancy: GridOccupancy,
-	stage: GridStage,
+	gridDimensions: GridDimensions,
 	ignoreNodeId?: string,
 ): boolean {
-	if (cell.col < 0 || cell.row < 0 || cell.col >= stage || cell.row >= stage) {
+	if (
+		cell.col < 0 ||
+		cell.row < 0 ||
+		cell.col >= gridDimensions.cols ||
+		cell.row >= gridDimensions.rows
+	) {
 		return false;
 	}
 
@@ -90,11 +95,11 @@ export function isDockableForSpan(
 	anchor: CellCoord,
 	span: NodeSpan,
 	occupancy: GridOccupancy,
-	stage: GridStage,
+	gridDimensions: GridDimensions,
 	ignoreNodeId?: string,
 ): boolean {
 	for (const cell of getNodeCells(anchor, span)) {
-		if (!isDockableCell(cell, occupancy, stage, ignoreNodeId)) {
+		if (!isDockableCell(cell, occupancy, gridDimensions, ignoreNodeId)) {
 			return false;
 		}
 	}
@@ -104,15 +109,15 @@ export function isDockableForSpan(
 function getNearestEmptyCell(input: DockingInput): CellCoord | null {
 	const nearestCell = positionToAnchorCell(
 		input.position,
-		input.stage,
 		input.span,
+		input.gridDimensions,
 	);
 	const preferredCell = nearestCell ?? input.lastValidDock;
 	let bestCell: CellCoord | null = null;
 	let bestDistance = Number.POSITIVE_INFINITY;
 
-	for (let row = 0; row < input.stage; row += 1) {
-		for (let col = 0; col < input.stage; col += 1) {
+	for (let row = 0; row < input.gridDimensions.rows; row += 1) {
+		for (let col = 0; col < input.gridDimensions.cols; col += 1) {
 			const cell = { col, row };
 
 			if (
@@ -120,7 +125,7 @@ function getNearestEmptyCell(input: DockingInput): CellCoord | null {
 					cell,
 					input.span,
 					input.occupancy,
-					input.stage,
+					input.gridDimensions,
 					input.ignoreNodeId,
 				)
 			) {
@@ -149,7 +154,7 @@ export function applyFallback(input: FallbackInput): FallbackResolution {
 			input.lastValidDock,
 			input.span,
 			input.occupancy,
-			input.stage,
+			input.gridDimensions,
 			input.ignoreNodeId,
 		)
 	) {
@@ -198,14 +203,14 @@ function resolveFailedDrop(
 }
 
 export function resolveDropPosition(input: DockingInput): ResolveDropResult {
-	if (isNodeEscapingStage(input.position, input.stage, input.span)) {
+	if (isNodeEscapingGrid(input.position, input.span, input.gridDimensions)) {
 		return resolveFailedDrop(input, DROP_REASONS.outsideStage);
 	}
 
 	const nearestCell = positionToAnchorCell(
 		input.position,
-		input.stage,
 		input.span,
+		input.gridDimensions,
 	);
 
 	if (!nearestCell) {
@@ -217,7 +222,7 @@ export function resolveDropPosition(input: DockingInput): ResolveDropResult {
 			nearestCell,
 			input.span,
 			input.occupancy,
-			input.stage,
+			input.gridDimensions,
 			input.ignoreNodeId,
 		)
 	) {

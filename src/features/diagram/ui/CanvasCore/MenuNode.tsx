@@ -1,5 +1,6 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
 import { CELL_SIZE } from "@/features/diagram/lib/grid";
+import { useCanvasStore } from "../../model/canvasStore";
 import type { MenuNodeData } from "../../model/nodeTypes";
 
 const BLOCK_TYPE_BUTTONS = [
@@ -12,10 +13,14 @@ const BLOCK_TYPE_BUTTONS = [
 	{ blockType: "music", label: "Music", className: "bg-pinky" },
 ] as const;
 
-export default function MenuNode({ data }: NodeProps<Node<MenuNodeData>>) {
+export default function MenuNode({ id }: NodeProps<Node<MenuNodeData>>) {
+	const mode = useCanvasStore((state) => state.mode);
+	const selectMenuType = useCanvasStore((state) => state.selectMenuType);
+	const isEditMode = mode === "edit";
+
 	return (
 		<div
-			className="border border-gray-700 bg-white text-sm text-gray-900"
+			className="box-shadow-border bg-white text-sm text-gray-900 z-30"
 			style={{ width: CELL_SIZE * 2, height: CELL_SIZE * 2 }}
 		>
 			<Handle type="source" position={Position.Top} id="top" />
@@ -28,7 +33,8 @@ export default function MenuNode({ data }: NodeProps<Node<MenuNodeData>>) {
 						key={blockType}
 						type="button"
 						className={`${className} w-full`}
-						onClick={() => data.onTypeSelect?.(blockType)}
+						disabled={!isEditMode}
+						onClick={() => selectMenuType(id, blockType)}
 					>
 						{label}
 					</button>

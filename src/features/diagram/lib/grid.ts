@@ -4,51 +4,79 @@ import { createDockedNodeState } from "./docking";
 import type {
 	CellCoord,
 	DockedNodeState,
+	GridDimensions,
 	GridOccupancy,
-	GridStage,
 	NodeSpan,
 	XYPosition,
 } from "./geometry";
 
-export const GRID_STAGES = [8, 14, 20] as const;
-export const MAX_GRID_STAGE: GridStage = GRID_STAGES[GRID_STAGES.length - 1];
-export const CELL_SIZE = 108;
+export const GRID_COLUMN_COUNT = 30;
+export const GRID_ROW_COUNT = 15;
+export const DEFAULT_GRID_DIMENSIONS: GridDimensions = {
+	cols: GRID_COLUMN_COUNT,
+	rows: GRID_ROW_COUNT,
+};
+export const CELL_SIZE = 106;
 
-export function getNextStage(currentStage: GridStage): GridStage {
-	const currentIndex = GRID_STAGES.indexOf(currentStage);
-	if (currentIndex === -1 || currentIndex === GRID_STAGES.length - 1) {
-		return currentStage;
-	}
-
-	return GRID_STAGES[currentIndex + 1];
+export function getGridPixelSize(
+	gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS,
+): { width: number; height: number } {
+	return {
+		width: gridDimensions.cols * CELL_SIZE,
+		height: gridDimensions.rows * CELL_SIZE,
+	};
 }
 
-export function getStagePixelSize(stage: GridStage): number {
-	return stage * CELL_SIZE;
+export function isNodeFullyInsideGrid(
+	node: DiagramNode,
+	gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS,
+): boolean {
+	const span = getNodeSpan(node.data.blockType);
+	const gridSize = getGridPixelSize(gridDimensions);
+
+	return (
+		node.position.x >= 0 &&
+		node.position.y >= 0 &&
+		node.position.x + span.cols * CELL_SIZE <= gridSize.width &&
+		node.position.y + span.rows * CELL_SIZE <= gridSize.height
+	);
+}
+
+export function getNodesOutsideGrid(
+	nodes: DiagramNode[],
+	gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS,
+): DiagramNode[] {
+	return nodes.filter((node) => !isNodeFullyInsideGrid(node, gridDimensions));
 }
 
 export function toCellKey(cell: CellCoord): string {
 	return `${cell.col},${cell.row}`;
 }
 
+export function getNodeCenterPosition(
+	position: XYPosition,
+	span: ReturnType<typeof getNodeSpan>,
+): XYPosition {
+	return {
+		x: position.x + (span.cols * CELL_SIZE) / 2,
+		y: position.y + (span.rows * CELL_SIZE) / 2,
+	};
+}
 /**
- * 노드의 좌상단이 stage 밖이거나 중심점이 stage 밖으로 나갔는지 판정합니다.
- * 드래그 중 stage 자동 확대 트리거 및 유효 앵커 계산의 gate로 사용됩니다.
+ * 노드의 좌상단이 grid 밖이거나 중심점이 grid 밖으로 나갔는지 판정합니다.
  */
-export function isNodeEscapingStage(
+export function isNodeEscapingGrid(
 	position: { x: number; y: number },
-	stage: GridStage,
 	span: NodeSpan,
+	gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS,
 ): boolean {
-	const stageSize = stage * CELL_SIZE;
-	const centerX = position.x + (span.cols * CELL_SIZE) / 2;
-	const centerY = position.y + (span.rows * CELL_SIZE) / 2;
-
+	const gridSize = getGridPixelSize(gridDimensions);
+	const { x: centerX, y: centerY } = getNodeCenterPosition(position, span);
 	return (
 		position.x < 0 ||
 		position.y < 0 ||
-		centerX > stageSize ||
-		centerY > stageSize
+		centerX > gridSize.width ||
+		centerY > gridSize.height
 	);
 }
 
@@ -56,15 +84,15 @@ export function isNodeEscapingStage(
  * 노드의 좌상단 좌표를 가장 가까운 그리드 앵커 셀로 변환합니다.
  * 노드 중심점에 가깝게 보정한 뒤 `Number.EPSILON`을 빼서 정확히 셀 경계에 놓인 경우
  * 다음 셀로 밀리는 현상을 방지합니다.
- * 노드가 stage 밖이면 null을 반환합니다.
- * @param span 경계 검사(`isNodeEscapingStage`)에 사용되며, 앵커 계산 자체는 좌상단 기준으로 span 무관
+ * 노드가 grid 밖이면 null을 반환합니다.
+ * @param span 경계 검사(`isNodeEscapingGrid`)에 사용되며, 앵커 계산 자체는 좌상단 기준으로 span 무관
  */
 export function positionToAnchorCell(
 	position: XYPosition,
-	stage: GridStage,
 	span: NodeSpan,
+	gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS,
 ): CellCoord | null {
-	if (isNodeEscapingStage(position, stage, span)) return null;
+	if (isNodeEscapingGrid(position, span, gridDimensions)) return null;
 
 	const biasedX = position.x + CELL_SIZE / 2 - Number.EPSILON;
 	const biasedY = position.y + CELL_SIZE / 2 - Number.EPSILON;
@@ -79,13 +107,13 @@ export function cellCoordToPosition(cell: CellCoord): XYPosition {
 	return { x: cell.col * CELL_SIZE, y: cell.row * CELL_SIZE };
 }
 
-export function clampPositionToStage(
+export function clampPositionToGrid(
 	position: { x: number; y: number },
-	stage: GridStage,
 	span: NodeSpan,
+	gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS,
 ): { x: number; y: number } {
-	const maxX = (stage - span.cols) * CELL_SIZE;
-	const maxY = (stage - span.rows) * CELL_SIZE;
+	const maxX = (gridDimensions.cols - span.cols) * CELL_SIZE;
+	const maxY = (gridDimensions.rows - span.rows) * CELL_SIZE;
 
 	return {
 		x: Math.min(Math.max(position.x, 0), maxX),
@@ -114,14 +142,14 @@ export function getNodeCells(anchor: CellCoord, span: NodeSpan): CellCoord[] {
  */
 export function getGridOccupancy(
 	nodes: DiagramNode[],
-	stage: GridStage,
+	gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS,
 ): GridOccupancy {
 	const cellToNodeId = new Map<string, string>();
 	const conflictedCellKeys = new Set<string>();
 
 	for (const node of nodes) {
 		const span = getNodeSpan(node.data.blockType);
-		const anchor = positionToAnchorCell(node.position, stage, span);
+		const anchor = positionToAnchorCell(node.position, span, gridDimensions);
 		if (!anchor) continue;
 
 		for (const cell of getNodeCells(anchor, span)) {
@@ -147,7 +175,7 @@ export function getGridOccupancy(
 export function syncNodeDockingState(
 	currentState: Record<string, DockedNodeState>,
 	nodes: DiagramNode[],
-	stage: GridStage,
+	gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS,
 ): Record<string, DockedNodeState> {
 	const nextNodeIds = new Set(nodes.map((node) => node.id));
 	let changed = false;
@@ -161,7 +189,11 @@ export function syncNodeDockingState(
 		}
 
 		const span = getNodeSpan(node.data.blockType);
-		nextState[node.id] = createDockedNodeState(node.position, stage, span);
+		nextState[node.id] = createDockedNodeState(
+			node.position,
+			span,
+			gridDimensions,
+		);
 		changed = true;
 	}
 

@@ -1,9 +1,9 @@
 import type { Edge } from "@xyflow/react";
 import { WIDE_SPAN } from "../lib/blockSpan";
-import type { GridStage, XYPosition } from "../lib/geometry";
-import { CELL_SIZE, clampPositionToStage, GRID_STAGES } from "../lib/grid";
+import type { XYPosition } from "../lib/geometry";
+import { clampPositionToGrid } from "../lib/grid";
 import { validateBlockData } from "./block";
-import type { BlockData, BlockType } from "./blockTypes";
+import type { BlockType } from "./blockTypes";
 import type { DiagramNode, DiagramNodeType } from "./nodeTypes";
 import type { CanvasRuntimeState } from "./runtime";
 
@@ -33,22 +33,14 @@ export type EdgeItem = {
 };
 
 export type CanvasDocument = {
-	visibleStage: GridStage;
 	nodes: NodeItem[];
 	edges: EdgeItem[];
 };
 
-export type ParsedCanvasDocument = Pick<
-	CanvasRuntimeState,
-	"nodes" | "edges" | "visibleStage"
->;
+export type ParsedCanvasDocument = Pick<CanvasRuntimeState, "nodes" | "edges">;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null;
-}
-
-function isGridStage(value: unknown): value is GridStage {
-	return typeof value === "number" && GRID_STAGES.includes(value as GridStage);
 }
 
 function isXYPosition(value: unknown): value is XYPosition {
@@ -141,7 +133,6 @@ export function serializeCanvasDocument(
 	runtimeState: ParsedCanvasDocument,
 ): CanvasDocument {
 	return {
-		visibleStage: runtimeState.visibleStage,
 		nodes: runtimeState.nodes.map((node) => ({
 			id: node.id,
 			type: node.type ?? "menu",
@@ -163,7 +154,7 @@ export function serializeCanvasDocument(
 export function parseCanvasDocument(
 	input: unknown,
 ): ParsedCanvasDocument | null {
-	if (!isRecord(input) || !isGridStage(input.visibleStage)) {
+	if (!isRecord(input)) {
 		return null;
 	}
 
@@ -186,7 +177,6 @@ export function parseCanvasDocument(
 	}
 
 	return {
-		visibleStage: input.visibleStage,
 		nodes,
 		edges,
 	};
@@ -196,15 +186,11 @@ interface MakeBlockNodeWhenMenuTypeSelectOptions {
 	id: string;
 	blockType: BlockType;
 	menuNodePosition: XYPosition;
-	onDataChange: (id: string, newData: BlockData) => void;
-	onEditStateChange: (id: string, isEditing: boolean) => void;
 }
 export const makeBlockNodeWhenMenuTypeSelect = ({
 	id,
 	blockType,
 	menuNodePosition,
-	onDataChange,
-	onEditStateChange,
 }: MakeBlockNodeWhenMenuTypeSelectOptions): DiagramNode => {
 	return {
 		id,
@@ -214,9 +200,6 @@ export const makeBlockNodeWhenMenuTypeSelect = ({
 			blockType,
 			title: "",
 			secondary: "",
-			onDataChange: (newData: BlockData) => onDataChange(id, newData),
-			onEditStateChange: (isEditing: boolean) =>
-				onEditStateChange(id, isEditing),
 			initialEditing: true,
 		},
 	};
@@ -224,31 +207,16 @@ export const makeBlockNodeWhenMenuTypeSelect = ({
 
 interface AddNodeOptions {
 	id: string;
-	onTypeSelect: (id: string, blockType: BlockType) => void;
-	stagePixelSize: number;
-	visibleStage: GridStage;
+	position: XYPosition;
 }
 
-export const addNode = ({
-	id,
-	onTypeSelect,
-	stagePixelSize,
-	visibleStage,
-}: AddNodeOptions): DiagramNode => {
+export const addNode = ({ id, position }: AddNodeOptions): DiagramNode => {
 	return {
 		id,
 		type: "menu",
-		position: clampPositionToStage(
-			{
-				x: stagePixelSize / 2 - CELL_SIZE,
-				y: stagePixelSize / 2 - CELL_SIZE,
-			},
-			visibleStage,
-			WIDE_SPAN,
-		),
+		position: clampPositionToGrid(position, WIDE_SPAN),
 		data: {
 			blockType: "menu",
-			onTypeSelect: (blockType) => onTypeSelect(id, blockType),
 		},
 	};
 };

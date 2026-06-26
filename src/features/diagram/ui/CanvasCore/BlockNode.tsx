@@ -4,6 +4,7 @@ import defaultImage from "@/assets/frankenstein.webp";
 import { getNodeSpan } from "../../lib/blockSpan";
 import { CELL_SIZE } from "../../lib/grid";
 import type { BlockData, BlockType } from "../../model/blockTypes";
+import { useCanvasStore } from "../../model/canvasStore";
 import type { BlockNodeData } from "../../model/nodeTypes";
 import BlockEditForm from "./BlockEditForm";
 
@@ -46,9 +47,11 @@ function RectangleBlockView({
 					alt={title}
 				/>
 			)}
-			<div className="flex flex-col flex-1 justify-center items-center p-1 gap-1">
-				<p className="font-medium text-center text-2xs">{title}</p>
-				<p className="font-medium text-center text-2xs text-gray-500">
+			<div className="flex flex-col flex-1 justify-center items-center p-1 gap-1 w-full">
+				<p className="font-medium text-center text-2xs w-full line-clamp-2 leading-tight">
+					{title}
+				</p>
+				<p className="font-medium text-center text-2xs text-gray-500 truncate w-full">
 					{secondary}
 					{year ? ` (${year})` : ""}
 				</p>
@@ -60,9 +63,9 @@ function containerClass(blockType: string): string {
 	switch (blockType) {
 		case "image":
 		case "link":
-			return "border border-gray-700 bg-green-100 text-xs text-gray-900";
+			return "box-shadow-border bg-green-100 text-xs text-gray-900 z-20";
 		default:
-			return "border border-gray-700 bg-green text-xs text-gray-900";
+			return "box-shadow-border bg-green text-xs text-gray-900 z-20";
 	}
 }
 
@@ -70,8 +73,8 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 	switch (data.blockType) {
 		case "text":
 			return (
-				<div className="flex h-full text-center leading-tight p-4 overflow-y-auto break-all">
-					{data.text}
+				<div className="flex h-full text-center leading-tight p-4 overflow-y-auto break-all ">
+					{data.title}
 				</div>
 			);
 		case "image":
@@ -81,10 +84,10 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 						<img
 							className="border border-gray-700"
 							src={data.image || defaultImage}
-							alt={data.caption}
+							alt={data.title}
 						/>
 						<figcaption className="text-center mt-1.5 text-xs">
-							{data.caption}
+							{data.title}
 						</figcaption>
 					</figure>
 				</div>
@@ -96,33 +99,41 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 						className="shrink min-h-0 h-40"
 						src={defaultImage}
 						alt={data.title}
+						height={160}
+						width={216}
 					/>
 					<div className="flex flex-row items-center gap-1.5 bg-green py-0.5 px-3 border-t border-t-gray-700 shrink-0">
 						<div className="bg-red w-2.5 h-2.5" />
-						<div className="text-2xs">{data.url || "URL"}</div>
+						<div className="min-w-0 truncate text-2xs">
+							{data.title || "URL"}
+						</div>
 					</div>
-					<div className="shrink-0 bg-blue border-t border-t-gray-700 text-2xs py-2 px-4">
-						{data.description || data.title}
+					<div className="flex-1 min-h-0 bg-blue border-t border-t-gray-700 py-1 px-2">
+						<p className="line-clamp-2 text-2xs leading-tight wrap-break-word">
+							{data.secondary || data.title}
+						</p>
 					</div>
 				</div>
 			);
 		case "music":
 			return (
-				<div className="grid grid-cols-[1.25rem_1fr] grid-rows-[1fr_1.25rem]">
-					<div className="flex items-end justify-center py-2 border-r">
-						<p className="[writing-mode:vertical-rl] rotate-180 text-2xs">
-							{data.title?.slice(0, 20)}
-						</p>
+				<div className="grid grid-cols-[1.25rem_1fr] grid-rows-[1fr_1.25rem] h-full">
+					<div className="flex items-start justify-center py-2 border-r min-h-0 overflow-hidden">
+						<h2 className="[writing-mode:vertical-rl] [text-orientation:mixed] text-2xs max-h-full truncate">
+							{data.title}
+						</h2>
 					</div>
 					<div>
 						<img
-							className="w-full h-full object-cover"
+							className="w-full h-full object-cover aspect-square"
+							width={196}
+							height={196}
 							src={data.image || defaultImage}
 							alt={data.title}
 						/>
 					</div>
-					<div className="col-span-2 flex items-center bg-blue border-t border-gray-700 px-4">
-						<h2 className="text-2xs">{data.secondary?.slice(0, 20)}</h2>
+					<div className="col-span-2 flex items-center bg-blue border-t border-gray-700 px-4 overflow-hidden w-full">
+						<h2 className="text-2xs truncate">{data.secondary}</h2>
 					</div>
 				</div>
 			);
@@ -160,10 +171,19 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 	}
 }
 
-export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
-	const [isEditing, setIsEditing] = useState(data.initialEditing ?? false);
-	const { onEditStateChange } = data;
+export default function BlockNode({
+	id,
+	data,
+}: NodeProps<Node<BlockNodeData>>) {
+	const canvasMode = useCanvasStore((state) => state.mode);
+	const updateBlockData = useCanvasStore((state) => state.updateBlockData);
+	const isCanvasEditMode = canvasMode === "edit";
+
+	const [isEditing, setIsEditing] = useState(
+		(data.initialEditing ?? false) && isCanvasEditMode,
+	);
 	const startEdit = () => {
+		if (!isCanvasEditMode) return;
 		setIsEditing(true);
 	};
 	const endEdit = () => {
@@ -183,8 +203,10 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 		}
 	};
 	useEffect(() => {
-		onEditStateChange?.(isEditing);
-	}, [isEditing, onEditStateChange]);
+		if (!isCanvasEditMode && isEditing) {
+			setIsEditing(false);
+		}
+	}, [isCanvasEditMode, isEditing]);
 
 	const span =
 		isEditing && SEARCH_BLOCK_TYPES.has(data.blockType)
@@ -205,7 +227,7 @@ export default function BlockNode({ data }: NodeProps<Node<BlockNodeData>>) {
 			{isEditing ? (
 				<BlockEditForm
 					data={data}
-					onDataChange={(newData) => data.onDataChange?.(newData)}
+					onDataChange={(newData) => updateBlockData(id, newData)}
 					onEditEnd={endEdit}
 				/>
 			) : (

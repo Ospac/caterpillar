@@ -1,15 +1,12 @@
 import type { Node } from "@xyflow/react";
-import type { BlockData, BlockType } from "./blockTypes";
+import type { BlockData } from "./blockTypes";
 
 export type MenuNodeData = {
 	blockType: "menu";
-	onTypeSelect?: (blockType: BlockType) => void;
 };
 
 export type BlockNodeData = BlockData & {
-	onDataChange?: (newData: BlockData) => void;
 	initialEditing?: boolean;
-	onEditStateChange?: (isEditing: boolean) => void;
 };
 
 export type DiagramNodeData = BlockNodeData | MenuNodeData;

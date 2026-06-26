@@ -13,6 +13,9 @@ import type { DockingInput, FallbackInput, GridOccupancy } from "../geometry";
 import { CELL_SIZE, cellCoordToPosition } from "../grid";
 
 describe("docking(lib)", () => {
+	const testGrid = { cols: 18, rows: 18 };
+	const wideGrid = { cols: 30, rows: 15 };
+
 	const emptyOccupancy = (): GridOccupancy => ({
 		occupiedCellCount: 0,
 		cellToNodeId: new Map(),
@@ -25,7 +28,7 @@ describe("docking(lib)", () => {
 		conflictedCellKeys: new Set(),
 	});
 
-	const fullOccupancy = (stage = 8): GridOccupancy => {
+	const fullOccupancy = (stage = 18): GridOccupancy => {
 		const entries: Record<string, string> = {};
 		for (let row = 0; row < stage; row += 1) {
 			for (let col = 0; col < stage; col += 1) {
@@ -38,8 +41,8 @@ describe("docking(lib)", () => {
 	it("도킹 상태는 현재 셀과 마지막 유효 셀만 보관한다", () => {
 		const state = createDockedNodeState(
 			{ x: 5 * CELL_SIZE, y: 2 * CELL_SIZE },
-			14,
 			WIDE_SPAN,
+			testGrid,
 		);
 
 		expect(state).toEqual({
@@ -58,14 +61,19 @@ describe("docking(lib)", () => {
 
 	it("스팬이 stage 경계를 넘거나 다른 노드 셀을 포함하면 도킹할 수 없다", () => {
 		expect(
-			isDockableForSpan({ col: 3, row: 7 }, TALL_SPAN, emptyOccupancy(), 8),
+			isDockableForSpan(
+				{ col: 3, row: 17 },
+				TALL_SPAN,
+				emptyOccupancy(),
+				testGrid,
+			),
 		).toBe(false);
 		expect(
 			isDockableForSpan(
 				{ col: 0, row: 0 },
 				WIDE_SPAN,
 				occupancyOf({ "1,0": "node-a" }),
-				8,
+				testGrid,
 			),
 		).toBe(false);
 		expect(
@@ -78,16 +86,32 @@ describe("docking(lib)", () => {
 					"0,1": "self",
 					"1,1": "self",
 				}),
-				8,
+				testGrid,
 				"self",
 			),
 		).toBe(true);
+		expect(
+			isDockableForSpan(
+				{ col: 29, row: 13 },
+				TALL_SPAN,
+				emptyOccupancy(),
+				wideGrid,
+			),
+		).toBe(true);
+		expect(
+			isDockableForSpan(
+				{ col: 29, row: 14 },
+				TALL_SPAN,
+				emptyOccupancy(),
+				wideGrid,
+			),
+		).toBe(false);
 	});
 
 	it("드롭 실패 시 lastValidDock, nearest-empty-cell 순서로 복구한다", () => {
 		const input = (overrides: Partial<FallbackInput> = {}): FallbackInput => ({
 			position: { x: 2 * CELL_SIZE, y: 2 * CELL_SIZE },
-			stage: 8,
+			gridDimensions: testGrid,
 			occupancy: emptyOccupancy(),
 			span: WIDE_SPAN,
 			lastValidDock: { col: 1, row: 0 },
@@ -114,13 +138,13 @@ describe("docking(lib)", () => {
 		);
 		expect(nearest?.strategy).toBe(FALLBACK_STRATEGIES.nearestEmptyCell);
 
-		expect(applyFallback(input({ occupancy: fullOccupancy(8) }))).toBeNull();
+		expect(applyFallback(input({ occupancy: fullOccupancy(18) }))).toBeNull();
 	});
 
 	it("드롭 해석은 유효 도킹, 점유 충돌, stage 밖 fallback을 구분한다", () => {
 		const input = (overrides: Partial<DockingInput> = {}): DockingInput => ({
 			position: { x: CELL_SIZE, y: CELL_SIZE },
-			stage: 8,
+			gridDimensions: testGrid,
 			occupancy: emptyOccupancy(),
 			span: WIDE_SPAN,
 			lastValidDock: { col: 0, row: 0 },
@@ -158,7 +182,7 @@ describe("docking(lib)", () => {
 				input({
 					position: { x: -20, y: CELL_SIZE },
 					lastValidDock: null,
-					occupancy: fullOccupancy(8),
+					occupancy: fullOccupancy(18),
 				}),
 			),
 		).toEqual({

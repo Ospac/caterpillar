@@ -21,7 +21,7 @@ export default function Input({
 			// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
 			autoFocus={autoFocus}
 			className={cn(
-				`w-full border border-gray-400 bg-white px-1.5 py-0.5 text-[11px] outline-none`,
+				`w-full border border-gray-400 bg-white px-1.5 py-0.5 text-[11px] outline-none nodrag`,
 				classNames,
 			)}
 		/>
