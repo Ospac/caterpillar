@@ -101,13 +101,11 @@ describe("canvasStore", () => {
 			throw new Error("Expected a block node");
 		}
 
-		useCanvasStore
-			.getState()
-			.updateBlockData(blockNode.id, {
-				blockType: "text",
-				title: "Updated",
-				secondary: "",
-			});
+		useCanvasStore.getState().updateBlockData(blockNode.id, {
+			blockType: "text",
+			title: "Updated",
+			secondary: "",
+		});
 		useCanvasStore.getState().connectEdge({
 			source: blockNode.id,
 			target: "target-1",
