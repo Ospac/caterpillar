@@ -18,8 +18,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Biome check
-        run: pnpm check
+      - name: Lint
+        run: pnpm lint
 
       - name: Test
         run: pnpm test
