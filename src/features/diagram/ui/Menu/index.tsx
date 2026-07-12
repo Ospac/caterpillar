@@ -14,11 +14,7 @@ interface HeaderProps {
 	onZoomReset: () => void;
 }
 
-function getDisplayZoomPercent(
-	zoom: number,
-	minZoom: number,
-	maxZoom: number,
-): number {
+function getDisplayZoomPercent(zoom: number, minZoom: number, maxZoom: number): number {
 	const zoomRange = maxZoom - minZoom;
 	if (zoomRange <= 0) return 100;
 
@@ -45,11 +41,7 @@ export default function Menu({
 		})),
 	);
 	const isEditMode = mode === "edit";
-	const displayZoomPercent = getDisplayZoomPercent(
-		zoom,
-		zoomDisplayMin,
-		zoomDisplayMax,
-	);
+	const displayZoomPercent = getDisplayZoomPercent(zoom, zoomDisplayMin, zoomDisplayMax);
 
 	const handleAddNode = () => {
 		if (!isEditMode) return;
@@ -66,9 +58,7 @@ export default function Menu({
 					type="button"
 					aria-pressed={mode === "read"}
 					onClick={() => setMode("read")}
-					className={`px-2.5 py-1 ${
-						mode === "read" ? "bg-gray-900 text-white" : "text-gray-800"
-					}`}
+					className={`px-2.5 py-1 ${mode === "read" ? "bg-gray-900 text-white" : "text-gray-800"}`}
 				>
 					Read
 				</button>
@@ -76,9 +66,7 @@ export default function Menu({
 					type="button"
 					aria-pressed={mode === "edit"}
 					onClick={() => setMode("edit")}
-					className={`px-2.5 py-1 ${
-						mode === "edit" ? "bg-gray-900 text-white" : "text-gray-800"
-					}`}
+					className={`px-2.5 py-1 ${mode === "edit" ? "bg-gray-900 text-white" : "text-gray-800"}`}
 				>
 					Edit
 				</button>
@@ -94,9 +82,7 @@ export default function Menu({
 				>
 					-
 				</Button>
-				<span className="min-w-10 text-center tabular-nums">
-					{displayZoomPercent}%
-				</span>
+				<span className="min-w-10 text-center tabular-nums">{displayZoomPercent}%</span>
 				<Button
 					type="button"
 					variant="ghost"
@@ -122,8 +108,8 @@ export default function Menu({
 				</button>
 			</div>
 			<div className="md:block hidden absolute top-3 left-128 z-20 border border-gray-300 bg-white/90 px-2 py-1 text-[11px] text-gray-700">
-				Cells: {GRID_COLUMN_COUNT}x{GRID_ROW_COUNT} | Occupied:{" "}
-				{occupiedCellCount} | Docking: {dockingCount}
+				Cells: {GRID_COLUMN_COUNT}x{GRID_ROW_COUNT} | Occupied: {occupiedCellCount} | Docking:{" "}
+				{dockingCount}
 			</div>
 		</div>
 	);

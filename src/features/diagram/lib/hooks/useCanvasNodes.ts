@@ -3,15 +3,9 @@ import { useCallback, useEffect, useReducer, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useCanvasStore } from "../../model/canvasStore";
 import type { DiagramNode } from "../../model/nodeTypes";
-import {
-	type CanvasRuntimeState,
-	createInitialCanvasRuntimeState,
-} from "../../model/runtime";
+import { type CanvasRuntimeState, createInitialCanvasRuntimeState } from "../../model/runtime";
 import { getNodeSpan } from "../blockSpan";
-import {
-	canvasRuntimeReducer,
-	createCanvasReducerState,
-} from "../canvasRuntimeReducer";
+import { canvasRuntimeReducer, createCanvasReducerState } from "../canvasRuntimeReducer";
 import { createDockedNodeState, resolveDropPosition } from "../docking";
 import type { GridOccupancy } from "../geometry";
 import { DEFAULT_GRID_DIMENSIONS } from "../grid";

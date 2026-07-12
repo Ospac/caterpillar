@@ -11,8 +11,8 @@
 		"moduleResolution": "bundler",
 		"useDefineForClassFields": true,
 		"paths": {
-			"@/*": ["./src/*"],
-		},
+			"@/*": ["./src/*"]
+		}
 	},
-	"include": ["src", "functions"],
+	"include": ["src", "functions"]
 }

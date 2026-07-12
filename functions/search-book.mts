@@ -32,18 +32,15 @@ export default withSearchQuery({
 		});
 		if (domain instanceof Response) return domain;
 
-		const response = await googleBooksClient.get<GoogleBooksResponse>(
-			ENDPOINT.googleBooks.books,
-			{
-				params: {
-					q: query,
-					maxResults: "10",
-					langRestrict: "ko",
-					key: apiKey,
-				},
-				headers: { Referer: domain },
+		const response = await googleBooksClient.get<GoogleBooksResponse>(ENDPOINT.googleBooks.books, {
+			params: {
+				q: query,
+				maxResults: "10",
+				langRestrict: "ko",
+				key: apiKey,
 			},
-		);
+			headers: { Referer: domain },
+		});
 		const error = responseNotOkFromAxiosResponse({
 			response,
 			message: "Failed to fetch from Google Books",
@@ -57,8 +54,7 @@ export default withSearchQuery({
 function formatBooks(items: { volumeInfo: Book }[]): SearchResult[] {
 	return items.map((item) => {
 		const info = item.volumeInfo;
-		const rawImage =
-			info.imageLinks?.thumbnail ?? info.imageLinks?.smallThumbnail;
+		const rawImage = info.imageLinks?.thumbnail ?? info.imageLinks?.smallThumbnail;
 		const image = rawImage?.replace(/^http:\/\//, "https://");
 
 		return {

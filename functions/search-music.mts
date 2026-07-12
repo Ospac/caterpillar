@@ -29,18 +29,15 @@ export default withSearchQuery({
 		const apiKey = requireEnv({ name: "LASTFM_API_KEY" });
 		if (apiKey instanceof Response) return apiKey;
 
-		const response = await lastFmClient.get<LastFmAlbumSearchResponse>(
-			ENDPOINT.lastfm.music,
-			{
-				params: {
-					method: "album.search",
-					album: query,
-					api_key: apiKey,
-					format: "json",
-					limit: "10",
-				},
+		const response = await lastFmClient.get<LastFmAlbumSearchResponse>(ENDPOINT.lastfm.music, {
+			params: {
+				method: "album.search",
+				album: query,
+				api_key: apiKey,
+				format: "json",
+				limit: "10",
 			},
-		);
+		});
 		const error = responseNotOkFromAxiosResponse({
 			response,
 			message: "Failed to fetch from Last.fm",

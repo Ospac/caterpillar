@@ -32,9 +32,7 @@ describe("Menu", () => {
 	it("read mode에서는 노드 추가 버튼을 비활성화한다", () => {
 		render(<TestMenu />);
 
-		expect((screen.getByText("Add Node") as HTMLButtonElement).disabled).toBe(
-			true,
-		);
+		expect((screen.getByText("Add Node") as HTMLButtonElement).disabled).toBe(true);
 	});
 
 	it("edit mode에서는 노드를 추가한다", () => {
@@ -89,9 +87,7 @@ describe("Menu", () => {
 			/>,
 		);
 
-		expect(
-			(screen.getByLabelText("Zoom out") as HTMLButtonElement).disabled,
-		).toBe(true);
+		expect((screen.getByLabelText("Zoom out") as HTMLButtonElement).disabled).toBe(true);
 
 		rerender(
 			<Menu
@@ -106,9 +102,7 @@ describe("Menu", () => {
 			/>,
 		);
 
-		expect(
-			(screen.getByLabelText("Zoom in") as HTMLButtonElement).disabled,
-		).toBe(true);
+		expect((screen.getByLabelText("Zoom in") as HTMLButtonElement).disabled).toBe(true);
 	});
 
 	it("zoom 표시값은 실질 조작 가능 범위를 0-100%로 정규화한다", () => {

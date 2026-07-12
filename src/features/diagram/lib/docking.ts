@@ -107,11 +107,7 @@ export function isDockableForSpan(
 }
 
 function getNearestEmptyCell(input: DockingInput): CellCoord | null {
-	const nearestCell = positionToAnchorCell(
-		input.position,
-		input.span,
-		input.gridDimensions,
-	);
+	const nearestCell = positionToAnchorCell(input.position, input.span, input.gridDimensions);
 	const preferredCell = nearestCell ?? input.lastValidDock;
 	let bestCell: CellCoord | null = null;
 	let bestDistance = Number.POSITIVE_INFINITY;
@@ -132,10 +128,8 @@ function getNearestEmptyCell(input: DockingInput): CellCoord | null {
 				continue;
 			}
 
-			const refCol =
-				preferredCell?.col ?? Math.round(input.position.x / CELL_SIZE);
-			const refRow =
-				preferredCell?.row ?? Math.round(input.position.y / CELL_SIZE);
+			const refCol = preferredCell?.col ?? Math.round(input.position.x / CELL_SIZE);
+			const refRow = preferredCell?.row ?? Math.round(input.position.y / CELL_SIZE);
 			const cellDistance = Math.abs(refCol - col) + Math.abs(refRow - row);
 			if (cellDistance < bestDistance) {
 				bestCell = cell;
@@ -207,11 +201,7 @@ export function resolveDropPosition(input: DockingInput): ResolveDropResult {
 		return resolveFailedDrop(input, DROP_REASONS.outsideStage);
 	}
 
-	const nearestCell = positionToAnchorCell(
-		input.position,
-		input.span,
-		input.gridDimensions,
-	);
+	const nearestCell = positionToAnchorCell(input.position, input.span, input.gridDimensions);
 
 	if (!nearestCell) {
 		return resolveFailedDrop(input, DROP_REASONS.noNearestCell);

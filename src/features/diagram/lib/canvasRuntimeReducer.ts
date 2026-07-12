@@ -35,20 +35,13 @@ export function canvasRuntimeReducer(
 		case "nodeDropCommitted": {
 			const currentDockingState =
 				state.nodeDockingState[action.nodeId] ??
-				createDockedNodeState(
-					action.position,
-					action.span,
-					DEFAULT_GRID_DIMENSIONS,
-				);
+				createDockedNodeState(action.position, action.span, DEFAULT_GRID_DIMENSIONS);
 
 			return {
 				...state,
 				nodeDockingState: {
 					...state.nodeDockingState,
-					[action.nodeId]: commitDockedNodeState(
-						currentDockingState,
-						action.dockedCell,
-					),
+					[action.nodeId]: commitDockedNodeState(currentDockingState, action.dockedCell),
 				},
 			};
 		}
@@ -59,9 +52,7 @@ export function canvasRuntimeReducer(
 				DEFAULT_GRID_DIMENSIONS,
 			);
 
-			return nodeDockingState === state.nodeDockingState
-				? state
-				: { ...state, nodeDockingState };
+			return nodeDockingState === state.nodeDockingState ? state : { ...state, nodeDockingState };
 		}
 	}
 }

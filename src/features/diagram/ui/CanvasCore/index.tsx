@@ -49,15 +49,13 @@ function CanvasCoreInner() {
 	);
 	const isEditMode = mode === "edit";
 	const occupancy = useMemo(() => getGridOccupancy(nodes), [nodes]);
-	const { isNodeDragging, nodeDockingState, onNodesChange, onNodeDragStop } =
-		useCanvasNodes({ isEditMode, nodes, occupancy });
-	const {
-		isEdgeDragging,
-		onConnect,
-		onConnectEnd,
-		onEdgesChange,
-		onEdgeDoubleClick,
-	} = useCanvasEdges({ isEditMode, nodes, occupancy });
+	const { isNodeDragging, nodeDockingState, onNodesChange, onNodeDragStop } = useCanvasNodes({
+		isEditMode,
+		nodes,
+		occupancy,
+	});
+	const { isEdgeDragging, onConnect, onConnectEnd, onEdgesChange, onEdgeDoubleClick } =
+		useCanvasEdges({ isEditMode, nodes, occupancy });
 
 	const {
 		scrollContainerRef,

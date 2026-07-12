@@ -9,12 +9,7 @@ import type { BlockNodeData } from "../../model/nodeTypes";
 import BlockEditForm from "./BlockEditForm";
 
 const SEARCH_EDIT_SPAN = { cols: 2, rows: 4 } as const;
-const SEARCH_BLOCK_TYPES = new Set<BlockType>([
-	"music",
-	"game",
-	"movie",
-	"book",
-]);
+const SEARCH_BLOCK_TYPES = new Set<BlockType>(["music", "game", "movie", "book"]);
 
 function NodeHandles() {
 	return (
@@ -32,12 +27,7 @@ interface RectangleBlockViewProps {
 	secondary?: string;
 	year?: string;
 }
-function RectangleBlockView({
-	image,
-	title,
-	secondary,
-	year,
-}: RectangleBlockViewProps) {
+function RectangleBlockView({ image, title, secondary, year }: RectangleBlockViewProps) {
 	return (
 		<div className="flex flex-col h-full">
 			{image && (
@@ -86,9 +76,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 							src={data.image || defaultImage}
 							alt={data.title}
 						/>
-						<figcaption className="text-center mt-1.5 text-xs">
-							{data.title}
-						</figcaption>
+						<figcaption className="text-center mt-1.5 text-xs">{data.title}</figcaption>
 					</figure>
 				</div>
 			);
@@ -104,9 +92,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 					/>
 					<div className="flex flex-row items-center gap-1.5 bg-green py-0.5 px-3 border-t border-t-gray-700 shrink-0">
 						<div className="bg-red w-2.5 h-2.5" />
-						<div className="min-w-0 truncate text-2xs">
-							{data.title || "URL"}
-						</div>
+						<div className="min-w-0 truncate text-2xs">{data.title || "URL"}</div>
 					</div>
 					<div className="flex-1 min-h-0 bg-blue border-t border-t-gray-700 py-1 px-2">
 						<p className="line-clamp-2 text-2xs leading-tight wrap-break-word">
@@ -138,21 +124,9 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				</div>
 			);
 		case "game":
-			return (
-				<RectangleBlockView
-					image={data.image}
-					title={data.title}
-					year={data.year}
-				/>
-			);
+			return <RectangleBlockView image={data.image} title={data.title} year={data.year} />;
 		case "movie":
-			return (
-				<RectangleBlockView
-					image={data.image}
-					title={data.title}
-					year={data.year}
-				/>
-			);
+			return <RectangleBlockView image={data.image} title={data.title} year={data.year} />;
 		case "book":
 			return (
 				<RectangleBlockView
@@ -171,17 +145,12 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 	}
 }
 
-export default function BlockNode({
-	id,
-	data,
-}: NodeProps<Node<BlockNodeData>>) {
+export default function BlockNode({ id, data }: NodeProps<Node<BlockNodeData>>) {
 	const canvasMode = useCanvasStore((state) => state.mode);
 	const updateBlockData = useCanvasStore((state) => state.updateBlockData);
 	const isCanvasEditMode = canvasMode === "edit";
 
-	const [isEditing, setIsEditing] = useState(
-		(data.initialEditing ?? false) && isCanvasEditMode,
-	);
+	const [isEditing, setIsEditing] = useState((data.initialEditing ?? false) && isCanvasEditMode);
 	const startEdit = () => {
 		if (!isCanvasEditMode) return;
 		setIsEditing(true);

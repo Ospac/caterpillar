@@ -29,10 +29,7 @@ export function getVisibleCellCountBounds(
 	);
 	const maxVisibleCellCount = Math.min(
 		cellCount,
-		Math.max(
-			minVisibleCellCount,
-			Math.floor(containerWidth / (CELL_SIZE * MIN_GRID_ZOOM)),
-		),
+		Math.max(minVisibleCellCount, Math.floor(containerWidth / (CELL_SIZE * MIN_GRID_ZOOM))),
 	);
 
 	return {
@@ -123,10 +120,7 @@ export function getWheelGridVisibleCellCount(
 /**
  * `Ctrl` 또는 `Cmd`가 눌린 wheel 이벤트인지 판정합니다.
  */
-export function isGridZoomWheelEvent(event: {
-	metaKey: boolean;
-	ctrlKey: boolean;
-}): boolean {
+export function isGridZoomWheelEvent(event: { metaKey: boolean; ctrlKey: boolean }): boolean {
 	return event.metaKey || event.ctrlKey;
 }
 
@@ -139,10 +133,7 @@ function clampScrollOffset(
 	viewportSize: number,
 	axisCellCount = GRID_COLUMN_COUNT,
 ): number {
-	const maxScrollOffset = Math.max(
-		0,
-		axisCellCount * CELL_SIZE * zoom - viewportSize,
-	);
+	const maxScrollOffset = Math.max(0, axisCellCount * CELL_SIZE * zoom - viewportSize);
 
 	return Math.min(Math.max(scrollOffset, 0), maxScrollOffset);
 }
@@ -170,17 +161,7 @@ export function getCellAlignedAnchoredScrollOffset(
 	axisCellCount = GRID_COLUMN_COUNT,
 ): number {
 	const rawScrollOffset = flowPosition * zoom - anchorPosition;
-	const clampedScrollOffset = clampScrollOffset(
-		rawScrollOffset,
-		zoom,
-		viewportSize,
-		axisCellCount,
-	);
+	const clampedScrollOffset = clampScrollOffset(rawScrollOffset, zoom, viewportSize, axisCellCount);
 	const snappedScrollOffset = snapScrollOffsetToCell(clampedScrollOffset, zoom);
-	return clampScrollOffset(
-		snappedScrollOffset,
-		zoom,
-		viewportSize,
-		axisCellCount,
-	);
+	return clampScrollOffset(snappedScrollOffset, zoom, viewportSize, axisCellCount);
 }

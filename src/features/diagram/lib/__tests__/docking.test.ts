@@ -60,21 +60,11 @@ describe("docking(lib)", () => {
 	});
 
 	it("스팬이 stage 경계를 넘거나 다른 노드 셀을 포함하면 도킹할 수 없다", () => {
+		expect(isDockableForSpan({ col: 3, row: 17 }, TALL_SPAN, emptyOccupancy(), testGrid)).toBe(
+			false,
+		);
 		expect(
-			isDockableForSpan(
-				{ col: 3, row: 17 },
-				TALL_SPAN,
-				emptyOccupancy(),
-				testGrid,
-			),
-		).toBe(false);
-		expect(
-			isDockableForSpan(
-				{ col: 0, row: 0 },
-				WIDE_SPAN,
-				occupancyOf({ "1,0": "node-a" }),
-				testGrid,
-			),
+			isDockableForSpan({ col: 0, row: 0 }, WIDE_SPAN, occupancyOf({ "1,0": "node-a" }), testGrid),
 		).toBe(false);
 		expect(
 			isDockableForSpan(
@@ -90,22 +80,12 @@ describe("docking(lib)", () => {
 				"self",
 			),
 		).toBe(true);
-		expect(
-			isDockableForSpan(
-				{ col: 29, row: 13 },
-				TALL_SPAN,
-				emptyOccupancy(),
-				wideGrid,
-			),
-		).toBe(true);
-		expect(
-			isDockableForSpan(
-				{ col: 29, row: 14 },
-				TALL_SPAN,
-				emptyOccupancy(),
-				wideGrid,
-			),
-		).toBe(false);
+		expect(isDockableForSpan({ col: 29, row: 13 }, TALL_SPAN, emptyOccupancy(), wideGrid)).toBe(
+			true,
+		);
+		expect(isDockableForSpan({ col: 29, row: 14 }, TALL_SPAN, emptyOccupancy(), wideGrid)).toBe(
+			false,
+		);
 	});
 
 	it("드롭 실패 시 lastValidDock, nearest-empty-cell 순서로 복구한다", () => {
@@ -152,9 +132,7 @@ describe("docking(lib)", () => {
 		});
 
 		expect(
-			resolveDropPosition(
-				input({ position: { x: 4 * CELL_SIZE, y: 2 * CELL_SIZE } }),
-			),
+			resolveDropPosition(input({ position: { x: 4 * CELL_SIZE, y: 2 * CELL_SIZE } })),
 		).toEqual({
 			position: cellCoordToPosition({ col: 4, row: 2 }),
 			cell: { col: 4, row: 2 },

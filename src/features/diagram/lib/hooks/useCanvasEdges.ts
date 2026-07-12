@@ -40,15 +40,14 @@ export function useCanvasEdges({
 }: UseCanvasEdgesInput): CanvasEdgeHandlers {
 	const { screenToFlowPosition } = useReactFlow();
 	const { inProgress: isEdgeDragging } = useConnection<DiagramNode>();
-	const { addMenuNode, connectEdge, removeEdge, applyEdgesChange } =
-		useCanvasStore(
-			useShallow((state) => ({
-				addMenuNode: state.addMenuNode,
-				connectEdge: state.connectEdge,
-				removeEdge: state.removeEdge,
-				applyEdgesChange: state.applyEdgesChange,
-			})),
-		);
+	const { addMenuNode, connectEdge, removeEdge, applyEdgesChange } = useCanvasStore(
+		useShallow((state) => ({
+			addMenuNode: state.addMenuNode,
+			connectEdge: state.connectEdge,
+			removeEdge: state.removeEdge,
+			applyEdgesChange: state.applyEdgesChange,
+		})),
+	);
 
 	const onConnect = useCallback<OnConnect>(
 		(connection) => {
@@ -97,14 +96,7 @@ export function useCanvasEdges({
 				targetHandle: connectionHandles.targetHandle,
 			});
 		},
-		[
-			addMenuNode,
-			connectEdge,
-			isEditMode,
-			nodes,
-			occupancy,
-			screenToFlowPosition,
-		],
+		[addMenuNode, connectEdge, isEditMode, nodes, occupancy, screenToFlowPosition],
 	);
 
 	const onEdgesChange = useCallback<OnEdgesChange<Edge>>(

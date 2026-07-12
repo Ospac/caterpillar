@@ -1,13 +1,7 @@
 import type { DiagramNode } from "../model/nodeTypes";
 import { getNodeSpan } from "./blockSpan";
 import { isDockableForSpan } from "./docking";
-import type {
-	CellCoord,
-	GridDimensions,
-	GridOccupancy,
-	NodeSpan,
-	XYPosition,
-} from "./geometry";
+import type { CellCoord, GridDimensions, GridOccupancy, NodeSpan, XYPosition } from "./geometry";
 import { CELL_SIZE, cellCoordToPosition, getNodeCenterPosition } from "./grid";
 
 type ResolveMenuNodeDropPositionInput = {
@@ -41,10 +35,7 @@ function positionToEdgeDropAnchorCell(
 		return null;
 	}
 
-	if (
-		cell.col + span.cols > gridDimensions.cols ||
-		cell.row + span.rows > gridDimensions.rows
-	) {
+	if (cell.col + span.cols > gridDimensions.cols || cell.row + span.rows > gridDimensions.rows) {
 		return null;
 	}
 
@@ -74,10 +65,7 @@ export function resolveEdgeDropTargetHandle(
 		sourceNode.position,
 		getNodeSpan(sourceNode.data.blockType),
 	);
-	const targetCenter = getNodeCenterPosition(
-		targetPosition,
-		getNodeSpan("menu"),
-	);
+	const targetCenter = getNodeCenterPosition(targetPosition, getNodeSpan("menu"));
 
 	if (targetCenter.x > sourceCenter.x) return "left";
 	if (targetCenter.x < sourceCenter.x) return "right";
@@ -99,10 +87,7 @@ export function resolveEdgeDropConnectionHandles(
 		sourceNode.position,
 		getNodeSpan(sourceNode.data.blockType),
 	);
-	const targetCenter = getNodeCenterPosition(
-		targetPosition,
-		getNodeSpan("menu"),
-	);
+	const targetCenter = getNodeCenterPosition(targetPosition, getNodeSpan("menu"));
 
 	if (targetCenter.x === sourceCenter.x && targetCenter.y > sourceCenter.y) {
 		return { sourceHandle: "bottom", targetHandle: "top" };

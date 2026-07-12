@@ -28,11 +28,7 @@ describe("grid(lib)", () => {
 	});
 
 	it("노드 span 전체가 30x15 grid 안에 있어야 유지한다", () => {
-		const node = (
-			x: number,
-			y: number,
-			blockType: "text" | "movie" = "text",
-		): DiagramNode =>
+		const node = (x: number, y: number, blockType: "text" | "movie" = "text"): DiagramNode =>
 			({
 				id: `${x}-${y}-${blockType}`,
 				type: "block",
@@ -49,12 +45,7 @@ describe("grid(lib)", () => {
 		expect(isNodeFullyInsideGrid(insideTallNode)).toBe(true);
 		expect(isNodeFullyInsideGrid(outsideTallNode)).toBe(false);
 		expect(
-			getNodesOutsideGrid([
-				insideWideNode,
-				outsideWideNode,
-				insideTallNode,
-				outsideTallNode,
-			]),
+			getNodesOutsideGrid([insideWideNode, outsideWideNode, insideTallNode, outsideTallNode]),
 		).toEqual([outsideWideNode, outsideTallNode]);
 	});
 
@@ -70,29 +61,20 @@ describe("grid(lib)", () => {
 	it("노드 중심이 grid를 벗어나면 앵커 셀을 만들지 않는다", () => {
 		expect(isNodeEscapingGrid({ x: 0, y: 0 }, WIDE_SPAN)).toBe(false);
 		expect(isNodeEscapingGrid({ x: -1, y: 0 }, WIDE_SPAN)).toBe(true);
+		expect(isNodeEscapingGrid({ x: 29 * CELL_SIZE + 1, y: 13 * CELL_SIZE }, WIDE_SPAN)).toBe(true);
 		expect(
-			isNodeEscapingGrid(
-				{ x: 29 * CELL_SIZE + 1, y: 13 * CELL_SIZE },
-				WIDE_SPAN,
-			),
-		).toBe(true);
-		expect(
-			positionToAnchorCell(
-				{ x: 29 * CELL_SIZE + 1, y: 13 * CELL_SIZE },
-				WIDE_SPAN,
-			),
+			positionToAnchorCell({ x: 29 * CELL_SIZE + 1, y: 13 * CELL_SIZE }, WIDE_SPAN),
 		).toBeNull();
 	});
 
 	it("기본 grid 치수는 가로 30칸, 세로 15칸이다", () => {
 		expect(GRID_COLUMN_COUNT).toBe(30);
 		expect(GRID_ROW_COUNT).toBe(15);
-		expect(isNodeEscapingGrid({ x: 0, y: 14 * CELL_SIZE + 1 }, TALL_SPAN)).toBe(
-			true,
-		);
-		expect(
-			positionToAnchorCell({ x: 0, y: 13 * CELL_SIZE }, TALL_SPAN),
-		).toEqual({ col: 0, row: 13 });
+		expect(isNodeEscapingGrid({ x: 0, y: 14 * CELL_SIZE + 1 }, TALL_SPAN)).toBe(true);
+		expect(positionToAnchorCell({ x: 0, y: 13 * CELL_SIZE }, TALL_SPAN)).toEqual({
+			col: 0,
+			row: 13,
+		});
 	});
 
 	it("점유 현황은 스팬 단위 충돌을 sub-cell 기준으로 계산한다", () => {
@@ -115,10 +97,7 @@ describe("grid(lib)", () => {
 			node("node-c", 4 * CELL_SIZE, 0, "movie"),
 		]);
 
-		expect(Array.from(occupancy.conflictedCellKeys).sort()).toEqual([
-			"1,0",
-			"1,1",
-		]);
+		expect(Array.from(occupancy.conflictedCellKeys).sort()).toEqual(["1,0", "1,1"]);
 		expect(occupancy.cellToNodeId.get("0,0")).toBe("node-a");
 		expect(occupancy.cellToNodeId.get("2,0")).toBe("node-b");
 		expect(occupancy.cellToNodeId.get("4,0")).toBe("node-c");

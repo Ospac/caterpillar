@@ -18,9 +18,10 @@ export const DEFAULT_GRID_DIMENSIONS: GridDimensions = {
 };
 export const CELL_SIZE = 106;
 
-export function getGridPixelSize(
-	gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS,
-): { width: number; height: number } {
+export function getGridPixelSize(gridDimensions: GridDimensions = DEFAULT_GRID_DIMENSIONS): {
+	width: number;
+	height: number;
+} {
 	return {
 		width: gridDimensions.cols * CELL_SIZE,
 		height: gridDimensions.rows * CELL_SIZE,
@@ -72,12 +73,7 @@ export function isNodeEscapingGrid(
 ): boolean {
 	const gridSize = getGridPixelSize(gridDimensions);
 	const { x: centerX, y: centerY } = getNodeCenterPosition(position, span);
-	return (
-		position.x < 0 ||
-		position.y < 0 ||
-		centerX > gridSize.width ||
-		centerY > gridSize.height
-	);
+	return position.x < 0 || position.y < 0 || centerX > gridSize.width || centerY > gridSize.height;
 }
 
 /**
@@ -189,11 +185,7 @@ export function syncNodeDockingState(
 		}
 
 		const span = getNodeSpan(node.data.blockType);
-		nextState[node.id] = createDockedNodeState(
-			node.position,
-			span,
-			gridDimensions,
-		);
+		nextState[node.id] = createDockedNodeState(node.position, span, gridDimensions);
 		changed = true;
 	}
 

@@ -16,17 +16,10 @@ type FormProps<T extends BlockData> = {
 const handleOutsideClick = (e: React.FocusEvent, onEditEnd: () => void) => {
 	if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
 };
-function TextBlockForm({
-	data,
-	onDataChange,
-	onEditEnd,
-}: FormProps<TextBlockData>) {
+function TextBlockForm({ data, onDataChange, onEditEnd }: FormProps<TextBlockData>) {
 	const { register } = useForm<TextBlockData>({ defaultValues: data });
 	return (
-		<fieldset
-			className="h-full"
-			onBlur={(e) => handleOutsideClick(e, onEditEnd)}
-		>
+		<fieldset className="h-full" onBlur={(e) => handleOutsideClick(e, onEditEnd)}>
 			<textarea
 				{...register("title", {
 					onChange: (e) => onDataChange({ ...data, title: e.target.value }),
@@ -40,11 +33,7 @@ function TextBlockForm({
 	);
 }
 
-function ImageBlockForm({
-	data,
-	onDataChange,
-	onEditEnd,
-}: FormProps<ImageBlockData>) {
+function ImageBlockForm({ data, onDataChange, onEditEnd }: FormProps<ImageBlockData>) {
 	const { register } = useForm<ImageBlockData>({
 		defaultValues: data,
 	});
@@ -78,11 +67,7 @@ function ImageBlockForm({
 	);
 }
 
-function LinkBlockForm({
-	data,
-	onDataChange,
-	onEditEnd,
-}: FormProps<LinkBlockData>) {
+function LinkBlockForm({ data, onDataChange, onEditEnd }: FormProps<LinkBlockData>) {
 	const { register } = useForm<LinkBlockData>({
 		defaultValues: data,
 	});
@@ -115,36 +100,14 @@ interface BlockEditFormProps {
 	onDataChange: (newData: BlockData) => void;
 	onEditEnd: () => void;
 }
-export default function BlockEditForm({
-	data,
-	onDataChange,
-	onEditEnd,
-}: BlockEditFormProps) {
+export default function BlockEditForm({ data, onDataChange, onEditEnd }: BlockEditFormProps) {
 	switch (data.blockType) {
 		case "text":
-			return (
-				<TextBlockForm
-					data={data}
-					onDataChange={onDataChange}
-					onEditEnd={onEditEnd}
-				/>
-			);
+			return <TextBlockForm data={data} onDataChange={onDataChange} onEditEnd={onEditEnd} />;
 		case "image":
-			return (
-				<ImageBlockForm
-					data={data}
-					onDataChange={onDataChange}
-					onEditEnd={onEditEnd}
-				/>
-			);
+			return <ImageBlockForm data={data} onDataChange={onDataChange} onEditEnd={onEditEnd} />;
 		case "link":
-			return (
-				<LinkBlockForm
-					data={data}
-					onDataChange={onDataChange}
-					onEditEnd={onEditEnd}
-				/>
-			);
+			return <LinkBlockForm data={data} onDataChange={onDataChange} onEditEnd={onEditEnd} />;
 		case "music":
 			return (
 				<SearchBlockForm

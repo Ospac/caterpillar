@@ -58,17 +58,11 @@ export function createSearchClient(config: SearchClientConfig = {}) {
 	});
 }
 
-export function withSearchQuery<T>({
-	handler,
-	errorMessage,
-}: WithSearchQueryOptions<T>) {
-	return async (
-		...args: [request: Request, context: Context]
-	): Promise<Response> => {
+export function withSearchQuery<T>({ handler, errorMessage }: WithSearchQueryOptions<T>) {
+	return async (...args: [request: Request, context: Context]): Promise<Response> => {
 		const [request, context] = args;
 		const query = getQuery(request);
-		if (!query)
-			return jsonError({ message: "Missing query parameter", status: 400 });
+		if (!query) return jsonError({ message: "Missing query parameter", status: 400 });
 
 		try {
 			const result = await handler({ query, request, context });
@@ -92,13 +86,7 @@ export function withSearchQuery<T>({
 		}
 	};
 }
-export function jsonError({
-	message,
-	status,
-}: {
-	message: string;
-	status: number;
-}): Response {
+export function jsonError({ message, status }: { message: string; status: number }): Response {
 	return new Response(JSON.stringify({ error: message }), {
 		status,
 		headers: JSON_HEADERS,
@@ -134,8 +122,7 @@ export async function responseNotOk({
 	message: string;
 }): Promise<Response> {
 	const context = Netlify.env.get("context");
-	if (context === "production")
-		return jsonError({ message, status: response.status });
+	if (context === "production") return jsonError({ message, status: response.status });
 	return jsonError({ message: await response.json(), status: response.status });
 }
 
@@ -147,8 +134,7 @@ export function responseNotOkFromAxios({
 	message: string;
 }): Response {
 	const context = Netlify.env.get("context");
-	if (context === "production")
-		return jsonError({ message, status: response.status });
+	if (context === "production") return jsonError({ message, status: response.status });
 	return jsonError({
 		message: JSON.stringify(response.data),
 		status: response.status,
@@ -163,8 +149,7 @@ export function responseNotOkFromAxiosError({
 	message: string;
 }): Response {
 	if (!axios.isAxiosError(error)) return jsonError({ message, status: 500 });
-	if (error.response)
-		return responseNotOkFromAxios({ response: error.response, message });
+	if (error.response) return responseNotOkFromAxios({ response: error.response, message });
 
 	const context = Netlify.env.get("context");
 	if (context === "production") return jsonError({ message, status: 502 });

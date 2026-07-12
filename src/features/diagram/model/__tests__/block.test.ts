@@ -84,9 +84,7 @@ describe("block(model)", () => {
 	});
 
 	it("music: title/secondary가 빈 문자열이면 fallback으로 보정한다", () => {
-		expect(
-			validateBlockData({ blockType: "music", title: "", secondary: "" }),
-		).toEqual({
+		expect(validateBlockData({ blockType: "music", title: "", secondary: "" })).toEqual({
 			status: "fallback",
 			data: {
 				blockType: "music",
@@ -116,9 +114,7 @@ describe("block(model)", () => {
 	});
 
 	it("game: title이 빈 문자열이면 fallback으로 보정한다", () => {
-		expect(
-			validateBlockData({ blockType: "game", title: "", secondary: "" }),
-		).toEqual({
+		expect(validateBlockData({ blockType: "game", title: "", secondary: "" })).toEqual({
 			status: "fallback",
 			data: {
 				blockType: "game",
@@ -148,9 +144,7 @@ describe("block(model)", () => {
 	});
 
 	it("movie: title이 빈 문자열이면 fallback으로 보정한다", () => {
-		expect(
-			validateBlockData({ blockType: "movie", title: "", secondary: "" }),
-		).toEqual({
+		expect(validateBlockData({ blockType: "movie", title: "", secondary: "" })).toEqual({
 			status: "fallback",
 			data: {
 				blockType: "movie",
@@ -182,9 +176,7 @@ describe("block(model)", () => {
 	});
 
 	it("book: title/secondary가 빈 문자열이면 fallback으로 보정한다", () => {
-		expect(
-			validateBlockData({ blockType: "book", title: "", secondary: "" }),
-		).toEqual({
+		expect(validateBlockData({ blockType: "book", title: "", secondary: "" })).toEqual({
 			status: "fallback",
 			data: {
 				blockType: "book",

@@ -13,9 +13,7 @@ export type CanvasRuntimeState = {
 	nodeDockingState: RuntimeNodeDockingState;
 };
 
-export function createRuntimeNodeDockingState(
-	nodes: DiagramNode[],
-): RuntimeNodeDockingState {
+export function createRuntimeNodeDockingState(nodes: DiagramNode[]): RuntimeNodeDockingState {
 	return Object.fromEntries(
 		nodes.map((node) => [
 			node.id,

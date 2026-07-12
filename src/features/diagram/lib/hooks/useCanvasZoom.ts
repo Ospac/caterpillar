@@ -1,11 +1,4 @@
-import {
-	type RefObject,
-	useCallback,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-	useState,
-} from "react";
+import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { GRID_COLUMN_COUNT, GRID_ROW_COUNT, getGridPixelSize } from "../grid";
 import {
 	GRID_ZOOM_BUTTON_CELL_STEP,
@@ -52,28 +45,17 @@ interface CanvasZoom {
 export function useCanvasZoom(): CanvasZoom {
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const pendingAnchorRef = useRef<ZoomAnchor | null>(null);
-	const zoomGuideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-		null,
-	);
+	const zoomGuideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const [containerWidth, setContainerWidth] = useState(0);
-	const [manualVisibleCellCount, setManualVisibleCellCount] = useState<
-		number | null
-	>(null);
+	const [manualVisibleCellCount, setManualVisibleCellCount] = useState<number | null>(null);
 	const [isZooming, setIsZooming] = useState(false);
 
-	const responsiveVisibleCellCount =
-		getResponsiveGridVisibleCellCount(containerWidth);
+	const responsiveVisibleCellCount = getResponsiveGridVisibleCellCount(containerWidth);
 	const visibleCellCountBounds = getVisibleCellCountBounds(containerWidth);
 	const visibleCellCount = manualVisibleCellCount ?? responsiveVisibleCellCount;
 	const gridZoom = getGridZoomForVisibleCells(containerWidth, visibleCellCount);
-	const minGridZoom = getGridZoomForVisibleCells(
-		containerWidth,
-		responsiveVisibleCellCount,
-	);
-	const maxGridZoom = getGridZoomForVisibleCells(
-		containerWidth,
-		visibleCellCountBounds.min,
-	);
+	const minGridZoom = getGridZoomForVisibleCells(containerWidth, responsiveVisibleCellCount);
+	const maxGridZoom = getGridZoomForVisibleCells(containerWidth, visibleCellCountBounds.min);
 
 	const captureZoomAnchor = useCallback(
 		(pointer?: PointerPosition): ZoomAnchor | null => {
@@ -81,12 +63,8 @@ export function useCanvasZoom(): CanvasZoom {
 			if (!container) return null;
 
 			const rect = pointer ? container.getBoundingClientRect() : null;
-			const anchorX = pointer
-				? pointer.clientX - (rect?.left ?? 0)
-				: container.clientWidth / 2;
-			const anchorY = pointer
-				? pointer.clientY - (rect?.top ?? 0)
-				: container.clientHeight / 2;
+			const anchorX = pointer ? pointer.clientX - (rect?.left ?? 0) : container.clientWidth / 2;
+			const anchorY = pointer ? pointer.clientY - (rect?.top ?? 0) : container.clientHeight / 2;
 
 			return {
 				flowX: (container.scrollLeft + anchorX) / gridZoom,
@@ -127,21 +105,13 @@ export function useCanvasZoom(): CanvasZoom {
 
 	const zoomIn = useCallback(() => {
 		applyVisibleCellCount(
-			getNextGridVisibleCellCount(
-				visibleCellCount,
-				containerWidth,
-				-GRID_ZOOM_BUTTON_CELL_STEP,
-			),
+			getNextGridVisibleCellCount(visibleCellCount, containerWidth, -GRID_ZOOM_BUTTON_CELL_STEP),
 		);
 	}, [applyVisibleCellCount, containerWidth, visibleCellCount]);
 
 	const zoomOut = useCallback(() => {
 		applyVisibleCellCount(
-			getNextGridVisibleCellCount(
-				visibleCellCount,
-				containerWidth,
-				GRID_ZOOM_BUTTON_CELL_STEP,
-			),
+			getNextGridVisibleCellCount(visibleCellCount, containerWidth, GRID_ZOOM_BUTTON_CELL_STEP),
 		);
 	}, [applyVisibleCellCount, containerWidth, visibleCellCount]);
 
@@ -188,11 +158,7 @@ export function useCanvasZoom(): CanvasZoom {
 
 			event.preventDefault();
 			applyVisibleCellCount(
-				getWheelGridVisibleCellCount(
-					visibleCellCount,
-					event.deltaY,
-					containerWidth,
-				),
+				getWheelGridVisibleCellCount(visibleCellCount, event.deltaY, containerWidth),
 				event,
 			);
 		};

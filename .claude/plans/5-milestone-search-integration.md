@@ -62,10 +62,10 @@ src/features/diagram/
 
 ```ts
 interface SearchResult {
-  title: string
-  secondary: string        // artist, author 등
-  year?: string            // 출시 연도, 출판 연도 등
-  image?: string
+	title: string;
+	secondary: string; // artist, author 등
+	year?: string; // 출시 연도, 출판 연도 등
+	image?: string;
 }
 ```
 
@@ -171,35 +171,35 @@ HTTP 클라이언트는 `axios`를 사용한다 (`pnpm add axios`).
 
 ```ts
 // types.ts
-import { z } from "zod/v4"
+import { z } from "zod/v4";
 
 export const SearchResultSchema = z.object({
-  title: z.string(),
-  secondary: z.string(),
-  year: z.string().optional(),
-  image: z.string().optional(),
-})
+	title: z.string(),
+	secondary: z.string(),
+	year: z.string().optional(),
+	image: z.string().optional(),
+});
 
-export type SearchResult = z.infer<typeof SearchResultSchema>
+export type SearchResult = z.infer<typeof SearchResultSchema>;
 
-const SearchResultArraySchema = z.array(SearchResultSchema)
+const SearchResultArraySchema = z.array(SearchResultSchema);
 
 /** axios 응답을 Zod로 검증하여 SearchResult[]를 반환 */
 export function parseSearchResults(data: unknown): SearchResult[] {
-  return SearchResultArraySchema.parse(data)
+	return SearchResultArraySchema.parse(data);
 }
 ```
 
 ```ts
 // searchMusic.ts
-import axios from "axios"
-import { parseSearchResults } from "./types"
+import axios from "axios";
+import { parseSearchResults } from "./types";
 
 export async function searchMusic(query: string) {
-  const { data } = await axios.get("/api/search-music", {
-    params: { q: query },
-  })
-  return parseSearchResults(data)
+	const { data } = await axios.get("/api/search-music", {
+		params: { q: query },
+	});
+	return parseSearchResults(data);
 }
 ```
 
@@ -222,6 +222,7 @@ export async function searchMusic(query: string) {
 #### 컴포넌트 연동
 
 **변경 전:**
+
 ```tsx
 <SearchBlockForm
   items={MOCK_RESULTS.music}
@@ -231,6 +232,7 @@ export async function searchMusic(query: string) {
 ```
 
 **변경 후:**
+
 ```tsx
 // MusicBlockForm 내부
 const [debouncedQuery] = useDebouncedValue(query, 300)
@@ -250,6 +252,7 @@ const { data, isLoading, isError } = useQuery(
 - `queryOptions`의 `enabled` 조건이 최소 글자수 제어
 
 **SearchBlockForm 변경사항:**
+
 - `filterFn` prop 제거 (서버에서 이미 필터링됨)
 - `isLoading` prop 추가 → 로딩 스피너/텍스트 표시
 - `isError` prop 추가 → 에러 메시지 + 재시도 버튼 표시
@@ -262,21 +265,21 @@ const { data, isLoading, isError } = useQuery(
 
 **변경 전 → 변경 후:**
 
-| 블록 타입 | 기존 필드 | 변경 후 필드 |
-|---|---|---|
-| `MusicBlockData` | `artist: string` | `secondary: string` |
-| `GameBlockData` | `releaseYear: number` | `year: string` |
-| `MovieBlockData` | `releaseYear: number` | `year: string` |
-| `BookBlockData` | `author: string` | `secondary: string` |
+| 블록 타입        | 기존 필드             | 변경 후 필드        |
+| ---------------- | --------------------- | ------------------- |
+| `MusicBlockData` | `artist: string`      | `secondary: string` |
+| `GameBlockData`  | `releaseYear: number` | `year: string`      |
+| `MovieBlockData` | `releaseYear: number` | `year: string`      |
+| `BookBlockData`  | `author: string`      | `secondary: string` |
 
 4개 검색 블록 타입 모두 공통 구조를 갖는다:
 
 ```ts
 interface SearchableBlockData {
-  title: string
-  secondary: string
-  year?: string
-  image?: string
+	title: string;
+	secondary: string;
+	year?: string;
+	image?: string;
 }
 ```
 
@@ -306,7 +309,6 @@ interface SearchableBlockData {
   status = 200
 ```
 
-
 - 로컬 개발: `netlify dev` 명령으로 Functions + 프론트엔드 동시 실행
 - 프로덕션: Netlify 대시보드에서 환경 변수 설정
 
@@ -320,16 +322,15 @@ interface SearchableBlockData {
 
 ## 에러 처리 전략
 
-| 상황 | 사용자에게 표시 | 동작 |
-|---|---|---|
-| 네트워크 오류 | "검색 중 오류가 발생했습니다" + 재시도 버튼 | TanStack Query `retry: 1` |
-| API 키 미설정/인증 실패 | "API 설정을 확인해주세요" | HTTP 401/403 → 에러 메시지 |
-| 쿼터 초과 | "요청 한도를 초과했습니다" | HTTP 429 → 에러 메시지 |
-| 빈 결과 | "결과 없음" | 정상 빈 배열 |
-| 외부 API 응답 파싱 실패 | "검색 중 오류가 발생했습니다" | function 내부 catch → 500 |
+| 상황                    | 사용자에게 표시                             | 동작                       |
+| ----------------------- | ------------------------------------------- | -------------------------- |
+| 네트워크 오류           | "검색 중 오류가 발생했습니다" + 재시도 버튼 | TanStack Query `retry: 1`  |
+| API 키 미설정/인증 실패 | "API 설정을 확인해주세요"                   | HTTP 401/403 → 에러 메시지 |
+| 쿼터 초과               | "요청 한도를 초과했습니다"                  | HTTP 429 → 에러 메시지     |
+| 빈 결과                 | "결과 없음"                                 | 정상 빈 배열               |
+| 외부 API 응답 파싱 실패 | "검색 중 오류가 발생했습니다"               | function 내부 catch → 500  |
 
 **핵심 원칙:** 검색 에러는 해당 블록 폼 안에서만 표시. 캔버스 노드/엣지/도킹 상태에 영향 없음.
-
 
 ## 검증 체크리스트
 

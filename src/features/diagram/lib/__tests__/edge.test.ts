@@ -170,18 +170,12 @@ describe("menuDrop(lib)", () => {
 		});
 
 		it("중심점이 같으면 targetHandle을 지정하지 않는다", () => {
-			expect(resolveEdgeDropTargetHandle(sourceNode(), { x: 0, y: 0 })).toBe(
-				null,
-			);
+			expect(resolveEdgeDropTargetHandle(sourceNode(), { x: 0, y: 0 })).toBe(null);
 		});
 
 		it("x축이 같고 target이 아래에 있으면 source 아래에서 target 위로 연결한다", () => {
 			expect(
-				resolveEdgeDropConnectionHandles(
-					sourceNode(),
-					{ x: 0, y: CELL_SIZE },
-					"left",
-				),
+				resolveEdgeDropConnectionHandles(sourceNode(), { x: 0, y: CELL_SIZE }, "left"),
 			).toEqual({
 				sourceHandle: "bottom",
 				targetHandle: "top",
@@ -190,11 +184,7 @@ describe("menuDrop(lib)", () => {
 
 		it("x축이 같고 target이 위에 있으면 source 위에서 target 아래로 연결한다", () => {
 			expect(
-				resolveEdgeDropConnectionHandles(
-					sourceNode(),
-					{ x: 0, y: -CELL_SIZE },
-					"right",
-				),
+				resolveEdgeDropConnectionHandles(sourceNode(), { x: 0, y: -CELL_SIZE }, "right"),
 			).toEqual({
 				sourceHandle: "top",
 				targetHandle: "bottom",

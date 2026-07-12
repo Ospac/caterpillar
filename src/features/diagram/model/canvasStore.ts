@@ -208,9 +208,7 @@ export const useCanvasStore = create<CanvasStore>()(
 				set((state) => {
 					if (!isEditMode(state)) return state;
 					return {
-						nodes: state.nodes.map((node) =>
-							node.id === nodeId ? { ...node, position } : node,
-						),
+						nodes: state.nodes.map((node) => (node.id === nodeId ? { ...node, position } : node)),
 						dirty: true,
 						saveStatus: "idle",
 					};
@@ -229,8 +227,7 @@ export const useCanvasStore = create<CanvasStore>()(
 					saveStatus: "idle",
 				}),
 			markSaving: () => set({ saveStatus: "saving" }),
-			markSaved: (savedAt) =>
-				set({ dirty: false, lastSavedAt: savedAt, saveStatus: "saved" }),
+			markSaved: (savedAt) => set({ dirty: false, lastSavedAt: savedAt, saveStatus: "saved" }),
 			markSaveError: () => set({ saveStatus: "error" }),
 		}),
 		{

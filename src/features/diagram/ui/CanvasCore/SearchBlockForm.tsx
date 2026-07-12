@@ -5,10 +5,7 @@ import type { SearchType } from "@/features/diagram/lib/api/searchApi";
 import { searchQueries } from "@/features/diagram/lib/api/searchQueries";
 import type { SearchResult } from "@/features/diagram/lib/api/types";
 import { useDebouncedValue } from "@/features/diagram/lib/hooks/useDebouncedValue";
-import type {
-	BlockData,
-	SearchBlockData,
-} from "@/features/diagram/model/blockTypes";
+import type { BlockData, SearchBlockData } from "@/features/diagram/model/blockTypes";
 
 interface SearchBlockFormProps {
 	selectedData: SearchBlockData;
@@ -29,9 +26,7 @@ export function SearchBlockForm({
 	const searchInputId = useId();
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const debouncedQuery = useDebouncedValue(query, 300);
-	const { data, isLoading, isError, refetch } = useQuery(
-		searchQueries[searchType](debouncedQuery),
-	);
+	const { data, isLoading, isError, refetch } = useQuery(searchQueries[searchType](debouncedQuery));
 	const onItemSelect = (item: SearchResult) => {
 		onDataChange({
 			...selectedData,
@@ -115,9 +110,7 @@ export function SearchBlockForm({
 					onClick={onEditEnd}
 					className="flex gap-1 border-t border-gray-300 px-2 py-1 text-[10px] text-gray-600 bg-white/50"
 				>
-					<span className="font-medium line-clamp-2 text-left">
-						{selectedData.title}
-					</span>
+					<span className="font-medium line-clamp-2 text-left">{selectedData.title}</span>
 					<span className="text-gray-400"> {selectedData.secondary}</span>
 				</button>
 			)}

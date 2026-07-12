@@ -15,20 +15,19 @@
 
 ---
 
-### GET /search/movie *(키워드 검색 — 권장)*
+### GET /search/movie _(키워드 검색 — 권장)_
 
 **Method:** `GET`
 **URL:** `https://api.themoviedb.org/3/search/movie`
 
 #### 파라미터
 
-| 파라미터 | 필수 | 타입 | 기본값 | 설명 |
-|----------|------|------|--------|------|
-| `query` | ✅ | string | — | 검색 키워드 |
-| `language` | | string | `en-US` | 결과 언어 |
-| `page` | | integer | 1 | 페이지 번호 |
-| `include_adult` | | boolean | false | 성인 콘텐츠 포함 여부 |
-
+| 파라미터        | 필수 | 타입    | 기본값  | 설명                  |
+| --------------- | ---- | ------- | ------- | --------------------- |
+| `query`         | ✅   | string  | —       | 검색 키워드           |
+| `language`      |      | string  | `en-US` | 결과 언어             |
+| `page`          |      | integer | 1       | 페이지 번호           |
+| `include_adult` |      | boolean | false   | 성인 콘텐츠 포함 여부 |
 
 ---
 
@@ -36,24 +35,24 @@
 
 ```json
 {
-  "page": 1,
-  "total_results": 100,
-  "total_pages": 5,
-  "results": [
-    {
-      "id": 12345,
-      "title": "영화 제목",
-      "original_title": "Original Title",
-      "poster_path": "/abc123.jpg",
-      "backdrop_path": "/xyz789.jpg",
-      "release_date": "2024-06-15",
-      "overview": "줄거리...",
-      "vote_average": 7.5,
-      "vote_count": 1234,
-      "genre_ids": [28, 12],
-      "popularity": 89.3
-    }
-  ]
+	"page": 1,
+	"total_results": 100,
+	"total_pages": 5,
+	"results": [
+		{
+			"id": 12345,
+			"title": "영화 제목",
+			"original_title": "Original Title",
+			"poster_path": "/abc123.jpg",
+			"backdrop_path": "/xyz789.jpg",
+			"release_date": "2024-06-15",
+			"overview": "줄거리...",
+			"vote_average": 7.5,
+			"vote_count": 1234,
+			"genre_ids": [28, 12],
+			"popularity": 89.3
+		}
+	]
 }
 ```
 
@@ -76,34 +75,34 @@ Authorization: Bearer YOUR_BEARER_TOKEN
 
 ## TV 프로그램 검색
 
-### GET /search/tv *(키워드 검색 — 권장)*
+### GET /search/tv _(키워드 검색 — 권장)_
 
 **Method:** `GET`
 **URL:** `https://api.themoviedb.org/3/search/tv`
 
 #### 파라미터
 
-| 파라미터 | 필수 | 타입 | 기본값 | 설명 |
-|----------|------|------|--------|------|
-| `query` | ✅ | string | — | 검색 키워드 |
-| `language` | | string | `en-US` | 결과 언어 |
-| `page` | | integer | 1 | 페이지 번호 |
+| 파라미터   | 필수 | 타입    | 기본값  | 설명        |
+| ---------- | ---- | ------- | ------- | ----------- |
+| `query`    | ✅   | string  | —       | 검색 키워드 |
+| `language` |      | string  | `en-US` | 결과 언어   |
+| `page`     |      | integer | 1       | 페이지 번호 |
 
 ### 응답 주요 필드
 
 ```json
 {
-  "results": [
-    {
-      "id": 67890,
-      "name": "시리즈 제목",
-      "original_name": "Original Name",
-      "poster_path": "/def456.jpg",
-      "first_air_date": "2022-01-15",
-      "overview": "줄거리...",
-      "vote_average": 8.1
-    }
-  ]
+	"results": [
+		{
+			"id": 67890,
+			"name": "시리즈 제목",
+			"original_name": "Original Name",
+			"poster_path": "/def456.jpg",
+			"first_air_date": "2022-01-15",
+			"overview": "줄거리...",
+			"vote_average": 8.1
+		}
+	]
 }
 ```
 

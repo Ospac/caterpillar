@@ -14,12 +14,7 @@ export default function EdgeDropPreview({
 }) {
 	const connection = useConnection<DiagramNode>();
 
-	if (
-		!isEditMode ||
-		!connection.inProgress ||
-		connection.isValid ||
-		connection.toHandle
-	) {
+	if (!isEditMode || !connection.inProgress || connection.isValid || connection.toHandle) {
 		return null;
 	}
 

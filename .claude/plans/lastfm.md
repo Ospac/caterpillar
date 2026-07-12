@@ -18,34 +18,34 @@
 
 ### 파라미터
 
-| 파라미터 | 필수 | 타입 | 기본값 | 설명 |
-|----------|------|------|--------|------|
-| `api_key` | ✅ | string | — | Last.fm API 키 |
-| `album` | ✅ | string | — | 검색할 앨범명 |
-| `limit` | | integer | 30 | 페이지당 결과 수 |
-| `page` | | integer | 1 | 페이지 번호 |
-| `format` | | string | xml | `json` 지정 권장 |
+| 파라미터  | 필수 | 타입    | 기본값 | 설명             |
+| --------- | ---- | ------- | ------ | ---------------- |
+| `api_key` | ✅   | string  | —      | Last.fm API 키   |
+| `album`   | ✅   | string  | —      | 검색할 앨범명    |
+| `limit`   |      | integer | 30     | 페이지당 결과 수 |
+| `page`    |      | integer | 1      | 페이지 번호      |
+| `format`  |      | string  | xml    | `json` 지정 권장 |
 
 ### 응답 주요 필드
 
 ```json
 {
-  "results": {
-    "opensearch:totalResults": "123",
-    "albummatches": {
-      "album": [
-        {
-          "name": "앨범명",
-          "artist": "아티스트명",
-          "image": [
-            { "#text": "https://...", "size": "small" },
-            { "#text": "https://...", "size": "medium" },
-            { "#text": "https://...", "size": "large" }
-          ]
-        }
-      ]
-    }
-  }
+	"results": {
+		"opensearch:totalResults": "123",
+		"albummatches": {
+			"album": [
+				{
+					"name": "앨범명",
+					"artist": "아티스트명",
+					"image": [
+						{ "#text": "https://...", "size": "small" },
+						{ "#text": "https://...", "size": "medium" },
+						{ "#text": "https://...", "size": "large" }
+					]
+				}
+			]
+		}
+	}
 }
 ```
 
@@ -74,15 +74,15 @@ GET https://ws.audioscrobbler.com/2.0/?method=album.search&album=believe&api_key
 
 ### 파라미터
 
-| 파라미터 | 필수 | 타입 | 설명 |
-|----------|------|------|------|
-| `api_key` | ✅ | string | Last.fm API 키 |
-| `artist` | ✅* | string | 아티스트명 (`mbid` 없을 때 필수) |
-| `album` | ✅* | string | 앨범명 (`mbid` 없을 때 필수) |
-| `mbid` | | string | MusicBrainz ID (artist/album 대체 가능) |
-| `autocorrect` | | 0\|1 | 오탈자 자동 교정 |
-| `lang` | | string | 바이오 언어 (ISO 639-1, 예: `ko`, `en`) |
-| `format` | | string | `json` 지정 권장 |
+| 파라미터      | 필수 | 타입   | 설명                                    |
+| ------------- | ---- | ------ | --------------------------------------- |
+| `api_key`     | ✅   | string | Last.fm API 키                          |
+| `artist`      | ✅*  | string | 아티스트명 (`mbid` 없을 때 필수)        |
+| `album`       | ✅*  | string | 앨범명 (`mbid` 없을 때 필수)            |
+| `mbid`        |      | string | MusicBrainz ID (artist/album 대체 가능) |
+| `autocorrect` |      | 0\|1   | 오탈자 자동 교정                        |
+| `lang`        |      | string | 바이오 언어 (ISO 639-1, 예: `ko`, `en`) |
+| `format`      |      | string | `json` 지정 권장                        |
 
 ### 응답 주요 필드
 

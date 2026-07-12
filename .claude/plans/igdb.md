@@ -33,14 +33,14 @@ Accept: application/json
 
 Body에 텍스트 형태로 쿼리를 전달합니다.
 
-| 키워드 | 설명 | 예시 |
-|--------|------|------|
+| 키워드   | 설명                         | 예시                                    |
+| -------- | ---------------------------- | --------------------------------------- |
 | `fields` | 반환할 필드 목록 (쉼표 구분) | `fields name,cover,first_release_date;` |
-| `search` | 이름 키워드 검색 | `search "zelda";` |
-| `where` | 필터 조건 | `where rating > 80;` |
-| `limit` | 결과 수 (기본 10, 최대 500) | `limit 10;` |
-| `offset` | 페이지네이션 시작 위치 | `offset 0;` |
-| `sort` | 정렬 | `sort rating desc;` |
+| `search` | 이름 키워드 검색             | `search "zelda";`                       |
+| `where`  | 필터 조건                    | `where rating > 80;`                    |
+| `limit`  | 결과 수 (기본 10, 최대 500)  | `limit 10;`                             |
+| `offset` | 페이지네이션 시작 위치       | `offset 0;`                             |
+| `sort`   | 정렬                         | `sort rating desc;`                     |
 
 ### 키워드 검색 예시
 
@@ -56,40 +56,40 @@ curl 'https://api.igdb.com/v4/games' \
 
 ## 주요 필드 목록
 
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| `id` | Integer | 고유 ID |
-| `name` | String | 게임 이름 |
-| `cover` | Reference ID (Cover) | 커버 이미지 ID |
-| `first_release_date` | Unix Timestamp | 최초 출시일 |
-| `summary` | String | 게임 설명 |
-| `storyline` | String | 스토리 설명 |
-| `rating` | Double | IGDB 유저 평점 (0–100) |
-| `rating_count` | Integer | 유저 평점 수 |
-| `aggregated_rating` | Double | 외부 평론가 평점 |
-| `total_rating` | Double | 유저 + 평론가 통합 평점 |
-| `genres` | Array of Genre IDs | 장르 |
-| `platforms` | Array of Platform IDs | 플랫폼 |
-| `game_modes` | Array of Game Mode IDs | 싱글/멀티플레이어 등 |
-| `involved_companies` | Array of Involved Company IDs | 개발/배급사 |
-| `release_dates` | Array of Release Date IDs | 플랫폼별 출시일 |
-| `screenshots` | Array of Screenshot IDs | 스크린샷 |
-| `videos` | Array of Game Video IDs | 영상 |
-| `websites` | Array of Website IDs | 관련 웹사이트 |
-| `similar_games` | Array of Game IDs | 유사 게임 |
-| `slug` | String | URL-safe 고유 이름 |
-| `url` | String | IGDB 페이지 URL |
-| `game_type` | Reference ID (Game Type) | 게임 유형 |
-| `game_status` | Reference ID (Game Status) | 출시 상태 |
+| 필드                 | 타입                          | 설명                    |
+| -------------------- | ----------------------------- | ----------------------- |
+| `id`                 | Integer                       | 고유 ID                 |
+| `name`               | String                        | 게임 이름               |
+| `cover`              | Reference ID (Cover)          | 커버 이미지 ID          |
+| `first_release_date` | Unix Timestamp                | 최초 출시일             |
+| `summary`            | String                        | 게임 설명               |
+| `storyline`          | String                        | 스토리 설명             |
+| `rating`             | Double                        | IGDB 유저 평점 (0–100)  |
+| `rating_count`       | Integer                       | 유저 평점 수            |
+| `aggregated_rating`  | Double                        | 외부 평론가 평점        |
+| `total_rating`       | Double                        | 유저 + 평론가 통합 평점 |
+| `genres`             | Array of Genre IDs            | 장르                    |
+| `platforms`          | Array of Platform IDs         | 플랫폼                  |
+| `game_modes`         | Array of Game Mode IDs        | 싱글/멀티플레이어 등    |
+| `involved_companies` | Array of Involved Company IDs | 개발/배급사             |
+| `release_dates`      | Array of Release Date IDs     | 플랫폼별 출시일         |
+| `screenshots`        | Array of Screenshot IDs       | 스크린샷                |
+| `videos`             | Array of Game Video IDs       | 영상                    |
+| `websites`           | Array of Website IDs          | 관련 웹사이트           |
+| `similar_games`      | Array of Game IDs             | 유사 게임               |
+| `slug`               | String                        | URL-safe 고유 이름      |
+| `url`                | String                        | IGDB 페이지 URL         |
+| `game_type`          | Reference ID (Game Type)      | 게임 유형               |
+| `game_status`        | Reference ID (Game Status)    | 출시 상태               |
 
 ### Deprecated 필드 (사용 금지)
 
-| 구 필드 | 대체 필드 |
-|---------|----------|
-| `category` | `game_type` |
+| 구 필드      | 대체 필드     |
+| ------------ | ------------- |
+| `category`   | `game_type`   |
 | `collection` | `collections` |
-| `status` | `game_status` |
-| `follows` | — (제거 예정) |
+| `status`     | `game_status` |
+| `follows`    | — (제거 예정) |
 
 ---
 
@@ -110,13 +110,13 @@ https://images.igdb.com/igdb/image/upload/t_{size}/{image_id}.jpg
 
 ### 주요 size 옵션
 
-| size | 해상도 |
-|------|--------|
-| `cover_small` | 90×128 |
-| `cover_big` | 264×374 |
-| `thumb` | 90×90 |
+| size             | 해상도  |
+| ---------------- | ------- |
+| `cover_small`    | 90×128  |
+| `cover_big`      | 264×374 |
+| `thumb`          | 90×90   |
 | `screenshot_med` | 569×320 |
-| `original` | 원본 |
+| `original`       | 원본    |
 
 ---
 

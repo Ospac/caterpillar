@@ -82,9 +82,7 @@ describe("canvasStore", () => {
 				type: "block",
 			}),
 		);
-		expect(
-			useCanvasStore.getState().addMenuNode({ x: 4 * CELL_SIZE, y: 0 }),
-		).toBe("node-3");
+		expect(useCanvasStore.getState().addMenuNode({ x: 4 * CELL_SIZE, y: 0 })).toBe("node-3");
 	});
 
 	it("블록 데이터와 엣지를 갱신하고 문서 shape로 직렬화한다", () => {

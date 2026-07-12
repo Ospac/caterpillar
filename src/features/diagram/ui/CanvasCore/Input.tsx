@@ -2,17 +2,10 @@ import type { ClassValue } from "clsx";
 import type { InputHTMLAttributes } from "react";
 import { cn } from "@/shared/utils/cn";
 
-interface InputProps
-	extends Omit<InputHTMLAttributes<HTMLInputElement>, "className"> {
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "className"> {
 	classNames?: ClassValue;
 }
-export default function Input({
-	type,
-	placeholder,
-	autoFocus,
-	classNames,
-	...rest
-}: InputProps) {
+export default function Input({ type, placeholder, autoFocus, classNames, ...rest }: InputProps) {
 	return (
 		<input
 			{...rest}

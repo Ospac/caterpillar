@@ -104,9 +104,7 @@ describe("document(model)", () => {
 		const parsed = parseCanvasDocument(documentFixture);
 		expect(parsed).not.toBeNull();
 
-		expect(serializeCanvasDocument(parsed as ParsedCanvasDocument)).toEqual(
-			documentFixture,
-		);
+		expect(serializeCanvasDocument(parsed as ParsedCanvasDocument)).toEqual(documentFixture);
 	});
 
 	it("직렬화할 때 런타임 콜백은 저장하지 않는다", () => {

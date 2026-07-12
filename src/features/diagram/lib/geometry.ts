@@ -31,8 +31,7 @@ export type GridOccupancy = {
 	conflictedCellKeys: Set<string>;
 };
 
-export type FallbackStrategy =
-	(typeof FALLBACK_STRATEGIES)[keyof typeof FALLBACK_STRATEGIES];
+export type FallbackStrategy = (typeof FALLBACK_STRATEGIES)[keyof typeof FALLBACK_STRATEGIES];
 
 export type FallbackResult = {
 	position: XYPosition;

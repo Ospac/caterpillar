@@ -1,12 +1,4 @@
-export const BLOCK_TYPES = [
-	"text",
-	"image",
-	"link",
-	"music",
-	"game",
-	"movie",
-	"book",
-] as const;
+export const BLOCK_TYPES = ["text", "image", "link", "music", "game", "movie", "book"] as const;
 
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
@@ -34,11 +26,7 @@ export type BlockData =
 	| MovieBlockData
 	| BookBlockData;
 
-export type SearchBlockData =
-	| MusicBlockData
-	| GameBlockData
-	| MovieBlockData
-	| BookBlockData;
+export type SearchBlockData = MusicBlockData | GameBlockData | MovieBlockData | BookBlockData;
 
 export type BlockValidationResult =
 	| {

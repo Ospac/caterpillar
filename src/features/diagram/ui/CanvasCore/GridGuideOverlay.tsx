@@ -42,12 +42,7 @@ export default function GridGuideOverlay({ visible }: GridGuideOverlayProps) {
 						colorInterpolationFilters="sRGB"
 					>
 						<feFlood floodOpacity="0" result="BackgroundImageFix" />
-						<feBlend
-							mode="normal"
-							in="SourceGraphic"
-							in2="BackgroundImageFix"
-							result="shape"
-						/>
+						<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
 						<feTurbulence
 							type="fractalNoise"
 							baseFrequency="0.05000000074505806 0.05000000074505806"
@@ -88,13 +83,7 @@ export default function GridGuideOverlay({ visible }: GridGuideOverlayProps) {
 						/>
 					</pattern>
 				</defs>
-				<rect
-					x="0"
-					y="0"
-					width={size.width}
-					height={size.height}
-					fill={`url(#${patternId})`}
-				/>
+				<rect x="0" y="0" width={size.width} height={size.height} fill={`url(#${patternId})`} />
 			</svg>
 		</ViewportPortal>
 	);

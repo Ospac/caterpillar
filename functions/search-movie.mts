@@ -28,17 +28,14 @@ export default withSearchQuery({
 		});
 		if (bearerToken instanceof Response) return bearerToken;
 
-		const response = await tmdbClient.get<TmdbSearchResponse>(
-			ENDPOINT.tmdb.movie,
-			{
-				params: {
-					query,
-					language: "ko-KR",
-					page: "1",
-				},
-				headers: { Authorization: `Bearer ${bearerToken}` },
+		const response = await tmdbClient.get<TmdbSearchResponse>(ENDPOINT.tmdb.movie, {
+			params: {
+				query,
+				language: "ko-KR",
+				page: "1",
 			},
-		);
+			headers: { Authorization: `Bearer ${bearerToken}` },
+		});
 		const error = responseNotOkFromAxiosResponse({
 			response,
 			message: "Failed to fetch from TMDB",
@@ -56,9 +53,7 @@ function formatMovies(movies: Movie[]): SearchResult[] {
 			title: movie.title,
 			secondary: year ?? "",
 			year,
-			image: movie.poster_path
-				? `${ENDPOINT.tmdb.poster}${movie.poster_path}`
-				: undefined,
+			image: movie.poster_path ? `${ENDPOINT.tmdb.poster}${movie.poster_path}` : undefined,
 		};
 	});
 }

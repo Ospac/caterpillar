@@ -62,8 +62,7 @@ async function loadIgdbConfig(): Promise<IgdbConfig | Response> {
 
 	const store = getStore("tokens");
 	const storedToken = await store.get("access_token", { type: "text" });
-	const accessToken =
-		storedToken ?? (await refreshAccessToken(clientId, clientSecret));
+	const accessToken = storedToken ?? (await refreshAccessToken(clientId, clientSecret));
 
 	if (!storedToken) await store.set("access_token", accessToken);
 
@@ -81,10 +80,7 @@ async function searchGames(
 	if (response.status === 401) {
 		currentConfig = {
 			...currentConfig,
-			accessToken: await refreshAccessToken(
-				currentConfig.clientId,
-				currentConfig.clientSecret,
-			),
+			accessToken: await refreshAccessToken(currentConfig.clientId, currentConfig.clientSecret),
 		};
 		await getStore("tokens").set("access_token", currentConfig.accessToken);
 		client = createIgdbClient(currentConfig);
@@ -118,9 +114,7 @@ function requestGames(client: AxiosInstance, query: string) {
 }
 
 async function fetchCoverMap(client: AxiosInstance, games: Game[]) {
-	const coverIds = games.flatMap((game) =>
-		game.cover === undefined ? [] : [game.cover],
-	);
+	const coverIds = games.flatMap((game) => (game.cover === undefined ? [] : [game.cover]));
 	if (coverIds.length === 0) return new Map<number, string>();
 
 	const response = await client.post<Cover[]>(
@@ -132,17 +126,11 @@ async function fetchCoverMap(client: AxiosInstance, games: Game[]) {
 	}
 
 	return new Map(
-		response.data.map((cover) => [
-			cover.id,
-			`${ENDPOINT.igdb.cover}${cover.image_id}.jpg`,
-		]),
+		response.data.map((cover) => [cover.id, `${ENDPOINT.igdb.cover}${cover.image_id}.jpg`]),
 	);
 }
 
-function formatGames(
-	games: Game[],
-	coverMap: Map<number, string>,
-): SearchResult[] {
+function formatGames(games: Game[], coverMap: Map<number, string>): SearchResult[] {
 	return games.map((game) => ({
 		title: game.name,
 		secondary: "",
