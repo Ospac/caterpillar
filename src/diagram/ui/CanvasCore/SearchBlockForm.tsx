@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useId, useRef, useState } from "react";
 import defaultImage from "@/assets/frankenstein.webp";
-import type { SearchType } from "@/features/diagram/lib/api/searchApi";
-import { searchQueries } from "@/features/diagram/lib/api/searchQueries";
-import type { SearchResult } from "@/features/diagram/lib/api/types";
-import { useDebouncedValue } from "@/features/diagram/lib/hooks/useDebouncedValue";
-import type { BlockData, SearchBlockData } from "@/features/diagram/model/blockTypes";
+import type { SearchType } from "@/diagram/api/searchApi";
+import { searchQueries } from "@/diagram/api/searchQueries";
+import type { SearchResult } from "@/diagram/api/types";
+import { useDebouncedValue } from "@/diagram/hooks/useDebouncedValue";
+import type { BlockData, SearchBlockData } from "@/diagram/model/blockTypes";
 
 interface SearchBlockFormProps {
 	selectedData: SearchBlockData;

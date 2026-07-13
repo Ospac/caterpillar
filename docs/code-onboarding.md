@@ -4,12 +4,12 @@
 
 ## 1. 데이터 모델
 
-출발점은 `src/features/diagram/model/blockTypes.ts`입니다.
+출발점은 `src/diagram/model/blockTypes.ts`입니다.
 
 블록 타입은 7개입니다.
 
 ```ts
-text | image | link | music | game | movie | book
+text | image | link | music | game | movie | book;
 ```
 
 현재 모든 블록은 공통 필드 구조를 공유합니다.
@@ -22,11 +22,11 @@ image?
 year?
 ```
 
-`src/features/diagram/model/block.ts`의 `validateBlockData()`는 저장소나 localStorage에서 복원한 값이 실제 블록으로 쓸 수 있는지 검증하는 관문입니다.
+`src/diagram/model/block.ts`의 `validateBlockData()`는 저장소나 localStorage에서 복원한 값이 실제 블록으로 쓸 수 있는지 검증하는 관문입니다.
 
 ## 2. 문서와 저장 모델
 
-저장 가능한 캔버스 구조는 `src/features/diagram/model/document.ts`의 `CanvasDocument`입니다.
+저장 가능한 캔버스 구조는 `src/diagram/model/document.ts`의 `CanvasDocument`입니다.
 
 핵심 함수는 다음과 같습니다.
 
@@ -46,7 +46,7 @@ year?
 
 ## 3. 전역 캔버스 상태
 
-상태의 중심은 `src/features/diagram/model/canvasStore.ts`의 `useCanvasStore`입니다.
+상태의 중심은 `src/diagram/model/canvasStore.ts`의 `useCanvasStore`입니다.
 
 이 store는 앱의 명령 API 역할을 합니다.
 
@@ -61,7 +61,7 @@ year?
 
 ## 4. 메인 화면 오케스트레이터
 
-실제 화면의 중심은 `src/features/diagram/ui/CanvasCore/index.tsx`입니다.
+실제 화면의 중심은 `src/diagram/ui/CanvasCore/index.tsx`입니다.
 
 이 컴포넌트의 책임은 다음과 같습니다.
 
@@ -85,7 +85,7 @@ store에서 nodes/edges/mode 읽기
 
 ## 5. 그리드와 줌
 
-캔버스의 논리 grid는 `src/features/diagram/lib/grid.ts`에 정의된 30×15 cells이며,
+캔버스의 논리 grid는 `src/diagram/lib/grid.ts`에 정의된 30×15 cells이며,
 cell 하나는 106px입니다. grid 크기는 고정이고, 화면에 보이는 크기만 줌에 따라 달라집니다.
 
 줌은 React Flow 내장 zoom을 직접 조작하지 않습니다. `useCanvasZoom()`이 viewport에 보이는
@@ -121,7 +121,7 @@ React Flow의 pan과 scroll/pinch/double-click zoom은 비활성화되어 있습
 
 ## 6. 노드 드래그와 도킹
 
-노드 드래그 흐름은 `src/features/diagram/lib/hooks/useCanvasNodes.ts`에서 시작합니다.
+노드 드래그 흐름은 `src/diagram/hooks/useCanvasNodes.ts`에서 시작합니다.
 
 드래그 중에는 React Flow의 node position을 그대로 사용하고, 드래그가 끝나는 순간에만 도킹 규칙을 적용합니다.
 
@@ -133,7 +133,7 @@ onNodeDragStop
 -> runtime docking state 갱신
 ```
 
-도킹 계산 자체는 `src/features/diagram/lib/docking.ts`에 있습니다.
+도킹 계산 자체는 `src/diagram/lib/docking.ts`에 있습니다.
 
 `resolveDropPosition()`의 판단 순서는 다음과 같습니다.
 
@@ -144,11 +144,11 @@ onNodeDragStop
 4. 실패하면 lastValidDock 또는 nearestEmptyCell로 fallback
 ```
 
-그리드 좌표 변환은 `src/features/diagram/lib/grid.ts`가 담당합니다. 여기서 `XYPosition` 픽셀 좌표와 `CellCoord` 그리드 좌표가 서로 변환됩니다.
+그리드 좌표 변환은 `src/diagram/lib/grid.ts`가 담당합니다. 여기서 `XYPosition` 픽셀 좌표와 `CellCoord` 그리드 좌표가 서로 변환됩니다.
 
 ## 7. 엣지 연결
 
-엣지는 `src/features/diagram/lib/hooks/useCanvasEdges.ts`를 보면 됩니다.
+엣지는 `src/diagram/hooks/useCanvasEdges.ts`를 보면 됩니다.
 
 일반 연결은 단순합니다.
 
@@ -168,11 +168,11 @@ onConnectEnd
 
 즉, 사용자가 어떤 노드에서 선을 끌어 빈 공간에 놓으면 그 자리에 새 메뉴 노드가 생기고 기존 노드와 연결됩니다.
 
-좌표와 핸들 계산은 `src/features/diagram/lib/edge.ts`에 분리되어 있습니다.
+좌표와 핸들 계산은 `src/diagram/lib/edge.ts`에 분리되어 있습니다.
 
 ## 8. 블록 UI와 편집
 
-블록 렌더링은 `src/features/diagram/ui/CanvasCore/BlockNode.tsx`가 담당합니다.
+블록 렌더링은 `src/diagram/ui/CanvasCore/BlockNode.tsx`가 담당합니다.
 
 이 컴포넌트는 두 모드로 나뉩니다.
 
@@ -183,37 +183,38 @@ onConnectEnd
 
 읽기 UI는 `BlockView()`의 `switch (data.blockType)`에서 타입별로 갈라집니다.
 
-편집 UI는 `src/features/diagram/ui/CanvasCore/BlockEditForm.tsx`에서 갈라집니다.
+편집 UI는 `src/diagram/ui/CanvasCore/BlockEditForm.tsx`에서 갈라집니다.
 
 - `text`, `image`, `link`: 직접 입력 폼
 - `music`, `game`, `movie`, `book`: 검색 폼
 
-검색형 블록은 `src/features/diagram/ui/CanvasCore/SearchBlockForm.tsx`에서 TanStack Query를 사용합니다. 실제 요청은 `src/features/diagram/lib/api/searchApi.ts`, 쿼리 옵션은 `src/features/diagram/lib/api/searchQueries.ts`에 있습니다.
+검색형 블록은 `src/diagram/ui/CanvasCore/SearchBlockForm.tsx`에서 TanStack Query를 사용합니다. 실제 요청은 `src/diagram/api/searchApi.ts`, 쿼리 옵션은 `src/diagram/api/searchQueries.ts`에 있습니다.
 
 ## 9. 추천 읽기 순서
 
 처음 코드를 읽는다면 다음 순서를 추천합니다.
 
-1. `src/features/diagram/model/blockTypes.ts`
+1. `src/diagram/model/blockTypes.ts`
    - 데이터가 무엇인지 확인합니다.
-2. `src/features/diagram/model/canvasStore.ts`
+2. `src/diagram/model/canvasStore.ts`
    - 사용자 행동이 어떤 상태 변경으로 이어지는지 확인합니다.
-3. `src/features/diagram/ui/CanvasCore/index.tsx`
+3. `src/diagram/ui/CanvasCore/index.tsx`
    - React Flow에 무엇을 연결하는지 확인합니다.
-4. `src/features/diagram/lib/hooks/useCanvasZoom.ts`
+4. `src/diagram/hooks/useCanvasZoom.ts`
    - visible cell 기반 zoom과 anchor scroll 복원을 확인합니다.
-5. `src/features/diagram/lib/zoom.ts`
+5. `src/diagram/lib/zoom.ts`
    - zoom의 순수 계산과 범위 제한을 확인합니다.
-6. `src/features/diagram/lib/hooks/useCanvasNodes.ts`
+6. `src/diagram/hooks/useCanvasNodes.ts`
    - 노드 드래그 종료 이벤트가 어떻게 처리되는지 확인합니다.
-7. `src/features/diagram/lib/docking.ts`
+7. `src/diagram/lib/docking.ts`
    - 도킹 성공/실패/fallback 규칙을 확인합니다.
-8. `src/features/diagram/lib/hooks/useCanvasEdges.ts`
+8. `src/diagram/hooks/useCanvasEdges.ts`
    - 연결선 생성과 빈 공간 드롭 동작을 확인합니다.
-9. `src/features/diagram/ui/CanvasCore/BlockNode.tsx`
+9. `src/diagram/ui/CanvasCore/BlockNode.tsx`
    - 블록이 어떻게 보이고 편집 모드로 전환되는지 확인합니다.
-10. `src/features/diagram/ui/CanvasCore/BlockEditForm.tsx`
-   - 타입별 편집 폼이 어떻게 연결되는지 확인합니다.
+10. `src/diagram/ui/CanvasCore/BlockEditForm.tsx`
+
+- 타입별 편집 폼이 어떻게 연결되는지 확인합니다.
 
 ## 10. 학습 관점에서 볼 질문
 

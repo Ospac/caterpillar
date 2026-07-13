@@ -1,6 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import type { AxiosInstance } from "axios";
-import type { SearchResult } from "@/features/diagram/lib/api/types";
+import type { SearchResult } from "@/diagram/api/types";
 import {
 	createSearchClient,
 	ENDPOINT,

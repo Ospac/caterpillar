@@ -195,9 +195,9 @@ Google Books가 지원하는 `intitle:`, `inauthor:`, `inpublisher:`, `subject:`
 
 ## 관련 코드
 
-- 클라이언트 요청: `src/features/diagram/lib/api/searchApi.ts`
-- TanStack Query 설정: `src/features/diagram/lib/api/searchQueries.ts`
-- 응답 스키마: `src/features/diagram/lib/api/types.ts`
+- 클라이언트 요청: `src/diagram/api/searchApi.ts`
+- TanStack Query 설정: `src/diagram/api/searchQueries.ts`
+- 응답 스키마: `src/diagram/api/types.ts`
 - 공통 함수 유틸리티와 외부 URL: `functions/_shared.ts`
 - 공급자별 함수: `functions/search-{music,game,movie,book}.mts`
 - Netlify 프록시: `netlify.toml`

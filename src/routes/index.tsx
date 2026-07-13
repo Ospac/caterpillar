@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CanvasCore } from "@/features/diagram/ui/CanvasCore";
+import { CanvasCore } from "@/diagram/ui/CanvasCore";
 
 export const Route = createFileRoute("/")({
 	component: HomeComponent,

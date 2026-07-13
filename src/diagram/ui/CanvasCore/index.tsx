@@ -10,9 +10,9 @@ import {
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { CELL_SIZE, getGridOccupancy, getGridPixelSize } from "../../lib/grid";
-import { useCanvasEdges } from "../../lib/hooks/useCanvasEdges";
-import { useCanvasNodes } from "../../lib/hooks/useCanvasNodes";
-import { useCanvasZoom } from "../../lib/hooks/useCanvasZoom";
+import { useCanvasEdges } from "../../hooks/useCanvasEdges";
+import { useCanvasNodes } from "../../hooks/useCanvasNodes";
+import { useCanvasZoom } from "../../hooks/useCanvasZoom";
 import { useCanvasStore } from "../../model/canvasStore";
 import Menu from "../Menu";
 import BlockNode from "./BlockNode";

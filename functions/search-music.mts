@@ -1,4 +1,4 @@
-import type { SearchResult } from "@/features/diagram/lib/api/types";
+import type { SearchResult } from "@/diagram/api/types";
 import {
 	createSearchClient,
 	ENDPOINT,

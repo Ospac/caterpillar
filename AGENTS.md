@@ -28,11 +28,13 @@ pnpm check            # 포맷 + 린트 함께 실행
 
 ```text
 src/
-  features/diagram/     # 주요 기능 — 캔버스, 노드, 엣지, 그리드, 검색
+  diagram/             # 핵심 도메인 — 캔버스, 노드, 엣지, 그리드, 검색
+    api/                # 검색 API 클라이언트와 응답 계약
+    hooks/              # 캔버스 상호작용 React hooks
     model/              # 상태, 타입, 비즈니스 규칙
     ui/                 # React 컴포넌트
-    lib/                # 기능 내부 유틸리티
-  shared/               # 전역 유틸리티 전용 (ui, lib, types, constants, utils)
+    lib/                # 도킹, 그리드, 좌표 등 순수 로직
+  shared/               # 공용 UI와 범용 유틸리티
   routes/               # TanStack Router 파일 기반 라우트
 ```
 

@@ -4,25 +4,25 @@
 
 ## 코드 위치 인덱스
 
-| 역할 | 경로 |
-| --- | --- |
-| 캔버스 오케스트레이터 | `src/features/diagram/ui/CanvasCore/index.tsx` |
-| 전역 문서 상태 | `src/features/diagram/model/canvasStore.ts` |
-| 런타임 도킹 상태 | `src/features/diagram/model/runtime.ts` |
-| 블록 데이터와 검증 | `src/features/diagram/model/blockTypes.ts`, `model/block.ts` |
-| 노드 타입 | `src/features/diagram/model/nodeTypes.ts` |
-| 문서 파싱과 직렬화 | `src/features/diagram/model/document.ts` |
-| 그리드와 점유 계산 | `src/features/diagram/lib/grid.ts` |
-| 좌표와 도킹 타입 | `src/features/diagram/lib/geometry.ts` |
-| 도킹 해석 | `src/features/diagram/lib/docking.ts` |
-| 블록별 span | `src/features/diagram/lib/blockSpan.ts` |
-| 런타임 리듀서 | `src/features/diagram/lib/canvasRuntimeReducer.ts` |
-| 노드 이벤트 hook | `src/features/diagram/lib/hooks/useCanvasNodes.ts` |
-| 엣지 이벤트 hook | `src/features/diagram/lib/hooks/useCanvasEdges.ts` |
-| 줌 hook과 순수 계산 | `src/features/diagram/lib/hooks/useCanvasZoom.ts`, `lib/zoom.ts` |
-| 검색 클라이언트 | `src/features/diagram/lib/api/` |
-| 블록과 캔버스 UI | `src/features/diagram/ui/CanvasCore/` |
-| 캔버스 메뉴 | `src/features/diagram/ui/Menu/` |
+| 역할                  | 경로                                                |
+| --------------------- | --------------------------------------------------- |
+| 캔버스 오케스트레이터 | `src/diagram/ui/CanvasCore/index.tsx`               |
+| 전역 문서 상태        | `src/diagram/model/canvasStore.ts`                  |
+| 런타임 도킹 상태      | `src/diagram/model/runtime.ts`                      |
+| 블록 데이터와 검증    | `src/diagram/model/blockTypes.ts`, `model/block.ts` |
+| 노드 타입             | `src/diagram/model/nodeTypes.ts`                    |
+| 문서 파싱과 직렬화    | `src/diagram/model/document.ts`                     |
+| 그리드와 점유 계산    | `src/diagram/lib/grid.ts`                           |
+| 좌표와 도킹 타입      | `src/diagram/lib/geometry.ts`                       |
+| 도킹 해석             | `src/diagram/lib/docking.ts`                        |
+| 블록별 span           | `src/diagram/lib/blockSpan.ts`                      |
+| 런타임 리듀서         | `src/diagram/lib/canvasRuntimeReducer.ts`           |
+| 노드 이벤트 hook      | `src/diagram/hooks/useCanvasNodes.ts`               |
+| 엣지 이벤트 hook      | `src/diagram/hooks/useCanvasEdges.ts`               |
+| 줌 hook과 순수 계산   | `src/diagram/hooks/useCanvasZoom.ts`, `lib/zoom.ts` |
+| 검색 클라이언트       | `src/diagram/api/`                                  |
+| 블록과 캔버스 UI      | `src/diagram/ui/CanvasCore/`                        |
+| 캔버스 메뉴           | `src/diagram/ui/Menu/`                              |
 
 ## Canvas
 
@@ -72,10 +72,10 @@ React Flow의 `nodeLookup`에서 계산하며 별도 drag start/move 상태 머�
 
 ### Node Span
 
-| 블록 | span |
-| --- | --- |
-| `text`, `image`, `link`, `music`, `menu` | 2×2 |
-| `game`, `movie`, `book` | 1×2 |
+| 블록                                     | span |
+| ---------------------------------------- | ---- |
+| `text`, `image`, `link`, `music`, `menu` | 2×2  |
+| `game`, `movie`, `book`                  | 1×2  |
 
 검색형 블록은 편집하는 동안 UI만 2×4로 커집니다. 영속적인 점유와 도킹 계산에는
 `getNodeSpan()`의 기본 span을 사용합니다.
@@ -164,12 +164,12 @@ type SearchResult = {
 };
 ```
 
-| 블록 | 내부 엔드포인트 | 공급자 |
-| --- | --- | --- |
-| `music` | `/api/search-music` | Last.fm |
-| `game` | `/api/search-game` | IGDB |
-| `movie` | `/api/search-movie` | TMDB |
-| `book` | `/api/search-book` | Google Books |
+| 블록    | 내부 엔드포인트     | 공급자       |
+| ------- | ------------------- | ------------ |
+| `music` | `/api/search-music` | Last.fm      |
+| `game`  | `/api/search-game`  | IGDB         |
+| `movie` | `/api/search-movie` | TMDB         |
+| `book`  | `/api/search-book`  | Google Books |
 
 Netlify Functions가 비밀 값을 보유하고 외부 API를 호출합니다. 세부 환경 변수, 필드 매핑과 오류
 계약은 `docs/API.md`를 참고합니다. UI는 loading, empty, error와 수동 재시도 상태를 제공합니다.

@@ -9,15 +9,15 @@ import {
 } from "@xyflow/react";
 import { useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { useCanvasStore } from "../../model/canvasStore";
-import type { DiagramNode } from "../../model/nodeTypes";
+import { useCanvasStore } from "../model/canvasStore";
+import type { DiagramNode } from "../model/nodeTypes";
 import {
 	getClientPosition,
 	resolveEdgeDropConnectionHandles,
 	resolveEdgeDropPosition,
-} from "../edge";
-import type { GridOccupancy } from "../geometry";
-import { DEFAULT_GRID_DIMENSIONS } from "../grid";
+} from "../lib/edge";
+import type { GridOccupancy } from "../lib/geometry";
+import { DEFAULT_GRID_DIMENSIONS } from "../lib/grid";
 
 interface UseCanvasEdgesInput {
 	isEditMode: boolean;

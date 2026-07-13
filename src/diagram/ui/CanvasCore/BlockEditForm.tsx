@@ -4,7 +4,7 @@ import type {
 	ImageBlockData,
 	LinkBlockData,
 	TextBlockData,
-} from "@/features/diagram/model/blockTypes";
+} from "@/diagram/model/blockTypes";
 import Input from "./Input";
 import { SearchBlockForm } from "./SearchBlockForm";
 

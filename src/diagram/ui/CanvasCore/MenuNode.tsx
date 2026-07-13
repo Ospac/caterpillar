@@ -1,5 +1,5 @@
 import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { CELL_SIZE } from "@/features/diagram/lib/grid";
+import { CELL_SIZE } from "@/diagram/lib/grid";
 import { useCanvasStore } from "../../model/canvasStore";
 import type { MenuNodeData } from "../../model/nodeTypes";
 
