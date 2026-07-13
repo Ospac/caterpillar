@@ -38,13 +38,19 @@ export function SearchBlockForm({
 	};
 	const items = data ?? [];
 
-	//TODO: focus 동작 X
+	const handleOutsideClick = (e: React.FocusEvent, onEditEnd: () => void) => {
+		if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
+	};
+
 	useEffect(() => {
 		searchInputRef.current?.focus();
 	}, []);
 
 	return (
-		<fieldset className="h-full flex flex-col min-w-full">
+		<fieldset
+			className="h-full flex flex-col min-w-full"
+			onBlur={(e) => handleOutsideClick(e, onEditEnd)}
+		>
 			<input
 				ref={searchInputRef}
 				id={searchInputId}

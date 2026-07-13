@@ -106,7 +106,7 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				<div className="grid grid-cols-[1.25rem_1fr] grid-rows-[1fr_1.25rem] h-full">
 					<div className="flex items-start justify-center py-2 border-r min-h-0 overflow-hidden">
 						<h2 className="[writing-mode:vertical-rl] [text-orientation:mixed] text-2xs max-h-full truncate">
-							{data.title}
+							{data.title || "music"}
 						</h2>
 					</div>
 					<div>
@@ -119,19 +119,23 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 						/>
 					</div>
 					<div className="col-span-2 flex items-center bg-blue border-t border-gray-700 px-4 overflow-hidden w-full">
-						<h2 className="text-2xs truncate">{data.secondary}</h2>
+						<h2 className="text-2xs truncate">{data.secondary || "someone"}</h2>
 					</div>
 				</div>
 			);
 		case "game":
-			return <RectangleBlockView image={data.image} title={data.title} year={data.year} />;
+			return (
+				<RectangleBlockView image={data.image} title={data.title || "game"} year={data.year} />
+			);
 		case "movie":
-			return <RectangleBlockView image={data.image} title={data.title} year={data.year} />;
+			return (
+				<RectangleBlockView image={data.image} title={data.title || "movie"} year={data.year} />
+			);
 		case "book":
 			return (
 				<RectangleBlockView
 					image={data.image}
-					title={data.title}
+					title={data.title || "book"}
 					secondary={data.secondary}
 					year={data.year}
 				/>
@@ -183,7 +187,6 @@ export default function BlockNode({ id, data }: NodeProps<Node<BlockNodeData>>) 
 			: getNodeSpan(data.blockType);
 
 	return (
-		// biome-ignore lint/a11y/useSemanticElements: <ReactFlow BlockNode>
 		<div
 			tabIndex={0}
 			className={`${containerClass(data.blockType)}`}
