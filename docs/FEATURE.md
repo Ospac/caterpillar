@@ -6,7 +6,7 @@
 
 | 역할                  | 경로                                                |
 | --------------------- | --------------------------------------------------- |
-| 캔버스 오케스트레이터 | `src/diagram/ui/CanvasCore/index.tsx`               |
+| 캔버스 오케스트레이터 | `src/diagram/ui/CanvasCore/CanvasCore.tsx`          |
 | 전역 문서 상태        | `src/diagram/model/canvasStore.ts`                  |
 | 런타임 도킹 상태      | `src/diagram/model/runtime.ts`                      |
 | 블록 데이터와 검증    | `src/diagram/model/blockTypes.ts`, `model/block.ts` |
@@ -21,7 +21,8 @@
 | 엣지 이벤트 hook      | `src/diagram/hooks/useCanvasEdges.ts`               |
 | 줌 hook과 순수 계산   | `src/diagram/hooks/useCanvasZoom.ts`, `lib/zoom.ts` |
 | 검색 클라이언트       | `src/diagram/api/`                                  |
-| 블록과 캔버스 UI      | `src/diagram/ui/CanvasCore/`                        |
+| 캔버스 노드 UI        | `src/diagram/ui/CanvasNode/`                        |
+| 캔버스 오버레이 UI    | `src/diagram/ui/CanvasOverlay/`                     |
 | 캔버스 메뉴           | `src/diagram/ui/Menu/`                              |
 
 ## Canvas

@@ -11,11 +11,15 @@
 ```bash
 pnpm dev              # 개발 서버 (포트 3000)
 pnpm build            # 프로덕션 빌드 + TypeScript 타입 검사
+pnpm preview          # 프로덕션 빌드 로컬 미리보기
+pnpm netlify:dev      # Netlify 로컬 개발 환경
+pnpm netlify:prod     # Netlify production 컨텍스트 로컬 실행
 pnpm test             # 전체 테스트 실행
-pnpm test:watch       # 워치 모드
-pnpm lint             # Biome 린터
-pnpm format           # Biome 포매터
-pnpm check            # 포맷 + 린트 함께 실행
+pnpm test:watch       # 테스트 워치 모드
+pnpm lint             # Oxlint 린트 검사
+pnpm lint:fix         # Oxlint 자동 수정
+pnpm fmt              # Oxfmt 포맷 적용
+pnpm fmt:check        # Oxfmt 포맷 검사
 ```
 
 단일 테스트 파일 실행: `pnpm test -- <경로-또는-패턴>`
@@ -28,65 +32,80 @@ pnpm check            # 포맷 + 린트 함께 실행
 
 ```text
 src/
-  diagram/             # 핵심 도메인 — 캔버스, 노드, 엣지, 그리드, 검색
-    api/                # 검색 API 클라이언트와 응답 계약
-    hooks/              # 캔버스 상호작용 React hooks
-    model/              # 상태, 타입, 비즈니스 규칙
-    ui/                 # React 컴포넌트
-    lib/                # 도킹, 그리드, 좌표 등 순수 로직
-  shared/               # 공용 UI와 범용 유틸리티
-  routes/               # TanStack Router 파일 기반 라우트
+  diagram/              # 캔버스 핵심 도메인
+    api/                 # 검색 API 클라이언트, TanStack Query 옵션, 응답 계약
+    hooks/               # 노드·엣지·줌 상호작용 React hooks
+    lib/                 # 도킹, 그리드, 엣지, 줌 등 순수 로직
+    model/               # 블록 타입, Zustand store, 문서·런타임 모델
+    ui/
+      CanvasCore/        # React Flow 오케스트레이터
+      CanvasNode/        # BlockNode, MenuNode와 연결 핸들
+      CanvasOverlay/     # 그리드·노드·엣지 드롭 가이드
+      Menu/              # 모드·추가·줌 조작 패널
+  routes/                # TanStack Router 파일 기반 라우트
+  shared/                # 공용 UI와 유틸리티
+functions/               # Netlify 검색 Functions와 공용 서버 유틸
 ```
 
-### 4계층 모델 (diagram 기능)
+`src/routeTree.gen.ts`는 TanStack Router가 생성하는 파일이므로 직접 수정하지 않습니다.
 
-**1. Block 데이터 모델** (`model/block.ts`, `model/blockTypes.ts`)
+### 블록과 노드 모델 (`model/block.ts`, `model/blockTypes.ts`, `model/nodeTypes.ts`)
 
 - `BlockData`: `text | image | link | music | game | movie | book`에 대한 판별 유니온
 - 직접 입력 타입: text, image, link / 검색 타입: music, game, movie, book
-- 유효성 검사는 `validateBlockData()`를 통해 `ok | fallback | invalid` 반환
-- 런타임 전용 콜백 타입: `BlockNodeData = BlockData & { onDataChange?, initialEditing? }` (`model/nodeTypes.ts`)
+- 공통 데이터: `blockType`, `title`, `secondary`, 선택 필드 `image`, `year`
+- `validateBlockData()`는 Zod 검증 후 `ok | fallback | invalid` 반환. 빈 title은 block type 문자열로 보정
+- 노드 타입은 `block | menu`; menu는 타입 선택용 임시 노드이며 `BlockData`에 포함되지 않음
+- `BlockNodeData = BlockData & { initialEditing? }`; `initialEditing`은 런타임 전용
 
-**2. 런타임 타입** (`model/runtime.ts`, `model/nodeTypes.ts`, `lib/geometry.ts`)
+### 상태와 영속성 (`model/canvasStore.ts`, `model/document.ts`)
 
-- `DiagramNode`: block 또는 menu 데이터를 가진 캔버스 노드
-- `DockedNodeState`: `dockedCell`(스냅됨), `lastValidDock`(롤백) 추적. 드래그 중 좌표는 React Flow 노드 position을 source of truth로 사용
-- 두 가지 좌표계: `XYPosition`(픽셀) ↔ `CellCoord`(그리드 col/row)
-- `NodeSpan { cols, rows }`: 노드가 차지하는 그리드 셀 크기 (기본 1×1, link 등 1×2)
+- `useCanvasStore`가 mode, nodes, edges, dirty/save 상태, 다음 node index와 문서 변경 명령을 소유
+- 문서 변경 action은 `edit` 모드에서만 동작하며 `read` 모드에서는 추가·편집·연결·삭제 차단
+- Zustand `persist`가 `localStorage["canvas-store"]`에 직렬화한 nodes와 edges만 저장
+- `CanvasDocument`는 nodes와 edges만 포함. mode, zoom, 저장 상태, 도킹 상태, `initialEditing`은 영속화하지 않음
+- `parseCanvasDocument()` / `serializeCanvasDocument()`로 저장 경계를 검증하고 런타임 필드를 제거
+- menu 선택 시 같은 id와 position을 유지한 block 노드로 교체하고 `initialEditing: true`로 시작
 
-**3. 영속성 모델** (`model/document.ts`)
+### 런타임과 도킹 (`model/runtime.ts`, `lib/canvasRuntimeReducer.ts`, `lib/docking.ts`)
 
-- `CanvasDocument`: 직렬화 가능한 포맷 (visibleStage, nodes, edges만 포함)
-- `parseCanvasDocument()` / `serializeCanvasDocument()`로 왕복 처리
+- 영속 store와 별도로 `nodeDockingState`가 각 노드의 `dockedCell`과 `lastValidDock`을 추적
+- 드래그 중 좌표의 source of truth는 React Flow node position이며, 드래그 종료 시 store 위치와 도킹 상태를 커밋
+- `nodesSynced` reducer action으로 노드 추가·삭제에 맞춰 런타임 도킹 상태 동기화
+- 좌표계는 `XYPosition`(픽셀)과 `CellCoord`(grid col/row), 크기는 `NodeSpan { cols, rows }`
 
-**4. UI** (`ui/CanvasCore/CanvasCoreInner.tsx`)
+### 캔버스 UI (`ui/CanvasCore/index.tsx`)
 
-- 메인 오케스트레이터 (~326줄); React hooks를 통해 모든 계층 연결
-- React Flow의 `useNodesState` / `useEdgesState` 사용
+- `CanvasCoreInner`가 Zustand store와 occupancy를 구독하고 `useCanvasNodes`, `useCanvasEdges`, `useCanvasZoom`을 React Flow에 연결
+- React Flow의 자동 snap, pan, zoom, auto-pan은 비활성화. 캔버스 이동은 바깥 컨테이너의 native scroll 사용
+- 그리드 가이드는 노드 드래그, 엣지 드래그 또는 줌 중 표시
+- `CanvasNode/`는 노드 UI, `CanvasOverlay/`는 드롭·그리드 가이드, `Menu/`는 모드·추가·줌 조작 담당
 
-### 블록 노드 UI (`ui/CanvasCore/`)
+### 그리드, 도킹과 줌 (`lib/grid.ts`, `lib/docking.ts`, `lib/blockSpan.ts`, `lib/zoom.ts`)
 
-- `MenuNode` — 블록 타입 7종 인라인 선택. `data.onTypeSelect` 콜백으로 부모에 전달
-- `BlockNode` — `BlockView`(읽기) / `BlockEditForm`(편집) 전환. 편집 중 `nodrag` 클래스로 드래그 비활성화
-- `BlockEditForm` — 타입별 편집 폼 (직접 입력 3종 + 검색 기반 4종)
-- `Input` — 공통 input 컴포넌트 (`twMerge` + `clsx` 기반)
-- `cn.ts` (`src/shared/utils/`) — Tailwind 클래스 병합 유틸
+- 고정 그리드: 30×15 cells, `CELL_SIZE = 106px` (논리 크기 3180×1590px)
+- span: text/image/link/music/menu는 2×2, game/movie/book은 1×2
+- `GridOccupancy`가 span을 sub-cell로 펼쳐 점유와 충돌을 계산; 충돌 셀은 도킹 불가
+- 드롭 순서: 유효 dock → lastValidDock → Manhattan distance 기준 가장 가까운 빈 span → 현재 위치 유지
+- 줌은 React Flow 제스처가 아니라 viewport에 보이는 grid column 수와 wrapper 크기를 변경하는 방식
+- zoom 배율은 0.2~1 범위의 파생값이며, `Ctrl/Cmd + wheel` 또는 메뉴 버튼으로 조작. 일반 wheel은 native scroll 유지
 
-### 그리드 & 도킹 시스템 (`lib/grid.ts`, `lib/docking.ts`, `lib/blockSpan.ts`)
+### 엣지와 검색
 
-- 그리드 단계: 8×8, 14×14, 20×20 (CELL_SIZE = 108px)
-- `NodeSpan` 기반 다중 크기 노드 지원: `getNodeSpan(blockType)` → 스팬 반환
-- 드래그 흐름: `dragStart`에서 가이드 표시 → `dragMove`에서 stage 확장 판단 → `dragStop`에서 가장 가까운 셀로 스냅하고 도킹 상태 커밋
-- 드롭 해결 우선순위: 유효한 dock → lastValidDock 폴백 → 가장 가까운 빈 셀 → 현재 위치 유지
+- 엣지는 `smoothstep`과 `ArrowClosed` marker 사용. edit 모드에서 더블 클릭 또는 Delete/Backspace로 삭제
+- 빈 공간에 연결을 놓으면 빈 2×2 영역에 menu 노드와 연결 엣지를 함께 생성
+- 검색형 블록은 300ms debounce 후 2자 이상일 때 TanStack Query로 내부 `/api/search-*` 엔드포인트 호출
+- Netlify Functions가 Last.fm, IGDB, TMDB, Google Books 연동과 비밀 값 관리를 담당
 
 ### 기술 스택
 
-- React 19, TypeScript, Rsbuild/Rspack
-- React Flow (XYFlow) — 캔버스 렌더링
-- TanStack Router (파일 기반 라우팅)
-- Tailwind CSS 4 + PostCSS
-- Biome — 린트/포맷 (tabs, double quote)
-- Rstest + Testing Library — 테스트
+- React 19, TypeScript, React Compiler, Rsbuild/Rspack
+- React Flow (XYFlow), Zustand + persist
+- TanStack Router(파일 기반 라우팅), TanStack Query
+- Tailwind CSS 4, Radix UI, class-variance-authority
+- Axios, Zod, Netlify Functions
+- Oxlint, Oxfmt (tabs, double quotes)
+- Rstest, Testing Library, happy-dom
 
 ## Git 워크플로우
 
@@ -98,6 +117,6 @@ src/
 
 ### Codex 작업용 (빠른 참조)
 
-- `.codex/FEATURE.md` — 코드 위치 인덱스, 핵심 타입/함수/규칙 요약
-- `.codex/ROADMAP.md` — 마일스톤 현황 및 다음 작업
-- `.codex/plans/` — 마일스톤별 구현 스펙
+- `docs/FEATURE.md` — 코드 위치 인덱스와 핵심 계약
+- `docs/code-onboarding.md` — diagram 코드 읽기 순서와 계층별 설명
+- `docs/API.md` — 검색 API 환경 변수, 공급자 매핑과 오류 계약

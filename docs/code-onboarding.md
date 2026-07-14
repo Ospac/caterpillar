@@ -61,7 +61,7 @@ year?
 
 ## 4. 메인 화면 오케스트레이터
 
-실제 화면의 중심은 `src/diagram/ui/CanvasCore/index.tsx`입니다.
+실제 화면의 중심은 `src/diagram/ui/CanvasCore/CanvasCore.tsx`입니다.
 
 이 컴포넌트의 책임은 다음과 같습니다.
 
@@ -113,7 +113,7 @@ column 수를 관리하고 `gridZoom`과 렌더링 크기를 파생합니다.
 
 - `lib/hooks/useCanvasZoom.ts`: DOM ref, width 관찰, 수동 visible cells, wheel listener, anchor와 scroll 복원
 - `lib/zoom.ts`: visible cell 범위, 배율, step, modifier 판정, cell-aligned offset 순수 계산
-- `ui/CanvasCore/index.tsx`: hook 결과를 wrapper 크기, React Flow viewport와 grid guide에 연결
+- `ui/CanvasCore/CanvasCore.tsx`: hook 결과를 wrapper 크기, React Flow viewport와 grid guide에 연결
 - `ui/Menu/index.tsx`: zoom in/out/reset 명령과 정규화된 퍼센트 표시
 
 React Flow의 pan과 scroll/pinch/double-click zoom은 비활성화되어 있습니다. 자세한 불변 조건과
@@ -172,7 +172,7 @@ onConnectEnd
 
 ## 8. 블록 UI와 편집
 
-블록 렌더링은 `src/diagram/ui/CanvasCore/BlockNode.tsx`가 담당합니다.
+블록 렌더링은 `src/diagram/ui/CanvasNode/BlockNode/BlockNode.tsx`가 담당합니다.
 
 이 컴포넌트는 두 모드로 나뉩니다.
 
@@ -181,14 +181,15 @@ onConnectEnd
 편집 모드: BlockEditForm
 ```
 
-읽기 UI는 `BlockView()`의 `switch (data.blockType)`에서 타입별로 갈라집니다.
+읽기 UI는 `src/diagram/ui/CanvasNode/BlockNode/BlockView.tsx`의
+`switch (data.blockType)`에서 타입별로 갈라집니다.
 
-편집 UI는 `src/diagram/ui/CanvasCore/BlockEditForm.tsx`에서 갈라집니다.
+편집 UI는 `src/diagram/ui/CanvasNode/BlockNode/BlockEditForm.tsx`에서 갈라집니다.
 
 - `text`, `image`, `link`: 직접 입력 폼
 - `music`, `game`, `movie`, `book`: 검색 폼
 
-검색형 블록은 `src/diagram/ui/CanvasCore/SearchBlockForm.tsx`에서 TanStack Query를 사용합니다. 실제 요청은 `src/diagram/api/searchApi.ts`, 쿼리 옵션은 `src/diagram/api/searchQueries.ts`에 있습니다.
+검색형 블록은 `src/diagram/ui/CanvasNode/BlockNode/SearchBlockForm.tsx`에서 TanStack Query를 사용합니다. 실제 요청은 `src/diagram/api/searchApi.ts`, 쿼리 옵션은 `src/diagram/api/searchQueries.ts`에 있습니다.
 
 ## 9. 추천 읽기 순서
 
@@ -198,7 +199,7 @@ onConnectEnd
    - 데이터가 무엇인지 확인합니다.
 2. `src/diagram/model/canvasStore.ts`
    - 사용자 행동이 어떤 상태 변경으로 이어지는지 확인합니다.
-3. `src/diagram/ui/CanvasCore/index.tsx`
+3. `src/diagram/ui/CanvasCore/CanvasCore.tsx`
    - React Flow에 무엇을 연결하는지 확인합니다.
 4. `src/diagram/hooks/useCanvasZoom.ts`
    - visible cell 기반 zoom과 anchor scroll 복원을 확인합니다.
@@ -210,9 +211,9 @@ onConnectEnd
    - 도킹 성공/실패/fallback 규칙을 확인합니다.
 8. `src/diagram/hooks/useCanvasEdges.ts`
    - 연결선 생성과 빈 공간 드롭 동작을 확인합니다.
-9. `src/diagram/ui/CanvasCore/BlockNode.tsx`
+9. `src/diagram/ui/CanvasNode/BlockNode/BlockNode.tsx`
    - 블록이 어떻게 보이고 편집 모드로 전환되는지 확인합니다.
-10. `src/diagram/ui/CanvasCore/BlockEditForm.tsx`
+10. `src/diagram/ui/CanvasNode/BlockNode/BlockEditForm.tsx`
 
 - 타입별 편집 폼이 어떻게 연결되는지 확인합니다.
 
