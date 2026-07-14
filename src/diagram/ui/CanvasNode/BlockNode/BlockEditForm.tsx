@@ -5,17 +5,19 @@ import type {
 	LinkBlockData,
 	TextBlockData,
 } from "@/diagram/model/blockTypes";
-import Input from "./Input";
-import { SearchBlockForm } from "./SearchBlockForm";
+import { BlockInput } from "./BlockInput";
+import { SearchBlockEditForm } from "./SearchBlockEditForm";
 
 type FormProps<T extends BlockData> = {
 	data: T;
 	onDataChange: (newData: BlockData) => void;
 	onEditEnd: () => void;
 };
+
 const handleOutsideClick = (e: React.FocusEvent, onEditEnd: () => void) => {
 	if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
 };
+
 function TextBlockForm({ data, onDataChange, onEditEnd }: FormProps<TextBlockData>) {
 	const { register } = useForm<TextBlockData>({ defaultValues: data });
 	return (
@@ -24,7 +26,6 @@ function TextBlockForm({ data, onDataChange, onEditEnd }: FormProps<TextBlockDat
 				{...register("title", {
 					onChange: (e) => onDataChange({ ...data, title: e.target.value }),
 				})}
-				// biome-ignore lint/a11y/noAutofocus: 편집 시작 시 즉시 포커스 필요
 				autoFocus
 				className="w-full h-full resize-none bg-transparent text-xs leading-tight outline-none p-4 nodrag"
 				placeholder="type"
@@ -34,26 +35,21 @@ function TextBlockForm({ data, onDataChange, onEditEnd }: FormProps<TextBlockDat
 }
 
 function ImageBlockForm({ data, onDataChange, onEditEnd }: FormProps<ImageBlockData>) {
-	const { register } = useForm<ImageBlockData>({
-		defaultValues: data,
-	});
+	const { register } = useForm<ImageBlockData>({ defaultValues: data });
 	return (
 		<fieldset
 			className="h-full p-2 flex flex-col gap-1.5 "
 			onBlur={(e) => handleOutsideClick(e, onEditEnd)}
 		>
-			<Input
+			<BlockInput
 				{...register("image", {
-					onChange: (e) => {
-						const url = e.target.value;
-						onDataChange({ ...data, image: url });
-					},
+					onChange: (e) => onDataChange({ ...data, image: e.target.value }),
 				})}
 				type="url"
 				placeholder="Image URL"
-				autoFocus={true}
+				autoFocus
 			/>
-			<Input
+			<BlockInput
 				{...register("title", {
 					onChange: (e) => onDataChange({ ...data, title: e.target.value }),
 				})}
@@ -68,15 +64,13 @@ function ImageBlockForm({ data, onDataChange, onEditEnd }: FormProps<ImageBlockD
 }
 
 function LinkBlockForm({ data, onDataChange, onEditEnd }: FormProps<LinkBlockData>) {
-	const { register } = useForm<LinkBlockData>({
-		defaultValues: data,
-	});
+	const { register } = useForm<LinkBlockData>({ defaultValues: data });
 	return (
 		<fieldset
 			className="h-full p-2 flex flex-col gap-1.5 "
 			onBlur={(e) => handleOutsideClick(e, onEditEnd)}
 		>
-			<Input
+			<BlockInput
 				{...register("title", {
 					onChange: (e) => onDataChange({ ...data, title: e.target.value }),
 				})}
@@ -84,7 +78,7 @@ function LinkBlockForm({ data, onDataChange, onEditEnd }: FormProps<LinkBlockDat
 				placeholder="URL"
 				autoFocus
 			/>
-			<Input
+			<BlockInput
 				{...register("secondary", {
 					onChange: (e) => onDataChange({ ...data, secondary: e.target.value }),
 				})}
@@ -100,7 +94,8 @@ interface BlockEditFormProps {
 	onDataChange: (newData: BlockData) => void;
 	onEditEnd: () => void;
 }
-export default function BlockEditForm({ data, onDataChange, onEditEnd }: BlockEditFormProps) {
+
+export function BlockEditForm({ data, onDataChange, onEditEnd }: BlockEditFormProps) {
 	switch (data.blockType) {
 		case "text":
 			return <TextBlockForm data={data} onDataChange={onDataChange} onEditEnd={onEditEnd} />;
@@ -109,41 +104,14 @@ export default function BlockEditForm({ data, onDataChange, onEditEnd }: BlockEd
 		case "link":
 			return <LinkBlockForm data={data} onDataChange={onDataChange} onEditEnd={onEditEnd} />;
 		case "music":
-			return (
-				<SearchBlockForm
-					selectedData={data}
-					searchType="music"
-					placeholder="Search music..."
-					onDataChange={onDataChange}
-					onEditEnd={onEditEnd}
-				/>
-			);
 		case "game":
-			return (
-				<SearchBlockForm
-					selectedData={data}
-					searchType="game"
-					placeholder="Search game..."
-					onDataChange={onDataChange}
-					onEditEnd={onEditEnd}
-				/>
-			);
 		case "movie":
-			return (
-				<SearchBlockForm
-					selectedData={data}
-					searchType="movie"
-					placeholder="Search movie..."
-					onDataChange={onDataChange}
-					onEditEnd={onEditEnd}
-				/>
-			);
 		case "book":
 			return (
-				<SearchBlockForm
+				<SearchBlockEditForm
 					selectedData={data}
-					searchType="book"
-					placeholder="Search book..."
+					searchType={data.blockType}
+					placeholder={`Search ${data.blockType}...`}
 					onDataChange={onDataChange}
 					onEditEnd={onEditEnd}
 				/>

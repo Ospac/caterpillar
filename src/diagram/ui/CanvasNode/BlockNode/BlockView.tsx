@@ -1,32 +1,14 @@
-import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
-import { Fragment, type JSX, useEffect, useState } from "react";
+import type { JSX } from "react";
 import defaultImage from "@/assets/frankenstein.webp";
-import { getNodeSpan } from "../../lib/blockSpan";
-import { CELL_SIZE } from "../../lib/grid";
-import type { BlockData, BlockType } from "../../model/blockTypes";
-import { useCanvasStore } from "../../model/canvasStore";
-import type { BlockNodeData } from "../../model/nodeTypes";
-import BlockEditForm from "./BlockEditForm";
+import type { BlockData } from "@/diagram/model/blockTypes";
 
-const SEARCH_EDIT_SPAN = { cols: 2, rows: 4 } as const;
-const SEARCH_BLOCK_TYPES = new Set<BlockType>(["music", "game", "movie", "book"]);
-
-function NodeHandles() {
-	return (
-		<Fragment>
-			<Handle type="source" position={Position.Top} id="top" />
-			<Handle type="source" position={Position.Bottom} id="bottom" />
-			<Handle type="source" position={Position.Left} id="left" />
-			<Handle type="source" position={Position.Right} id="right" />
-		</Fragment>
-	);
-}
 interface RectangleBlockViewProps {
 	image?: string;
 	title?: string;
 	secondary?: string;
 	year?: string;
 }
+
 function RectangleBlockView({ image, title, secondary, year }: RectangleBlockViewProps) {
 	return (
 		<div className="flex flex-col h-full">
@@ -49,17 +31,8 @@ function RectangleBlockView({ image, title, secondary, year }: RectangleBlockVie
 		</div>
 	);
 }
-function containerClass(blockType: string): string {
-	switch (blockType) {
-		case "image":
-		case "link":
-			return "box-shadow-border bg-green-100 text-xs text-gray-900 z-20";
-		default:
-			return "box-shadow-border bg-green text-xs text-gray-900 z-20";
-	}
-}
 
-function BlockView({ data }: { data: BlockData }): JSX.Element {
+export function BlockView({ data }: { data: BlockData }): JSX.Element {
 	switch (data.blockType) {
 		case "text":
 			return (
@@ -147,64 +120,4 @@ function BlockView({ data }: { data: BlockData }): JSX.Element {
 				</div>
 			);
 	}
-}
-
-export default function BlockNode({ id, data }: NodeProps<Node<BlockNodeData>>) {
-	const canvasMode = useCanvasStore((state) => state.mode);
-	const updateBlockData = useCanvasStore((state) => state.updateBlockData);
-	const isCanvasEditMode = canvasMode === "edit";
-
-	const [isEditing, setIsEditing] = useState((data.initialEditing ?? false) && isCanvasEditMode);
-	const startEdit = () => {
-		if (!isCanvasEditMode) return;
-		setIsEditing(true);
-	};
-	const endEdit = () => {
-		setIsEditing(false);
-	};
-	const nothing = () => {};
-
-	const handleClick = !isEditing ? startEdit : nothing;
-
-	const onKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" && e.shiftKey) {
-			return;
-		}
-		if (e.key === "Enter") {
-			handleClick();
-			return;
-		}
-	};
-	useEffect(() => {
-		if (!isCanvasEditMode && isEditing) {
-			setIsEditing(false);
-		}
-	}, [isCanvasEditMode, isEditing]);
-
-	const span =
-		isEditing && SEARCH_BLOCK_TYPES.has(data.blockType)
-			? SEARCH_EDIT_SPAN
-			: getNodeSpan(data.blockType);
-
-	return (
-		<div
-			tabIndex={0}
-			className={`${containerClass(data.blockType)}`}
-			style={{ width: span.cols * CELL_SIZE, height: span.rows * CELL_SIZE }}
-			onClick={handleClick}
-			onKeyDown={onKeyDown}
-			role={"button"}
-		>
-			<NodeHandles />
-			{isEditing ? (
-				<BlockEditForm
-					data={data}
-					onDataChange={(newData) => updateBlockData(id, newData)}
-					onEditEnd={endEdit}
-				/>
-			) : (
-				<BlockView data={data as BlockData} />
-			)}
-		</div>
-	);
 }

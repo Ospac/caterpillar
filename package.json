@@ -38,7 +38,6 @@
 		"zustand": "^5.0.13"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.5",
 		"@netlify/functions": "^5.1.5",
 		"@rsbuild/core": "^1.2.4",
 		"@rsbuild/plugin-babel": "^1.1.1",

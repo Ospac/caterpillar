@@ -1,7 +1,8 @@
-import { Handle, type Node, type NodeProps, Position } from "@xyflow/react";
+import type { Node, NodeProps } from "@xyflow/react";
 import { CELL_SIZE } from "@/diagram/lib/grid";
-import { useCanvasStore } from "../../model/canvasStore";
-import type { MenuNodeData } from "../../model/nodeTypes";
+import { useCanvasStore } from "@/diagram/model/canvasStore";
+import type { MenuNodeData } from "@/diagram/model/nodeTypes";
+import { NodeHandles } from "../NodeHandles";
 
 const BLOCK_TYPE_BUTTONS = [
 	{ blockType: "text", label: "Text", className: "bg-green" },
@@ -13,7 +14,7 @@ const BLOCK_TYPE_BUTTONS = [
 	{ blockType: "music", label: "Music", className: "bg-pinky" },
 ] as const;
 
-export default function MenuNode({ id }: NodeProps<Node<MenuNodeData>>) {
+export function MenuNode({ id }: NodeProps<Node<MenuNodeData>>) {
 	const mode = useCanvasStore((state) => state.mode);
 	const selectMenuType = useCanvasStore((state) => state.selectMenuType);
 	const isEditMode = mode === "edit";
@@ -23,10 +24,7 @@ export default function MenuNode({ id }: NodeProps<Node<MenuNodeData>>) {
 			className="box-shadow-border bg-white text-sm text-gray-900 z-30"
 			style={{ width: CELL_SIZE * 2, height: CELL_SIZE * 2 }}
 		>
-			<Handle type="source" position={Position.Top} id="top" />
-			<Handle type="source" position={Position.Bottom} id="bottom" />
-			<Handle type="source" position={Position.Left} id="left" />
-			<Handle type="source" position={Position.Right} id="right" />
+			<NodeHandles />
 			<div className="flex h-full flex-col items-center text-center *:flex-1 *:not-first:border-t">
 				{BLOCK_TYPE_BUTTONS.map(({ blockType, label, className }) => (
 					<button

@@ -5,7 +5,7 @@ import { DEFAULT_GRID_DIMENSIONS, type getGridOccupancy } from "../../lib/grid";
 import type { DiagramNode } from "../../model/nodeTypes";
 import DropPreviewBox from "./DropPreviewBox";
 
-export default function EdgeDropPreview({
+export default function EdgeDropOverlay({
 	isEditMode,
 	occupancy,
 }: {

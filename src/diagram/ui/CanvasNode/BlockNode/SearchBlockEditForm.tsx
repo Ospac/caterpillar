@@ -15,7 +15,7 @@ interface SearchBlockFormProps {
 	onEditEnd: () => void;
 }
 
-export function SearchBlockForm({
+export function SearchBlockEditForm({
 	selectedData,
 	searchType,
 	placeholder,
@@ -38,8 +38,8 @@ export function SearchBlockForm({
 	};
 	const items = data ?? [];
 
-	const handleOutsideClick = (e: React.FocusEvent, onEditEnd: () => void) => {
-		if (!e.currentTarget.contains(e.relatedTarget as Element)) onEditEnd();
+	const handleOutsideClick = (e: React.FocusEvent, handleEditEnd: () => void) => {
+		if (!e.currentTarget.contains(e.relatedTarget as Element)) handleEditEnd();
 	};
 
 	useEffect(() => {
@@ -78,29 +78,29 @@ export function SearchBlockForm({
 						검색 중...
 					</div>
 				) : items.length > 0 ? (
-					items.map((r) => (
+					items.map((result) => (
 						<button
-							key={r.title + r.secondary + r.year}
+							key={result.title + result.secondary + result.year}
 							type="button"
 							className="flex gap-2 w-full text-left px-2 py-1 text-xs hover:bg-gray-100"
 							onMouseDown={(e) => e.preventDefault()}
 							onClick={() => {
-								onItemSelect(r);
+								onItemSelect(result);
 								onEditEnd();
 							}}
 						>
 							<div className="min-w-8 min-h-8 flex justify-center items-center">
 								<img
 									className="w-8 h-8 inline"
-									src={r.image || defaultImage}
-									alt={r.title}
+									src={result.image || defaultImage}
+									alt={result.title}
 									width={32}
 									height={32}
 								/>
 							</div>
 							<div className="flex flex-col gap-1">
-								<span className="font-medium line-clamp-2">{r.title}</span>
-								<span className="text-gray-500"> {r.secondary}</span>
+								<span className="font-medium line-clamp-2">{result.title}</span>
+								<span className="text-gray-500"> {result.secondary}</span>
 							</div>
 						</button>
 					))

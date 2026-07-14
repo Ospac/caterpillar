@@ -6,20 +6,17 @@ import {
 	ReactFlowProvider,
 	type Viewport,
 } from "@xyflow/react";
-
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { CELL_SIZE, getGridOccupancy, getGridPixelSize } from "../../lib/grid";
-import { useCanvasEdges } from "../../hooks/useCanvasEdges";
-import { useCanvasNodes } from "../../hooks/useCanvasNodes";
-import { useCanvasZoom } from "../../hooks/useCanvasZoom";
-import { useCanvasStore } from "../../model/canvasStore";
+import { useCanvasEdges } from "@/diagram/hooks/useCanvasEdges";
+import { useCanvasNodes } from "@/diagram/hooks/useCanvasNodes";
+import { useCanvasZoom } from "@/diagram/hooks/useCanvasZoom";
+import { CELL_SIZE, getGridOccupancy, getGridPixelSize } from "@/diagram/lib/grid";
+import { useCanvasStore } from "@/diagram/model/canvasStore";
+import { BlockNode } from "../CanvasNode/BlockNode";
+import { MenuNode } from "../CanvasNode/MenuNode";
+import { EdgeDropOverlay, GridGuideOverlay, NodeDropOverlay } from "../CanvasOverlay";
 import Menu from "../Menu";
-import BlockNode from "./BlockNode";
-import EdgeDropOverlay from "./EdgeDropOverlay";
-import GridGuideOverlay from "./GridGuideOverlay";
-import MenuNode from "./MenuNode";
-import NodeDropOverlay from "./NodeDropOverlay";
 
 const GRID_PIXEL_SIZE = getGridPixelSize();
 const NODE_EXTENT: CoordinateExtent = [
@@ -31,7 +28,7 @@ const nodeTypes: NodeTypes = {
 	block: BlockNode,
 };
 
-export function CanvasCore() {
+export default function CanvasCore() {
 	return (
 		<ReactFlowProvider>
 			<CanvasCoreInner />
@@ -121,9 +118,7 @@ function CanvasCoreInner() {
 					zoomOnPinch={false}
 					zoomOnScroll={false}
 					deleteKeyCode={isEditMode ? ["Backspace", "Delete"] : null}
-					proOptions={{
-						hideAttribution: true,
-					}}
+					proOptions={{ hideAttribution: true }}
 					minZoom={gridZoom}
 					maxZoom={gridZoom}
 				>
